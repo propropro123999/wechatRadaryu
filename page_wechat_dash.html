@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>公众号内容表现 Dashboard（本地版·需授权）</title>
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    /* ===== 授权登录层样式（不改原 Dashboard 样式） ===== */
+    * {
+      box-sizing: border-box;
+    }
+    #auth-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, rgba(56,189,248,0.15), transparent 55%),
+                  radial-gradient(circle at bottom, rgba(129,140,248,0.2), transparent 55%),
+                  rgba(15,23,42,0.96);
+      z-index: 9999;
+    }
+    .auth-card {
+      width: 360px;
+      max-width: 90vw;
+      padding: 24px 24px 20px;
+      border-radius: 20px;
+      background: rgba(15,23,42,0.92);
+      border: 1px solid rgba(148,163,184,0.25);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.7);
+      backdrop-filter: blur(18px);
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: conic-gradient(from 140deg,
+        rgba(56,189,248,0.12),
+        rgba(94,234,212,0.08),
+        rgba(129,140,248,0.05),
+        transparent 55%);
+      opacity: 0.5;
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+    .auth-inner {
+      position: relative;
+      z-index: 1;
+    }
+    .auth-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #e5e7eb;
+    }
+    .auth-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(52,211,153,0.7);
+      color: #bbf7d0;
+      background: linear-gradient(to right, rgba(22,163,74,0.25), rgba(15,118,110,0.35));
+    }
+    .auth-subtitle {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 16px;
+    }
+    .auth-label {
+      font-size: 12px;
+      color: #cbd5f5;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .auth-input {
+      width: 100%;
+      padding: 10px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(15,23,42,0.9);
+      color: #e5e7eb;
+      outline: none;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      transition: border-color 0.18s, box-shadow 0.18s, background 0.18s, transform 0.12s;
+    }
+    .auth-input::placeholder {
+      color: #6b7280;
+      letter-spacing: 0;
+    }
+    .auth-input:focus {
+      border-color: rgba(56,189,248,0.85);
+      box-shadow: 0 0 0 1px rgba(56,189,248,0.45);
+      background: rgba(15,23,42,0.98);
+      transform: translateY(-0.5px);
+    }
+    .auth-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      gap: 10px;
+    }
+    .auth-btn {
+      flex: 0 0 auto;
+      border: none;
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      background: linear-gradient(135deg,#38bdf8,#6366f1);
+      color: #f9fafb;
+      box-shadow: 0 12px 30px rgba(37,99,235,0.45);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: transform 0.12s, box-shadow 0.12s, filter 0.12s;
+      white-space: nowrap;
+    }
+    .auth-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+      box-shadow: 0 16px 40px rgba(37,99,235,0.55);
+    }
+    .auth-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 8px 24px rgba(15,23,42,0.9);
+      filter: brightness(0.97);
+    }
+    .auth-hint {
+      font-size: 11px;
+      color: #64748b;
+      text-align: left;
+      flex: 1;
+    }
+    .auth-meta {
+      margin-top: 12px;
+      font-size: 11px;
+      color: #64748b;
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .auth-error {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #fecaca;
+      min-height: 14px;
+    }
+    .auth-card.shake {
+      animation: shake 0.26s ease-in-out;
+    }
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-3px); }
+      100% { transform: translateX(0); }
+    }
+
+    /* Dashboard 根节点：初始隐藏，授权后显示 */
+    #app {
+      display: none;
+    }
+
+    /* ======== Dashboard 样式 ======== */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Microsoft YaHei",
+        sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f7;
+    }
+    .topbar {
+      background: #111827;
+      color: #e5e7eb;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .file-input {
+      background: #111827;
+      border: 1px solid #4b5563;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: #e5e7eb;
+      cursor: pointer;
+    }
+    .file-input input {
+      display: none;
+    }
+    .hint {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+    .container {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+    h1 {
+      font-size: 26px;
+      margin-bottom: 6px;
+    }
+    h2 {
+      font-size: 20px;
+      margin: 24px 0 12px;
+    }
+    .sub-title {
+      color: #6b7280;
+      margin-bottom: 18px;
+      font-size: 13px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+    .card-label {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .card-value {
+      font-size: 22px;
+      font-weight: 600;
+      color: #111827;
+    }
+    .chart-block {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      margin-bottom: 20px;
+    }
+    .chart {
+      width: 100%;
+      height: 340px;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .data-table th,
+    .data-table td {
+      border: 1px solid #e5e7eb;
+      padding: 6px 8px;
+    }
+    .rank-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .rank-block-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background-color: #f9fafb;
+    }
+    #loading{font-size:12px;color:#6b7280;margin-top:6px;}
+    #error{font-size:12px;color:#b91c1c;margin-top:6px;}
+  </style>
+</head>
+
+<body>
+  <!-- 授权层 -->
+  <div id="auth-screen">
+    <div class="auth-card" id="auth-card">
+      <div class="auth-inner">
+        <div class="auth-title">
+          🔐 内部数据访问
+          <span class="auth-badge">Authorization Required</span>
+        </div>
+        <div class="auth-subtitle">
+          请输入授权码访问「公众号内容表现 Dashboard」。本页仅供经授权的内部成员 / 合作方使用。
+        </div>
+
+        <label class="auth-label" for="auth-code">授权码</label>
+        <input
+          id="auth-code"
+          class="auth-input"
+          type="text"
+          placeholder="例如：ICV-2025-7QAF"
+          autocomplete="off"
+        />
+
+        <div class="auth-actions">
+          <div class="auth-hint">每个授权码对应一次发放对象，可按需分发。</div>
+          <button class="auth-btn" id="auth-btn">确认进入</button>
+        </div>
+
+        <div class="auth-error" id="auth-error"></div>
+
+        <div class="auth-meta">
+          <span id="auth-info-version">当前版本：WeChat 内容 Dashboard</span>
+          <span id="auth-info-tag">未授权</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 真正的 Dashboard 根节点：授权后显示 -->
+  <div id="app">
+    <div class="topbar">
+      <div class="topbar-title">公众号内容表现 Dashboard（本地版）</div>
+      <label class="file-input">
+        选择数据文件（CSV / XLSX）
+        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" />
+      </label>
+      <div class="hint">
+        必须包含字段：内容标题、总阅读人数、总阅读次数、阅读完成率、送达阅读率、总分享次数、首次分享次数、分享产生阅读次数...
+      </div>
+    </div>
+
+    <div class="container">
+      <h1>公众号内容表现 Dashboard</h1>
+      <div class="sub-title" id="dateRange">按内容维度的阅读、分享、转化分析</div>
+
+      <div id="loading"></div>
+      <div id="error"></div>
+
+      <!-- Summary 卡片 -->
+      <div class="cards" id="summaryCards" style="display:none;">
+        <div class="card">
+          <div class="card-label">文章总数</div>
+          <div class="card-value" id="totalArticles">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">总阅读次数</div>
+          <div class="card-value" id="totalReadCount">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">总阅读人数</div>
+          <div class="card-value" id="totalReaders">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">总分享次数</div>
+          <div class="card-value" id="totalShareCount">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">总送达人数</div>
+          <div class="card-value" id="totalDelivered">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">平均送达阅读率</div>
+          <div class="card-value" id="avgDeliverReadRate">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">平均阅读完成率</div>
+          <div class="card-value" id="avgFinishRate">-</div>
+        </div>
+      </div>
+
+      <h2>二、Top 内容表现</h2>
+      <div class="chart-block">
+        <div class="chart-title">Top10 内容（按总阅读次数）</div>
+        <div id="topReadChart" class="chart"></div>
+      </div>
+
+      <div class="chart-block">
+        <div class="chart-title">阅读次数 vs 分享次数</div>
+        <div id="readShareScatter" class="chart"></div>
+      </div>
+
+      <h2>三、转化与完成度</h2>
+      <div class="chart-block">
+        <div class="chart-title">阅读完成率（Top50）</div>
+        <div id="finishRateChart" class="chart"></div>
+      </div>
+
+      <div class="chart-block">
+        <div class="chart-title">送达阅读率（Top50）</div>
+        <div id="deliverRateChart" class="chart"></div>
+      </div>
+
+      <h2>四、内容明细（Top100 按阅读次数）</h2>
+      <div class="chart-block">
+        <div class="chart-title">内容明细表</div>
+        <div id="detailTable"></div>
+      </div>
+
+      <h2>五、关键指标 TOP 榜单</h2>
+      <div class="chart-block">
+        <div class="chart-title">核心指标 Top3 榜单</div>
+        <div id="keyRanks" class="rank-grid"></div>
+      </div>
+
+      <!-- 六、阅读 × 总分享次数四象限分析 -->
+      <h2>六、阅读 × 总分享次数四象限分析</h2>
+      <div class="chart-block">
+        <div class="chart-title">阅读量 vs 总分享次数（四象限）</div>
+        <div id="quadrantChart" class="chart"></div>
+        <div id="quadrantInsight" style="font-size:12px;color:#6b7280;margin-top:8px;"></div>
+      </div>
+
+      <div class="footer" style="font-size:11px;color:#9ca3af;margin-top:24px;text-align:center;">
+        本页面仅在本地浏览器中运行，不会上传任何数据。
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Dashboard 脚本 ===== -->
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const loadingEl = document.getElementById("loading");
+    const errorEl = document.getElementById("error");
+
+    fileInput.addEventListener("change", handleFile);
+
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      loadingEl.textContent = "解析中，请稍候…";
+      errorEl.textContent = "";
+
+      const reader = new FileReader();
+      reader.onload = evt => {
+        try {
+          const workbook = XLSX.read(evt.target.result, { type: "array" });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+          process(rows);
+        } catch (err) {
+          console.error(err);
+          errorEl.textContent = "文件解析失败，请检查格式或另存为 UTF-8 后再试。";
+        }
+        loadingEl.textContent = "";
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function num(v) {
+      if (v === null || v === undefined || v === "") return 0;
+      return Number(String(v).replace(/,/g, "")) || 0;
+    }
+    function pct(v) {
+      if (!v) return 0;
+      const s = String(v).trim();
+      if (s.endsWith("%")) return parseFloat(s.slice(0, -1)) || 0;
+      return parseFloat(s) || 0;
+    }
+    function dateParse(v) {
+      let d = new Date(v);
+      if (!isNaN(d)) return d;
+      if (typeof v === "number")
+        return new Date(Math.round((v - 25569) * 86400 * 1000));
+      return null;
+    }
+    function dateFmt(d) {
+      if (!d) return "";
+      return (
+        d.getFullYear() +
+        "-" +
+        String(d.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(d.getDate()).padStart(2, "0")
+      );
+    }
+
+    function findCol(names, cols) {
+      for (const n of names) if (cols.includes(n)) return n;
+      return null;
+    }
+
+    function process(rows) {
+      if (!rows.length) {
+        errorEl.textContent = "文件为空";
+        return;
+      }
+
+      const cols = Object.keys(rows[0]);
+
+      const colTitle = findCol(["内容标题", "标题"], cols);
+      const colTime = findCol(["发表时间", "发布时间"], cols);
+      const colReadUser = findCol(["总阅读人数"], cols);
+      const colReadCount = findCol(["总阅读次数"], cols);
+      const colShareCount = findCol(["总分享次数"], cols);
+      const colFirstShare = findCol(["首次分享次数"], cols);
+      const colShareRead = findCol(["分享产生阅读次数"], cols);
+      const colFinishRate = findCol(["阅读完成率", "阅读完成率(%)"], cols);
+      const colDeliverRate = findCol(["送达阅读率", "送达阅读率(%)"], cols);
+      const colMsgRead = findCol(["公众号消息阅读次数"], cols);
+      const colDelivered = findCol(["送达人数"], cols);
+      const colFollow = findCol(["阅读后关注人数"], cols);
+
+      if (!colTitle || !colReadCount) {
+        errorEl.textContent = "缺少必要字段：内容标题、总阅读次数";
+        return;
+      }
+
+      let data = rows.map(r => {
+        const readUser = num(r[colReadUser]);
+        const shareCount = num(r[colShareCount]);
+        const firstShare = num(r[colFirstShare]);
+        const shareRead = num(r[colShareRead]);
+        const follow = num(r[colFollow]);
+        const time = dateParse(r[colTime]);
+
+        return {
+          title: r[colTitle],
+          time,
+          readUser,
+          readCount: num(r[colReadCount]),
+          shareCount,
+          firstShare,
+          shareRead,
+          finishRate: pct(r[colFinishRate]),
+          deliverRate: pct(r[colDeliverRate]),
+          msgRead: num(r[colMsgRead]),
+          delivered: num(r[colDelivered]),
+          follow,
+
+          // 首次分享率（%）
+          firstShareRate:
+            readUser > 0 ? (firstShare / readUser) * 100 : 0,
+
+          // 每次分享带来的阅读数
+          readPerShare:
+            shareCount > 0 ? (shareRead / shareCount) : 0,
+
+          // 阅读后关注率（%）
+          attentionRate:
+            readUser > 0
+              ? (follow / readUser) * 100
+              : 0
+        };
+      });
+
+      renderSummary(data);
+      renderTopRead(data);
+      renderReadShare(data);
+      renderFinishRate(data);
+      renderDeliverRate(data);
+      renderDetail(data);
+      renderRanks(data);
+      renderQuadrant(data); // 四象限分析
+    }
+
+    function renderSummary(data) {
+      document.getElementById("summaryCards").style.display = "grid";
+
+      document.getElementById("totalArticles").textContent = data.length;
+      document.getElementById("totalReadCount").textContent = sum(data, "readCount");
+      document.getElementById("totalReaders").textContent = sum(data, "readUser");
+      document.getElementById("totalShareCount").textContent = sum(data, "shareCount");
+      document.getElementById("totalDelivered").textContent = sum(data, "delivered");
+
+      document.getElementById("avgDeliverReadRate").textContent =
+        avg(data, "deliverRate").toFixed(2) + "%";
+      document.getElementById("avgFinishRate").textContent =
+        avg(data, "finishRate").toFixed(2) + "%";
+
+      const times = data.map(d => d.time).filter(Boolean);
+      if (times.length) {
+        const min = new Date(Math.min(...times));
+        const max = new Date(Math.max(...times));
+        document.getElementById("dateRange").textContent =
+          "时间范围：" + dateFmt(min) + " ~ " + dateFmt(max);
+      }
+    }
+
+    function sum(arr, key) {
+      return arr.reduce((a, b) => a + (b[key] || 0), 0);
+    }
+    function avg(arr, key) {
+      const v = arr.map(r => r[key]).filter(v => v > 0);
+      return v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0;
+    }
+
+    function topN(arr, key, n = 3) {
+      return arr
+        .filter(r => r[key] > 0)
+        .sort((a, b) => b[key] - a[key])
+        .slice(0, n);
+    }
+
+    function renderTopRead(data) {
+      const top = data
+        .slice()
+        .sort((a, b) => b.readCount - a.readCount)
+        .slice(0, 10);
+
+      Plotly.newPlot("topReadChart", [
+        {
+          x: top.map(x => x.title),
+          y: top.map(x => x.readCount),
+          type: "bar"
+        }
+      ], {
+        margin: { b: 120 }
+      });
+    }
+
+    function renderReadShare(data) {
+      Plotly.newPlot("readShareScatter", [
+        {
+          x: data.map(x => x.readCount),
+          y: data.map(x => x.shareCount),
+          mode: "markers",
+          type: "scatter",
+          text: data.map(x => x.title)
+        }
+      ], {
+        xaxis: { title: "阅读次数" },
+        yaxis: { title: "分享次数" }
+      });
+    }
+
+    function renderFinishRate(data) {
+      const list = data
+        .filter(x => x.finishRate > 0)
+        .sort((a, b) => b.finishRate - a.finishRate)
+        .slice(0, 50);
+
+      Plotly.newPlot("finishRateChart", [
+        {
+          x: list.map(x => x.title),
+          y: list.map(x => x.finishRate),
+          type: "bar"
+        }
+      ], { margin: { b: 120 } });
+    }
+
+    function renderDeliverRate(data) {
+      const list = data
+        .filter(x => x.deliverRate > 0)
+        .sort((a, b) => b.deliverRate - a.deliverRate)
+        .slice(0, 50);
+
+      Plotly.newPlot("deliverRateChart", [
+        {
+          x: list.map(x => x.title),
+          y: list.map(x => x.deliverRate),
+          type: "bar"
+        }
+      ], { margin: { b: 120 } });
+    }
+
+    function renderDetail(data) {
+      const top = data
+        .slice()
+        .sort((a, b) => b.readCount - a.readCount)
+        .slice(0, 100);
+
+      let html = "<table class='data-table'><thead><tr>";
+      const headers = [
+        "内容标题", "发表时间", "总阅读人数", "总阅读次数",
+        "总分享次数", "首次分享次数", "分享产生阅读次数",
+        "阅读完成率(%)", "送达阅读率(%)",
+        "公众号消息阅读次数", "送达人数", "阅读后关注人数"
+      ];
+      headers.forEach(h => html += `<th>${h}</th>`);
+      html += "</tr></thead><tbody>";
+
+      top.forEach(r => {
+        html += "<tr>";
+        html += `<td>${escapeHtml(r.title)}</td>`;
+        html += `<td>${r.time ? dateFmt(r.time) : ""}</td>`;
+        html += `<td>${r.readUser}</td>`;
+        html += `<td>${r.readCount}</td>`;
+        html += `<td>${r.shareCount}</td>`;
+        html += `<td>${r.firstShare}</td>`;
+        html += `<td>${r.shareRead}</td>`;
+        html += `<td>${r.finishRate.toFixed(2)}</td>`;
+        html += `<td>${r.deliverRate.toFixed(2)}</td>`;
+        html += `<td>${r.msgRead}</td>`;
+        html += `<td>${r.delivered}</td>`;
+        html += `<td>${r.follow}</td>`;
+        html += "</tr>";
+      });
+
+      html += "</tbody></table>";
+      document.getElementById("detailTable").innerHTML = html;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;");
+    }
+
+    function renderRanks(data) {
+      let html = "";
+
+      const rankItems = [
+        ["阅读表现 TOP3（按阅读次数）", "readCount", ""],
+        ["公众号消息阅读次数 TOP3", "msgRead", ""],
+        ["完读率 TOP3", "finishRate", "%"],
+        ["分享意愿 TOP3（按首次分享率）", "firstShareRate","%"],
+        ["分享动力 TOP3（按首次分享次数）", "firstShare", ""],
+        ["二次传播 TOP3（按分享产生阅读）", "shareRead", ""],
+        ["分享效率 TOP3（每次分享带来阅读）", "readPerShare",""],
+        ["分享规模 TOP3（总分享次数）", "shareCount", ""],
+        ["关注新增贡献 TOP3", "follow", ""],
+        ["标题吸引力 TOP3（送达阅读率）", "deliverRate", "%"],
+        ["用户关注心引力 TOP3", "attentionRate", "%"]
+      ];
+
+      rankItems.forEach(([title, key, suffix]) => {
+        const top = topN(data, key, 3);
+        if (!top.length) return;
+
+        html += `<div class="rank-block-item">
+          <div style="font-size:13px;font-weight:600;margin-bottom:6px;">${title}</div>
+          <table class='data-table'><thead><tr>
+            <th>排名</th><th>内容标题</th><th>值</th>
+          </tr></thead><tbody>`;
+
+        top.forEach((r, i) => {
+          html += `<tr>
+            <td>${i + 1}</td>
+            <td>${escapeHtml(r.title)}</td>
+            <td>${r[key].toFixed ? r[key].toFixed(2) : r[key]}${suffix}</td>
+          </tr>`;
+        });
+
+        html += "</tbody></table></div>";
+      });
+
+      document.getElementById("keyRanks").innerHTML = html;
+    }
+
+    // 阅读 × 总分享次数四象限分析（用中位数分类，用图形中心画十字）
+    function renderQuadrant(data) {
+      const points = data
+        .filter(d => d.readCount > 0 && d.shareCount > 0)
+        .map(d => ({
+          title: d.title,
+          read: d.readCount,
+          share: d.shareCount
+        }));
+
+      const insightEl = document.getElementById("quadrantInsight");
+
+      if (!points.length) {
+        insightEl.textContent = "暂无足够的阅读与分享数据，暂无法绘制四象限分析。";
+        return;
+      }
+
+      const reads = points.map(p => p.read).slice().sort((a, b) => a - b);
+      const shares = points.map(p => p.share).slice().sort((a, b) => a - b);
+
+      function median(arr) {
+        if (!arr.length) return 0;
+        const n = arr.length;
+        const mid = Math.floor(n / 2);
+        return n % 2 === 1
+          ? arr[mid]
+          : (arr[mid - 1] + arr[mid]) / 2;
+      }
+
+      // 逻辑上的高/低分界：中位数
+      const readMid = median(reads);
+      const shareMid = median(shares);
+
+      const minRead = Math.min(...reads);
+      const maxRead = Math.max(...reads);
+      const minShare = Math.min(...shares);
+      const maxShare = Math.max(...shares);
+
+      // 可视范围：稍微放大一点
+      const xPadding = (maxRead - minRead) * 0.1;
+      const yPadding = (maxShare - minShare) * 0.1;
+
+      const xMinRange = Math.max(0, minRead - xPadding);
+      const xMaxRange = maxRead + xPadding;
+      const yMinRange = Math.max(0, minShare - yPadding);
+      const yMaxRange = maxShare + yPadding;
+
+      // 视觉上的十字中心：用可视范围的中心（保证居中）
+      const xCenter = (xMinRange + xMaxRange) / 2;
+      const yCenter = (yMinRange + yMaxRange) / 2;
+
+      // 四象限分类仍然用中位数（不是用视觉中心）
+      const q1 = []; // 高阅读 · 高分享
+      const q2 = []; // 低阅读 · 高分享
+      const q3 = []; // 低阅读 · 低分享
+      const q4 = []; // 高阅读 · 低分享
+
+      points.forEach(p => {
+        if (p.read >= readMid && p.share >= shareMid) {
+          q1.push(p);
+        } else if (p.read < readMid && p.share >= shareMid) {
+          q2.push(p);
+        } else if (p.read < readMid && p.share < shareMid) {
+          q3.push(p);
+        } else {
+          q4.push(p);
+        }
+      });
+
+      function makeTrace(list, name, symbol) {
+        return {
+          x: list.map(p => p.read),
+          y: list.map(p => p.share),
+          mode: "markers",
+          type: "scatter",
+          name,
+          text: list.map(p => p.title),
+          marker: {
+            size: 9,
+            symbol
+          }
+        };
+      }
+
+      Plotly.newPlot("quadrantChart", [
+        makeTrace(q1, "高阅读 · 高分享", "circle"),
+        makeTrace(q2, "低阅读 · 高分享", "triangle-up"),
+        makeTrace(q3, "低阅读 · 低分享", "square"),
+        makeTrace(q4, "高阅读 · 低分享", "diamond")
+      ], {
+        xaxis: {
+          title: "总阅读次数",
+          zeroline: false,
+          range: [xMinRange, xMaxRange]
+        },
+        yaxis: {
+          title: "总分享次数",
+          zeroline: false,
+          range: [yMinRange, yMaxRange]
+        },
+        shapes: [
+          {
+            type: "line",
+            x0: xCenter,
+            x1: xCenter,
+            y0: yMinRange,
+            y1: yMaxRange,
+            line: { dash: "dot", width: 1 }
+          },
+          {
+            type: "line",
+            x0: xMinRange,
+            x1: xMaxRange,
+            y0: yCenter,
+            y1: yCenter,
+            line: { dash: "dot", width: 1 }
+          }
+        ],
+        margin: { t: 30 }
+      });
+
+      const total = points.length;
+      const pct = n => ((n / total) * 100).toFixed(1);
+
+      insightEl.innerHTML =
+        `基于 ${total} 篇具备「阅读 + 总分享次数」数据的内容，使用样本中位数作为高/低分界：` +
+        `总阅读次数中位数约为 <b>${Math.round(readMid)}</b>，总分享次数中位数约为 <b>${Math.round(shareMid)}</b>。<br>` +
+        `各象限文章数量与占比分别为：` +
+        `高阅读·高分享 ${q1.length} 篇（${pct(q1.length)}%），` +
+        `低阅读·高分享 ${q2.length} 篇（${pct(q2.length)}%），` +
+        `低阅读·低分享 ${q3.length} 篇（${pct(q3.length)}%），` +
+        `高阅读·低分享 ${q4.length} 篇（${pct(q4.length)}%）。`;
+    }
+  </script>
+
+  <!-- ===== 授权逻辑脚本 ===== -->
+  <script>
+    // 30 个授权码
+    const AUTH_CODES = {
+      "ICV-2025-7QAF": "标准授权",
+      "ICV-2025-P3ZD": "标准授权",
+      "ICV-2025-L8XK": "标准授权",
+      "ICV-2025-G2MW": "标准授权",
+      "ICV-2025-R9CE": "标准授权",
+      "ICV-2025-H4VU": "标准授权",
+      "ICV-2025-Y1SN": "标准授权",
+      "ICV-2025-K5BJ": "标准授权",
+      "ICV-2025-X7TP": "标准授权",
+      "ICV-2025-W6QD": "标准授权",
+      "ICV-2025-B2LA": "标准授权",
+      "ICV-2025-Z4RN": "标准授权",
+      "ICV-2025-M9KS": "标准授权",
+      "ICV-2025-T3HF": "标准授权",
+      "ICV-2025-E8CP": "标准授权",
+      "ICV-2025-A7UM": "标准授权",
+      "ICV-2025-V1DG": "标准授权",
+      "ICV-2025-S5QX": "标准授权",
+      "ICV-2025-J6WP": "标准授权",
+      "ICV-2025-U9FR": "标准授权",
+      "ICV-2025-Q2NM": "标准授权",
+      "ICV-2025-D4YS": "标准授权",
+      "ICV-2025-C7KV": "标准授权",
+      "ICV-2025-N8ZB": "标准授权",
+      "ICV-2025-F3LW": "标准授权",
+      "ICV-2025-P9JE": "标准授权",
+      "ICV-2025-H2GV": "标准授权",
+      "ICV-2025-Y5TC": "标准授权",
+      "ICV-2025-K6MR": "标准授权",
+      "ICV-2025-R8QN": "标准授权"
+    };
+
+    const STORAGE_KEY = "wechat_dashboard_auth";
+
+    const authScreen = document.getElementById("auth-screen");
+    const appRoot = document.getElementById("app");
+    const input = document.getElementById("auth-code");
+    const btn = document.getElementById("auth-btn");
+    const errEl = document.getElementById("auth-error");
+    const cardEl = document.getElementById("auth-card");
+    const infoTag = document.getElementById("auth-info-tag");
+
+    (function bootstrapAuth() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.code && AUTH_CODES[parsed.code]) {
+          showApp(parsed.code);
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
+
+    function showApp(code) {
+      const label = AUTH_CODES[code] || "已授权访问";
+      infoTag.textContent = label;
+      authScreen.style.display = "none";
+      appRoot.style.display = "block";
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ code, label, ts: Date.now() })
+        );
+      } catch (e) {}
+    }
+
+    function shakeCard() {
+      cardEl.classList.remove("shake");
+      void cardEl.offsetWidth;
+      cardEl.classList.add("shake");
+    }
+
+    function handleAuth() {
+      const code = (input.value || "").trim();
+      if (!code) {
+        errEl.textContent = "请输入授权码。";
+        shakeCard();
+        return;
+      }
+      if (!Object.prototype.hasOwnProperty.call(AUTH_CODES, code)) {
+        errEl.textContent = "授权码无效，请确认后重新输入。";
+        shakeCard();
+        return;
+      }
+      errEl.textContent = "";
+      showApp(code);
+    }
+
+    btn.addEventListener("click", handleAuth);
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") handleAuth();
+    });
+
+    window.addEventListener("load", function() {
+      setTimeout(() => input.focus(), 80);
+    });
+  </script>
+</body>
+</html>
