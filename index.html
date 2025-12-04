@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>已发表内容数据函数分析工具（函数运行在本地·V2）</title>
+  <title>内容数据函数分析工具（函数运行在本地·V2）</title>
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
@@ -278,14 +278,174 @@
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 16px;
     }
-    .rank-block-item {
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 10px 12px;
-      background-color: #f9fafb;
-    }
     #loading{font-size:12px;color:#6b7280;margin-top:6px;}
     #error{font-size:12px;color:#b91c1c;margin-top:6px;}
+
+    /* ===== 使用说明卡片 UI ===== */
+    .usage-card {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 12px 16px 4px;
+      margin-bottom: 20px;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+      border: 1px solid rgba(148,163,184,0.35);
+    }
+    .usage-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .usage-icon-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 30% 20%, #e0f2fe, #eff6ff);
+      font-size: 18px;
+    }
+    .usage-title-block {
+      flex: 1;
+      min-width: 0;
+    }
+    .usage-title-main {
+      font-size: 15px;
+      font-weight: 600;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .usage-tag {
+      font-size: 11px;
+      padding: 1px 8px;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #16a34a;
+      border: 1px solid rgba(34,197,94,0.35);
+      white-space: nowrap;
+    }
+    .usage-title-sub {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+    .usage-chip {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: #4b5563;
+      margin-right: 6px;
+      white-space: nowrap;
+    }
+    .usage-chevron {
+      font-size: 16px;
+      color: #6b7280;
+      transition: transform 0.16s ease;
+    }
+    .usage-chevron.expanded {
+      transform: rotate(180deg);
+    }
+    .usage-card-body {
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.7;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed #e5e7eb;
+    }
+    .usage-card-body ul {
+      padding-left: 18px;
+      margin: 4px 0 10px;
+    }
+    .usage-card-body h4 {
+      margin: 10px 0 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    /* ===== 首次使用弹窗样式 ===== */
+    .usage-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9998;
+      backdrop-filter: blur(3px);
+    }
+    .usage-modal-card {
+      width: min(420px, 92vw);
+      background: #f9fafb;
+      border-radius: 18px;
+      padding: 18px 18px 14px;
+      box-shadow: 0 22px 60px rgba(15,23,42,0.45);
+      border: 1px solid rgba(148,163,184,0.5);
+    }
+    .usage-modal-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .usage-modal-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 30% 20%, #bfdbfe, #eff6ff);
+      font-size: 18px;
+    }
+    .usage-modal-title-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: #111827;
+    }
+    .usage-modal-body {
+      font-size: 13px;
+      color: #4b5563;
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+    .usage-modal-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .usage-modal-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      background: linear-gradient(135deg,#3b82f6,#6366f1);
+      color: #f9fafb;
+      box-shadow: 0 12px 30px rgba(37,99,235,0.45);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .usage-modal-btn:hover {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+    .usage-modal-skip {
+      font-size: 12px;
+      color: #6b7280;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
   </style>
 </head>
 
@@ -329,7 +489,7 @@
   <!-- 真正的 Dashboard 根节点：授权后显示 -->
   <div id="app">
     <div class="topbar">
-      <div class="topbar-title">已发表内容数据函数分析工具（运行在浏览器）</div>
+      <div class="topbar-title">内容数据函数分析工具（运行在浏览器）</div>
       <label class="file-input">
         选择数据文件（CSV / XLSX）
         <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" />
@@ -340,8 +500,90 @@
     </div>
 
     <div class="container">
-      <h1>已发表内容数据函数分析工具</h1>
+      <h1>内容数据函数分析工具</h1>
       <div class="sub-title" id="dateRange">按内容维度的阅读、分享、转化分析</div>
+
+      <!-- 首次使用弹窗 -->
+      <div id="usageModal" class="usage-modal-backdrop">
+        <div class="usage-modal-card">
+          <div class="usage-modal-title">
+            <div class="usage-modal-icon">👋</div>
+            <div class="usage-modal-title-text">欢迎使用公众号内容表现 Dashboard</div>
+          </div>
+          <div class="usage-modal-body">
+            这是一个在 <b>本地浏览器运行</b> 的数据分析工具，不会把 Excel / CSV
+            上传到云端。<br />
+            建议先快速浏览一下下方的「使用说明」，再开始上传公众号导出的数据表。
+          </div>
+          <div class="usage-modal-actions">
+            <div class="usage-modal-skip" id="usageModalSkip">
+              直接进入，不再提示
+            </div>
+            <button class="usage-modal-btn" id="usageModalBtn">
+              👍 我知道了，开始使用
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 使用说明卡片（可折叠） -->
+      <div class="usage-card" id="usageCard">
+        <div class="usage-card-header" id="usageToggle">
+          <div class="usage-icon-wrap">📘</div>
+          <div class="usage-title-block">
+            <div class="usage-title-main">
+              使用说明 · Dashboard 使用指南
+              <span class="usage-tag">首次使用建议阅读</span>
+            </div>
+            <div class="usage-title-sub">
+              支持 CSV / XLSX，本地解析公众号内容维度数据，生成阅读 / 分享 / 完读 / 四象限等分析。
+            </div>
+          </div>
+          <div class="usage-chip">点击折叠 / 展开</div>
+          <div class="usage-chevron expanded" id="usageChevron">⌄</div>
+        </div>
+        <div class="usage-card-body" id="usageBody">
+          <h4>1）工具简介</h4>
+          <ul>
+            <li>导入公众号后台导出的 CSV / XLSX 内容维度数据；</li>
+            <li>自动识别标题、阅读次数、分享次数、完读率等字段；</li>
+            <li>一键生成多种图表与 Top 榜单；</li>
+            <li>所有计算在本地浏览器完成，不上传任何数据。</li>
+          </ul>
+
+          <h4>2）基础使用流程</h4>
+          <ul>
+            <li><b>Step 1：</b> 输入授权码，进入 Dashboard 主界面；</li>
+            <li><b>Step 2：</b> 顶部点击「选择数据文件（CSV / XLSX）」并选择导出的数据表；</li>
+            <li><b>Step 3：</b> 等待解析完成，页面会自动刷新图表和榜单，无需手动运行。</li>
+          </ul>
+
+          <h4>3）页面模块概览</h4>
+          <ul>
+            <li>Summary 总览卡片：文章数、阅读、分享、完读率等核心指标；</li>
+            <li>Top10 阅读柱状图 & 阅读 × 分享散点图；</li>
+            <li>完读率 / 送达阅读率排行榜（Top50）；</li>
+            <li>内容明细表（按阅读次数 Top100）；</li>
+            <li>11 组关键指标 TOP 榜单；</li>
+            <li>阅读 × 总分享次数四象限分析（附自动生成洞察说明）。</li>
+          </ul>
+
+          <h4>4）四象限图说明</h4>
+          <ul>
+            <li>以样本中位数为界，自动划分「高 / 低阅读」与「高 / 低分享」；</li>
+            <li>「高阅读 · 高分享」通常是头部爆款内容；</li>
+            <li>「低阅读 · 高分享」可以作为小众但高口碑内容参考；</li>
+            <li>文案优化或推送策略调整可以重点观察各象限占比变化。</li>
+          </ul>
+
+          <h4>5）小提示</h4>
+          <ul>
+            <li>建议使用 Chrome / Edge 浏览器访问；</li>
+            <li>尽量保留公众号默认导出的字段名，避免字段无法识别；</li>
+            <li>授权码仅保存在当前浏览器 localStorage 中，下次访问会自动登录。</li>
+          </ul>
+        </div>
+      </div>
 
       <div id="loading"></div>
       <div id="error"></div>
@@ -885,7 +1127,7 @@
     }
   </script>
 
-  <!-- ===== 授权逻辑脚本 ===== -->
+  <!-- ===== 授权逻辑脚本 + 使用说明交互 ===== -->
   <script>
     // 30 个授权码
     const AUTH_CODES = {
@@ -922,6 +1164,7 @@
     };
 
     const STORAGE_KEY = "wechat_dashboard_auth";
+    const USAGE_INTRO_KEY = "wechat_dashboard_intro_seen_v1";
 
     const authScreen = document.getElementById("auth-screen");
     const appRoot = document.getElementById("app");
@@ -944,6 +1187,63 @@
       }
     })();
 
+    function initUsageGuide() {
+      const card = document.getElementById("usageCard");
+      const body = document.getElementById("usageBody");
+      const chevron = document.getElementById("usageChevron");
+      const toggle = document.getElementById("usageToggle");
+      const modal = document.getElementById("usageModal");
+      const modalBtn = document.getElementById("usageModalBtn");
+      const modalSkip = document.getElementById("usageModalSkip");
+
+      if (!card || !body || !chevron || !toggle) return;
+
+      // 折叠/展开逻辑
+      let expanded = true;
+      function setExpanded(state) {
+        expanded = state;
+        body.style.display = state ? "block" : "none";
+        if (state) {
+          chevron.classList.add("expanded");
+        } else {
+          chevron.classList.remove("expanded");
+        }
+      }
+
+      setExpanded(true);
+
+      toggle.addEventListener("click", function () {
+        setExpanded(!expanded);
+      });
+
+      // 首次使用弹窗逻辑
+      const seen = (function () {
+        try {
+          return localStorage.getItem(USAGE_INTRO_KEY);
+        } catch (e) {
+          return null;
+        }
+      })();
+
+      if (!seen && modal) {
+        modal.style.display = "flex";
+      }
+
+      function closeModalAndRemember() {
+        if (modal) modal.style.display = "none";
+        try {
+          localStorage.setItem(USAGE_INTRO_KEY, "1");
+        } catch (e) {}
+      }
+
+      if (modalBtn) {
+        modalBtn.addEventListener("click", closeModalAndRemember);
+      }
+      if (modalSkip) {
+        modalSkip.addEventListener("click", closeModalAndRemember);
+      }
+    }
+
     function showApp(code) {
       const label = AUTH_CODES[code] || "已授权访问";
       infoTag.textContent = label;
@@ -955,6 +1255,12 @@
           JSON.stringify({ code, label, ts: Date.now() })
         );
       } catch (e) {}
+      // 初始化使用说明交互 & 首次使用弹窗
+      try {
+        initUsageGuide();
+      } catch (e) {
+        console.warn("initUsageGuide error:", e);
+      }
     }
 
     function shakeCard() {
