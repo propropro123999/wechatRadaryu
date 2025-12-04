@@ -543,6 +543,23 @@
           <div class="usage-chevron expanded" id="usageChevron">⌄</div>
         </div>
         <div class="usage-card-body" id="usageBody">
+          <h4>0）Excel 从哪里下载？（公众号后台）</h4>
+          <ul>
+            <li>登录公众号后台，左侧导航进入 <b>「数据分析 &gt; 内容分析」</b>；</li>
+            <li>上方切换到 <b>「已发表内容 &gt; 已通知内容」</b>；</li>
+            <li>在右侧点击 <b>「下载数据明细」</b>，即可获得本工具使用的 Excel / CSV 文件。</li>
+          </ul>
+          <div style="margin:6px 0 14px;">
+            <img
+              src="wechat-export-location.png"
+              alt="公众号后台下载内容分析数据明细的位置示意图"
+              style="max-width:100%;border-radius:10px;border:1px solid #e5e7eb;display:block;"
+            />
+            <div style="font-size:11px;color:#6b7280;margin-top:4px;">
+              示例：在「数据分析 &gt; 内容分析 &gt; 已通知内容」右侧，点击「下载数据明细」导出 Excel。
+            </div>
+          </div>
+
           <h4>1）工具简介</h4>
           <ul>
             <li>导入公众号后台导出的 CSV / XLSX 内容维度数据；</li>
@@ -561,7 +578,7 @@
           <h4>3）页面模块概览</h4>
           <ul>
             <li>Summary 总览卡片：文章数、阅读、分享、完读率等核心指标；</li>
-            <li>Top10 阅读柱状图 & 阅读 × 分享散点图；</li>
+            <li>Top10 阅读柱状图 &amp; 阅读 × 分享散点图；</li>
             <li>完读率 / 送达阅读率排行榜（Top50）；</li>
             <li>内容明细表（按阅读次数 Top100）；</li>
             <li>11 组关键指标 TOP 榜单；</li>
@@ -1129,63 +1146,36 @@
 
   <!-- ===== 授权逻辑脚本 + 使用说明交互 ===== -->
   <script>
-    // 30 个授权码
-    const AUTH_CODES = {
-      "ICV-2025-7QAF": "标准授权",
-      "ICV-2025-P3ZD": "标准授权",
-      "ICV-2025-L8XK": "标准授权",
-      "ICV-2025-G2MW": "标准授权",
-      "ICV-2025-R9CE": "标准授权",
-      "ICV-2025-H4VU": "标准授权",
-      "ICV-2025-Y1SN": "标准授权",
-      "ICV-2025-K5BJ": "标准授权",
-      "ICV-2025-X7TP": "标准授权",
-      "ICV-2025-W6QD": "标准授权",
-      "ICV-2025-B2LA": "标准授权",
-      "ICV-2025-Z4RN": "标准授权",
-      "ICV-2025-M9KS": "标准授权",
-      "ICV-2025-T3HF": "标准授权",
-      "ICV-2025-E8CP": "标准授权",
-      "ICV-2025-A7UM": "标准授权",
-      "ICV-2025-V1DG": "标准授权",
-      "ICV-2025-S5QX": "标准授权",
-      "ICV-2025-J6WP": "标准授权",
-      "ICV-2025-U9FR": "标准授权",
-      "ICV-2025-Q2NM": "标准授权",
-      "ICV-2025-D4YS": "标准授权",
-      "ICV-2025-C7KV": "标准授权",
-      "ICV-2025-N8ZB": "标准授权",
-      "ICV-2025-F3LW": "标准授权",
-      "ICV-2025-P9JE": "标准授权",
-      "ICV-2025-H2GV": "标准授权",
-      "ICV-2025-Y5TC": "标准授权",
-      "ICV-2025-K6MR": "标准授权",
-      "ICV-2025-R8QN": "标准授权"
-    };
-
     const STORAGE_KEY = "wechat_dashboard_auth";
     const USAGE_INTRO_KEY = "wechat_dashboard_intro_seen_v1";
+
+    // 动态加载授权码
+    let AUTH_CODES = {};
+    let authLoaded = false;
+
+    function loadAuthCodes() {
+      return fetch("auth-codes.json?" + Date.now())
+        .then(res => {
+          if (!res.ok) throw new Error("auth-codes.json 加载失败");
+          return res.json();
+        })
+        .then(data => {
+          AUTH_CODES = data || {};
+          authLoaded = true;
+        })
+        .catch(err => {
+          console.error("授权码文件加载失败:", err);
+          alert("授权码文件加载失败，请检查 auth-codes.json 是否存在且可访问。");
+        });
+    }
 
     const authScreen = document.getElementById("auth-screen");
     const appRoot = document.getElementById("app");
     const input = document.getElementById("auth-code");
     const btn = document.getElementById("auth-btn");
-    const errEl = document.getElementById("auth-error");
+    const errElAuth = document.getElementById("auth-error");
     const cardEl = document.getElementById("auth-card");
     const infoTag = document.getElementById("auth-info-tag");
-
-    (function bootstrapAuth() {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) return;
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.code && AUTH_CODES[parsed.code]) {
-          showApp(parsed.code);
-        }
-      } catch (e) {
-        // ignore
-      }
-    })();
 
     function initUsageGuide() {
       const card = document.getElementById("usageCard");
@@ -1269,23 +1259,46 @@
       cardEl.classList.add("shake");
     }
 
-    function handleAuth() {
+    async function handleAuth() {
       const code = (input.value || "").trim();
+
+      if (!authLoaded) {
+        await loadAuthCodes();
+      }
+
       if (!code) {
-        errEl.textContent = "请输入授权码。";
+        errElAuth.textContent = "请输入授权码。";
         shakeCard();
         return;
       }
       if (!Object.prototype.hasOwnProperty.call(AUTH_CODES, code)) {
-        errEl.textContent = "授权码无效，请确认后重新输入。";
+        errElAuth.textContent = "授权码无效，请确认后重新输入。";
         shakeCard();
         return;
       }
-      errEl.textContent = "";
+      errElAuth.textContent = "";
       showApp(code);
     }
 
-    btn.addEventListener("click", handleAuth);
+    (async function bootstrapAuth() {
+      await loadAuthCodes();
+
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.code && AUTH_CODES[parsed.code]) {
+          showApp(parsed.code);
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
+
+    btn.addEventListener("click", function () {
+      handleAuth();
+    });
+
     input.addEventListener("keydown", function (e) {
       if (e.key === "Enter") handleAuth();
     });
