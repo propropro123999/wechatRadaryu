@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>图片压缩工具（本地版）</title>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Microsoft YaHei",
+        sans-serif;
+      background: #0b1021;
+      color: #e5e7eb;
+      min-height: 100vh;
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(15,23,42,0.9);
+      border-bottom: 1px solid rgba(148,163,184,0.35);
+      backdrop-filter: blur(8px);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .title { font-size: 16px; font-weight: 700; color: #f8fafc; }
+    .pill { font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(148,163,184,0.35); }
+    .container { max-width: 1100px; margin: 0 auto; padding: 20px 16px 36px; }
+    .panel {
+      background: #0f172a;
+      border: 1px solid rgba(148,163,184,0.3);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 16px 60px rgba(0,0,0,0.25);
+      margin-bottom: 16px;
+    }
+    .panel h2 { margin: 0 0 10px; font-size: 16px; color: #f8fafc; }
+    .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+    .field { display: flex; flex-direction: column; gap: 6px; background: rgba(255,255,255,0.02); border: 1px solid rgba(148,163,184,0.2); padding: 10px; border-radius: 10px; }
+    .label { font-size: 12px; color: #cbd5e1; }
+    input[type="number"], select, input[type="range"] {
+      width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(255,255,255,0.04); color: #e5e7eb; outline: none;
+    }
+    input[type="range"] { padding: 0; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .btn {
+      border: none; border-radius: 10px; padding: 10px 14px; font-weight: 700; cursor: pointer;
+      background: linear-gradient(135deg, #22d3ee, #6366f1); color: #0b1021;
+      box-shadow: 0 12px 30px rgba(99,102,241,0.35); transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .btn.secondary {
+      background: rgba(255,255,255,0.06);
+      color: #e5e7eb;
+      box-shadow: none;
+      border: 1px solid rgba(148,163,184,0.3);
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 16px 40px rgba(99,102,241,0.45); }
+    .btn.secondary:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(0,0,0,0.25); }
+    .table {
+      width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px;
+    }
+    .table th, .table td { border: 1px solid rgba(148,163,184,0.2); padding: 8px 10px; text-align: left; }
+    .table th { background: rgba(255,255,255,0.04); color: #cbd5e1; }
+    .table tbody tr:nth-child(odd) { background: rgba(255,255,255,0.02); }
+    .muted { color: #94a3b8; }
+    .status { font-size: 12px; color: #cbd5e1; margin-top: 6px; min-height: 16px; }
+    .ratio-good { color: #4ade80; }
+    .ratio-bad { color: #fbbf24; }
+    .dropzone {
+      margin-top: 10px;
+      border: 1px dashed rgba(125,211,252,0.5);
+      background: rgba(14,165,233,0.08);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+      color: #bae6fd;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="title">图片压缩工具（本地运行，不上传）</div>
+    <span class="pill">JPG / PNG / WebP</span>
+    <span class="pill">多图批量</span>
+  </div>
+
+  <div class="container">
+    <div class="panel">
+      <h2>选择图片 & 参数</h2>
+      <div class="controls">
+        <div class="field">
+          <div class="label">选择图片（支持多选）</div>
+          <input type="file" id="fileInput" accept="image/*" multiple />
+          <div class="dropzone" id="dropzone">拖拽图片到此处</div>
+        </div>
+        <div class="field">
+          <div class="label">输出格式</div>
+          <select id="format">
+            <option value="auto">保持原格式</option>
+            <option value="image/jpeg">JPEG</option>
+            <option value="image/webp">WebP</option>
+            <option value="image/png">PNG</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="label">质量（0.1 - 1） <span id="qVal" class="muted"></span></div>
+          <input type="range" id="quality" min="0.1" max="1" step="0.05" value="0.8" />
+        </div>
+        <div class="field">
+          <div class="label">最大宽度 (px)</div>
+          <input type="number" id="maxW" value="1920" min="100" />
+        </div>
+        <div class="field">
+          <div class="label">最大高度 (px)</div>
+          <input type="number" id="maxH" value="1080" min="100" />
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="btnCompress">压缩所有并预览</button>
+        <button class="btn secondary" id="btnDownloadAll">下载全部（ZIP）</button>
+        <button class="btn secondary" id="btnClear">清空列表</button>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="panel">
+      <h2>文件列表</h2>
+      <table class="table" id="table">
+        <thead>
+          <tr>
+            <th>文件名</th>
+            <th>原尺寸</th>
+            <th>原大小</th>
+            <th>压后尺寸</th>
+            <th>压后大小</th>
+            <th>压缩率</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="7" class="muted">未选择文件</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const tbody = document.getElementById("tbody");
+    const statusEl = document.getElementById("status");
+    const qualityEl = document.getElementById("quality");
+    const qVal = document.getElementById("qVal");
+    const formatEl = document.getElementById("format");
+    const maxWEl = document.getElementById("maxW");
+    const maxHEl = document.getElementById("maxH");
+    const dropzone = document.getElementById("dropzone");
+
+    let files = [];
+    let results = {};
+
+    qVal.textContent = qualityEl.value;
+    qualityEl.addEventListener("input", () => qVal.textContent = qualityEl.value);
+
+    function fmtBytes(bytes) {
+      if (bytes === 0) return "0 B";
+      const k = 1024;
+      const sizes = ["B","KB","MB","GB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toFixed(2) + " " + sizes[i];
+    }
+
+    function renderTable() {
+      if (!files.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="muted">未选择文件</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = "";
+      files.forEach((f, idx) => {
+        const r = results[f.name];
+        const ratioText = r ? ((r.size / f.size * 100).toFixed(1) + "%") : "-";
+        const ratioClass = r && r.size <= f.size * 0.6 ? "ratio-good" : "ratio-bad";
+        tbody.innerHTML += `
+          <tr>
+            <td>${f.name}</td>
+            <td>${r?.origW ? `${r.origW}×${r.origH}` : "-"}</td>
+            <td>${fmtBytes(f.size)}</td>
+            <td>${r?.w ? `${r.w}×${r.h}` : "-"}</td>
+            <td>${r ? fmtBytes(r.size) : "-"}</td>
+            <td class="${r ? ratioClass : ""}">${r ? ratioText : "-"}</td>
+            <td>
+              ${r ? `<button class="btn secondary" data-name="${f.name}" data-dl>下载</button>` : `<span class="muted">未压缩</span>`}
+            </td>
+          </tr>
+        `;
+      });
+      tbody.querySelectorAll("button[data-dl]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const name = btn.getAttribute("data-name");
+          const r = results[name];
+          if (r?.blob) {
+            const url = URL.createObjectURL(r.blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = r.outputName;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }
+        });
+      });
+    }
+
+    async function compressOne(file) {
+      const format = formatEl.value;
+      const quality = parseFloat(qualityEl.value);
+      const maxW = parseInt(maxWEl.value, 10) || 1920;
+      const maxH = parseInt(maxHEl.value, 10) || 1080;
+
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const img = await new Promise((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = dataUrl;
+      });
+
+      let { width, height } = img;
+      const origW = width, origH = height;
+      const ratio = Math.min(1, maxW / width, maxH / height);
+      if (ratio < 1) {
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const outType = format === "auto" ? (file.type || "image/jpeg") : format;
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, outType, quality));
+      if (!blob) throw new Error("toBlob 失败");
+
+      const outputName = (file.name.replace(/\.[^.]+$/, "")) + (outType === "image/png" ? ".png" : outType === "image/webp" ? ".webp" : ".jpg");
+
+      results[file.name] = {
+        blob,
+        size: blob.size,
+        w: width,
+        h: height,
+        origW,
+        origH,
+        outputName
+      };
+    }
+
+    async function compressAll() {
+      if (!files.length) {
+        statusEl.textContent = "请先选择图片";
+        return;
+      }
+      statusEl.textContent = "压缩中...";
+      results = {};
+      for (const f of files) {
+        try {
+          await compressOne(f);
+        } catch (e) {
+          console.error(e);
+          statusEl.textContent = `压缩失败：${f.name}`;
+          renderTable();
+          return;
+        }
+      }
+      statusEl.textContent = "压缩完成";
+      renderTable();
+    }
+
+    async function downloadAll() {
+      if (!Object.keys(results).length) {
+        statusEl.textContent = "先压缩后再下载";
+        return;
+      }
+      const zip = new JSZip();
+      Object.entries(results).forEach(([name, r]) => {
+        zip.file(r.outputName, r.blob);
+      });
+      statusEl.textContent = "打包中...";
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "compressed-images.zip";
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      statusEl.textContent = "已下载 ZIP";
+    }
+
+    function clearAll() {
+      files = [];
+      results = {};
+      fileInput.value = "";
+      renderTable();
+      statusEl.textContent = "";
+    }
+
+    fileInput.addEventListener("change", (e) => {
+      files = Array.from(e.target.files || []);
+      renderTable();
+      statusEl.textContent = files.length ? `已选择 ${files.length} 个文件` : "";
+    });
+
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = "#7dd3fc";
+    });
+    dropzone.addEventListener("dragleave", () => dropzone.style.borderColor = "rgba(125,211,252,0.5)");
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = "rgba(125,211,252,0.5)";
+      const dropped = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
+      if (dropped.length) {
+        files = files.concat(dropped);
+        renderTable();
+        statusEl.textContent = `已选择 ${files.length} 个文件`;
+      }
+    });
+
+    document.getElementById("btnCompress").addEventListener("click", compressAll);
+    document.getElementById("btnDownloadAll").addEventListener("click", downloadAll);
+    document.getElementById("btnClear").addEventListener("click", clearAll);
+  </script>
+</body>
+</html>

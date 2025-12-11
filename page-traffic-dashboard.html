@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>页面流量分析 Dashboard（带自动解析标题）</title>
+  <!-- Plotly 用于画图 -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <!-- SheetJS 读取 Excel / CSV -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Microsoft YaHei",
+        sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f7;
+    }
+    .topbar {
+      background: #111827;
+      color: #e5e7eb;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .file-input {
+      background: #111827;
+      border: 1px solid #4b5563;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: #e5e7eb;
+      cursor: pointer;
+    }
+    .hint {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+    .container {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+    h1 {
+      font-size: 26px;
+      margin-bottom: 6px;
+    }
+    h2 {
+      font-size: 20px;
+      margin: 24px 0 12px;
+    }
+    .sub-title {
+      color: #6b7280;
+      margin-bottom: 18px;
+      font-size: 13px;
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background-color: #eef2ff;
+      color: #4f46e5;
+      font-size: 11px;
+      margin-left: 8px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+    .card-label {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .card-value {
+      font-size: 22px;
+      font-weight: 600;
+      color: #111827;
+    }
+    .card-desc {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+    .chart-block {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      margin-bottom: 20px;
+    }
+    .chart-title {
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    .chart-subtitle {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+    .chart {
+      width: 100%;
+      height: 340px;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .data-table th,
+    .data-table td {
+      border: 1px solid #e5e7eb;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    .data-table th {
+      background-color: #f9fafb;
+      font-weight: 600;
+    }
+    .data-table tbody tr:nth-child(odd) {
+      background-color: #fdfdfd;
+    }
+    .footer {
+      margin-top: 24px;
+      font-size: 11px;
+      color: #9ca3af;
+      text-align: center;
+    }
+    #loading {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 8px;
+    }
+    #error {
+      font-size: 13px;
+      color: #b91c1c;
+      margin-top: 8px;
+    }
+
+    /* ===== 授权层样式 ===== */
+    #auth-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.96);
+      z-index: 9999;
+    }
+
+    .auth-card {
+      width: 360px;
+      max-width: 90vw;
+      padding: 24px;
+      border-radius: 16px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .auth-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #111827;
+    }
+
+    .auth-subtitle {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 16px;
+    }
+
+    .auth-label {
+      font-size: 12px;
+      color: #374151;
+      margin-bottom: 6px;
+      display: block;
+      font-weight: 500;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+      color: #111827;
+      outline: none;
+      font-size: 13px;
+      margin-bottom: 14px;
+      box-sizing: border-box;
+    }
+
+    .auth-input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .auth-btn {
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      color: white;
+      box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .auth-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .auth-error {
+      margin-top: 10px;
+      font-size: 11px;
+      color: #dc2626;
+      min-height: 16px;
+    }
+
+    .auth-card.shake {
+      animation: shake 0.3s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(6px); }
+      75% { transform: translateX(-3px); }
+    }
+
+    #app {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- 授权层 -->
+  <div id="auth-screen">
+    <div class="auth-card" id="auth-card">
+      <div class="auth-title">🔐 页面流量分析</div>
+      <div class="auth-subtitle">请输入授权码访问本工具</div>
+
+      <label class="auth-label" for="auth-code">授权码</label>
+      <input
+        id="auth-code"
+        class="auth-input"
+        type="text"
+        placeholder="例如：PTD-2025-1A2B"
+        autocomplete="off"
+      />
+
+      <button class="auth-btn" id="auth-btn">确认进入</button>
+
+      <div class="auth-error" id="auth-error"></div>
+    </div>
+  </div>
+
+  <!-- 真正的应用 -->
+  <div id="app">
+  <div class="topbar">
+    <div class="topbar-title">页面流量分析 Dashboard（带自动解析标题）</div>
+    <label class="file-input">
+      选择数据文件（CSV / XLSX）
+      <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none" />
+    </label>
+    <div class="hint">
+      表头建议：受访页面 / 浏览次数 / 独立访客 / IP / 人均浏览页数 / 输出PV / 平均页面停留时间（例如 9.08秒）
+    </div>
+  </div>
+
+  <div class="container">
+    <h1>页面流量分析 Dashboard</h1>
+    <div class="sub-title" id="dateRange">
+      按受访页面维度的访问数据分析
+      <span class="tag">自动尝试抓取页面标题，用于运营复盘展示</span>
+    </div>
+
+    <div id="loading"></div>
+    <div id="error"></div>
+
+    <div class="cards" id="summaryCards" style="display:none;">
+      <div class="card">
+        <div class="card-label">总浏览次数（PV）</div>
+        <div class="card-value" id="totalPV">-</div>
+        <div class="card-desc">全站所有受访页面的浏览总量</div>
+      </div>
+      <div class="card">
+        <div class="card-label">总独立访客（UV）</div>
+        <div class="card-value" id="totalUV">-</div>
+        <div class="card-desc">按受访页面聚合的独立访客去重（简单求和）</div>
+      </div>
+      <div class="card">
+        <div class="card-label">总IP数</div>
+        <div class="card-value" id="totalIP">-</div>
+        <div class="card-desc">访问这些页面的唯一IP总数（简单求和）</div>
+      </div>
+      <div class="card">
+        <div class="card-label">平均人均浏览页数</div>
+        <div class="card-value" id="avgPagesPerVisitor">-</div>
+        <div class="card-desc">对各页面人均浏览页数取平均</div>
+      </div>
+      <div class="card">
+        <div class="card-label">平均页面停留时间（秒）</div>
+        <div class="card-value" id="avgStayTime">-</div>
+        <div class="card-desc">所有受访页面平均停留时间（简单平均）</div>
+      </div>
+    </div>
+
+    <!-- 一、Top 页面概览 -->
+    <h2>一、Top 页面概览</h2>
+    <div class="chart-block">
+      <div class="chart-title">Top 页面（按浏览次数）</div>
+      <div class="chart-subtitle">X 轴优先展示页面标题，未获取到标题则显示 URL</div>
+      <div id="topPagesPVChart" class="chart"></div>
+    </div>
+
+    <div class="chart-block">
+      <div class="chart-title">Top 页面（按独立访客）</div>
+      <div class="chart-subtitle">更接近页面真实触达规模</div>
+      <div id="topPagesUVChart" class="chart"></div>
+    </div>
+
+    <!-- 二、页面效率与价值 -->
+    <h2>二、页面效率与价值</h2>
+    <div class="chart-block">
+      <div class="chart-title">各页面 PV / UV 对比</div>
+      <div class="chart-subtitle">同一个页面的访问深度与吸引力对比（PV/UV 越高，代表重复浏览越多）</div>
+      <div id="pvUvChart" class="chart"></div>
+    </div>
+
+    <div class="chart-block">
+      <div class="chart-title">页面停留时间分布（Top20）</div>
+      <div class="chart-subtitle">停留时间更长的页面，更适合做重点内容沉淀或投放入口</div>
+      <div id="stayTimeChart" class="chart"></div>
+    </div>
+
+    <!-- 三、明细表 -->
+    <h2>三、页面访问明细（Top 50，带标题）</h2>
+    <div class="chart-block">
+      <div class="chart-title">受访页面明细表</div>
+      <div class="chart-subtitle">自动解析页面标题，可直接复制到 Excel / PPT 作为附录</div>
+      <div id="detailTable"></div>
+    </div>
+
+    <div class="footer">
+      本页面仅在本地浏览器中处理你的数据，不会上传到网络。
+      会尝试对 Top 页面发起网页请求以解析 &lt;title&gt;，如目标站点限制跨域，部分标题可能解析失败。
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const loadingEl = document.getElementById("loading");
+    const errorEl = document.getElementById("error");
+
+    let globalRows = []; // 清洗后的数据，含 page / title 等
+
+    fileInput.addEventListener("change", handleFile, false);
+
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      loadingEl.textContent = "正在读取并解析数据，请稍候…";
+      errorEl.textContent = "";
+
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        try {
+          const data = evt.target.result;
+          const workbook = XLSX.read(data, { type: "array" });
+          const firstSheet = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheet];
+          const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+          globalRows = cleanPageData(json);
+          renderAll(globalRows);         // 先用 URL 渲染一版
+          fetchTitlesForTopPages(globalRows); // 再异步抓标题，完了再重渲染
+          loadingEl.textContent = "";
+        } catch (err) {
+          console.error(err);
+          errorEl.textContent = "解析失败，请确认文件为 CSV 或 Excel，编码为 UTF-8 或用 Excel 另存为再试。";
+          loadingEl.textContent = "";
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function parseStayTimeToSeconds(value) {
+      if (!value) return 0;
+      const s = String(value).trim();
+      const num = parseFloat(s.replace("秒", "").replace("s", ""));
+      return isNaN(num) ? 0 : num;
+    }
+
+    function safeNumber(v) {
+      const n = Number(v);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function findCol(candidates, cols) {
+      for (const c of candidates) {
+        if (cols.includes(c)) return c;
+      }
+      return null;
+    }
+
+    function cleanPageData(rows) {
+      if (!rows || !rows.length) {
+        errorEl.textContent = "数据为空，请检查文件内容。";
+        return [];
+      }
+      const cols = Object.keys(rows[0]);
+      const colPage = findCol(["受访页面", "页面URL", "页面", "url", "URL"], cols);
+      const colPV = findCol(["浏览次数", "PV", "访问次数"], cols);
+      const colUV = findCol(["独立访客", "UV", "访客数"], cols);
+      const colIP = findCol(["IP", "IP数"], cols);
+      const colPagesPerUser = findCol(["人均浏览页数", "人均浏览页面数"], cols);
+      const colOutPV = findCol(["输出PV", "导出PV", "出口PV"], cols);
+      const colStay = findCol(["平均页面停留时间", "平均停留时间", "停留时间"], cols);
+
+      if (!colPage || !colPV) {
+        errorEl.textContent =
+          "未找到必要字段：受访页面 / 浏览次数，请检查表头。当前表头为：" + cols.join(" , ");
+        return [];
+      }
+
+      const cleanRows = [];
+      rows.forEach((r) => {
+        const page = r[colPage];
+        if (!page) return;
+        const pv = safeNumber(r[colPV]);
+        const uv = colUV ? safeNumber(r[colUV]) : 0;
+        const ip = colIP ? safeNumber(r[colIP]) : 0;
+        const ppl = colPagesPerUser ? safeNumber(r[colPagesPerUser]) : 0;
+        const outpv = colOutPV ? safeNumber(r[colOutPV]) : 0;
+        const staySec = colStay ? parseStayTimeToSeconds(r[colStay]) : 0;
+
+        cleanRows.push({
+          page,
+          title: "",     // 后面通过 fetch 填充
+          pv,
+          uv,
+          ip,
+          ppl,
+          outpv,
+          staySec,
+          stayRaw: r[colStay]
+        });
+      });
+      return cleanRows;
+    }
+
+    function renderAll(cleanRows) {
+      if (!cleanRows.length) return;
+
+      // 汇总指标
+      let totalPV = 0;
+      let totalUV = 0;
+      let totalIP = 0;
+      let sumPagesPerUser = 0;
+      let countPagesPerUser = 0;
+      let sumStay = 0;
+      let countStay = 0;
+
+      cleanRows.forEach((r) => {
+        totalPV += r.pv;
+        totalUV += r.uv;
+        totalIP += r.ip;
+        if (r.ppl > 0) {
+          sumPagesPerUser += r.ppl;
+          countPagesPerUser += 1;
+        }
+        if (r.staySec > 0) {
+          sumStay += r.staySec;
+          countStay += 1;
+        }
+      });
+
+      document.getElementById("summaryCards").style.display = "grid";
+      document.getElementById("totalPV").textContent = totalPV;
+      document.getElementById("totalUV").textContent = totalUV;
+      document.getElementById("totalIP").textContent = totalIP;
+
+      const avgPagesPerVisitor =
+        countPagesPerUser > 0 ? (sumPagesPerUser / countPagesPerUser).toFixed(2) : "0.00";
+      const avgStayTime =
+        countStay > 0 ? (sumStay / countStay).toFixed(2) : "0.00";
+
+      document.getElementById("avgPagesPerVisitor").textContent = avgPagesPerVisitor;
+      document.getElementById("avgStayTime").textContent = avgStayTime;
+
+      // Top PV / UV / PV-UV / 停留时间 / 明细
+      const sortedByPV = [...cleanRows].sort((a, b) => b.pv - a.pv);
+      const sortedByUV = [...cleanRows].sort((a, b) => b.uv - a.uv);
+      const withStay = cleanRows.filter((r) => r.staySec > 0).sort((a, b) => b.staySec - a.staySec);
+
+      const topByPV = sortedByPV.slice(0, 15);
+      const topByUV = sortedByUV.slice(0, 15);
+      const pvUvTop = sortedByPV.slice(0, 20);
+      const stayTop = withStay.slice(0, 20);
+      const topDetail = sortedByPV.slice(0, 50);
+
+      function labelFor(r) {
+        return r.title && r.title.trim() ? r.title.trim() : r.page;
+      }
+
+      // Top 页面（按 PV）
+      Plotly.newPlot(
+        "topPagesPVChart",
+        [
+          {
+            x: topByPV.map(labelFor),
+            y: topByPV.map((r) => r.pv),
+            type: "bar",
+            text: topByPV.map((r) => r.page),
+            hovertemplate: "标题: %{x}<br>URL: %{text}<br>PV: %{y}<extra></extra>",
+          },
+        ],
+        {
+          margin: { t: 20, r: 10, b: 100, l: 40 },
+          xaxis: { tickangle: -60, automargin: true },
+        }
+      );
+
+      // Top 页面（按 UV）
+      Plotly.newPlot(
+        "topPagesUVChart",
+        [
+          {
+            x: topByUV.map(labelFor),
+            y: topByUV.map((r) => r.uv),
+            type: "bar",
+            text: topByUV.map((r) => r.page),
+            hovertemplate: "标题: %{x}<br>URL: %{text}<br>UV: %{y}<extra></extra>",
+          },
+        ],
+        {
+          margin: { t: 20, r: 10, b: 100, l: 40 },
+          xaxis: { tickangle: -60, automargin: true },
+        }
+      );
+
+      // PV / UV 对比
+      Plotly.newPlot(
+        "pvUvChart",
+        [
+          {
+            x: pvUvTop.map(labelFor),
+            y: pvUvTop.map((r) => r.pv),
+            name: "PV",
+            type: "bar",
+          },
+          {
+            x: pvUvTop.map(labelFor),
+            y: pvUvTop.map((r) => r.uv),
+            name: "UV",
+            type: "bar",
+          },
+        ],
+        {
+          barmode: "group",
+          margin: { t: 20, r: 10, b: 100, l: 40 },
+          xaxis: { tickangle: -60, automargin: true },
+          legend: { orientation: "h", y: 1.15 },
+        }
+      );
+
+      // 停留时间分布
+      Plotly.newPlot(
+        "stayTimeChart",
+        [
+          {
+            x: stayTop.map(labelFor),
+            y: stayTop.map((r) => r.staySec),
+            type: "bar",
+          },
+        ],
+        {
+          margin: { t: 20, r: 10, b: 100, l: 40 },
+          xaxis: { tickangle: -60, automargin: true },
+          yaxis: { title: "平均停留时间（秒）" },
+        }
+      );
+
+      // 明细表
+      renderDetailTable("detailTable", topDetail);
+    }
+
+    function renderDetailTable(containerId, list) {
+      const container = document.getElementById(containerId);
+      if (!list || !list.length) {
+        container.innerHTML =
+          "<div style='font-size:12px;color:#6b7280;'>无数据</div>";
+        return;
+      }
+      let html = "<table class='data-table'><thead><tr>";
+      const headers = [
+        "页面标题",
+        "受访页面URL",
+        "浏览次数(PV)",
+        "独立访客(UV)",
+        "IP数",
+        "人均浏览页数",
+        "输出PV",
+        "平均停留时间(秒)",
+      ];
+      headers.forEach((h) => (html += `<th>${h}</th>`));
+      html += "</tr></thead><tbody>";
+      list.forEach((r) => {
+        html += "<tr>";
+        html += `<td>${escapeHtml(r.title || "")}</td>`;
+        html += `<td>${escapeHtml(r.page)}</td>`;
+        html += `<td>${r.pv}</td>`;
+        html += `<td>${r.uv}</td>`;
+        html += `<td>${r.ip}</td>`;
+        html += `<td>${r.ppl || ""}</td>`;
+        html += `<td>${r.outpv || ""}</td>`;
+        html += `<td>${r.staySec.toFixed(2)}</td>`;
+        html += "</tr>";
+      });
+      html += "</tbody></table>";
+      container.innerHTML = html;
+    }
+
+    function escapeHtml(val) {
+      if (val === null || val === undefined) return "";
+      return String(val)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    // ===== 自动抓取标题（方案 A：由浏览器直接请求） =====
+
+    function fetchPageTitle(url) {
+      return fetch(url, { method: "GET" })
+        .then((resp) => resp.text())
+        .then((html) => {
+          const match = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+          if (match && match[1]) {
+            return match[1].trim();
+          }
+          return "";
+        })
+        .catch((err) => {
+          console.warn("抓取标题失败:", url, err);
+          return "";
+        });
+    }
+
+    function fetchTitlesForTopPages(rows) {
+      if (!rows || !rows.length) return;
+      loadingEl.textContent = "正在尝试为 Top 页面抓取网页标题（受跨域限制影响）…";
+
+      // 只对 Top 50 PV 的页面尝试抓标题，避免请求太多
+      const sortedByPV = [...rows].sort((a, b) => b.pv - a.pv);
+      const top = sortedByPV.slice(0, 50);
+
+      const seen = new Set();
+      const tasks = [];
+      top.forEach((r) => {
+        if (!r.page || seen.has(r.page)) return;
+        seen.add(r.page);
+        tasks.push(
+          fetchPageTitle(r.page).then((title) => {
+            if (title) {
+              // 将该 title 填充到所有相同 page 的行里
+              rows.forEach((row) => {
+                if (row.page === r.page) {
+                  row.title = title;
+                }
+              });
+            }
+          })
+        );
+      });
+
+      if (!tasks.length) {
+        loadingEl.textContent = "";
+        return;
+      }
+
+      Promise.all(tasks).then(() => {
+        loadingEl.textContent = "";
+        // 标题填充完后，重新渲染一次，让图表和表里用标题展示
+        renderAll(rows);
+      });
+    }
+  </script>
+  </div>
+
+  <!-- 授权层脚本 -->
+  <script>
+    const TOOL_ID = "page-traffic";
+    const STORAGE_KEY = `wechat_dashboard_auth_${TOOL_ID}`;
+    const INLINE_AUTH_CODES = {
+      tools: {
+        "page-traffic": {
+          codes: {
+            "PTD-2025-1A2B": "标准授权",
+            "PTD-2025-3C4D": "标准授权",
+            "PTD-2025-5E6F": "标准授权",
+            "PTD-2025-7G8H": "标准授权",
+            "PTD-2025-9I0J": "标准授权",
+            "PTD-2025-1K2L": "标准授权",
+            "PTD-2025-3M4N": "标准授权",
+            "PTD-2025-5O6P": "标准授权",
+            "PTD-2025-7Q8R": "标准授权",
+            "PTD-2025-9S0T": "标准授权"
+          }
+        }
+      }
+    };
+
+    let AUTH_CODES = {};
+    let authLoaded = false;
+
+    function loadAuthCodes() {
+      if (location.protocol === "file:") {
+        AUTH_CODES = INLINE_AUTH_CODES.tools?.[TOOL_ID]?.codes || {};
+        authLoaded = true;
+        console.log("使用内置授权码（file:// 模式）");
+        return Promise.resolve();
+      }
+
+      const url = "./auth-codes.json?" + Date.now();
+      console.log("尝试加载授权码文件：", url);
+
+      return fetch(url)
+        .then(async (res) => {
+          if (!res.ok) {
+            throw new Error("HTTP " + res.status);
+          }
+          return res.json();
+        })
+        .then((data) => {
+          console.log("auth-codes.json 加载成功");
+          if (data.tools && data.tools[TOOL_ID]) {
+            AUTH_CODES = data.tools[TOOL_ID].codes || {};
+          }
+          authLoaded = true;
+        })
+        .catch((err) => {
+          console.error("授权码文件加载失败:", err);
+          // 兜底：使用内置授权码，避免阻断使用
+          AUTH_CODES = INLINE_AUTH_CODES.tools?.[TOOL_ID]?.codes || {};
+          authLoaded = true;
+          if (!Object.keys(AUTH_CODES).length) {
+            alert("授权码文件加载失败，请检查 auth-codes.json");
+          }
+        });
+    }
+
+    const authScreen = document.getElementById("auth-screen");
+    const appRoot = document.getElementById("app");
+    const input = document.getElementById("auth-code");
+    const btn = document.getElementById("auth-btn");
+    const errElAuth = document.getElementById("auth-error");
+    const cardEl = document.getElementById("auth-card");
+
+    function shakeCard() {
+      cardEl.classList.remove("shake");
+      void cardEl.offsetWidth;
+      cardEl.classList.add("shake");
+    }
+
+    async function handleAuth() {
+      const code = (input.value || "").trim();
+
+      if (!authLoaded) {
+        await loadAuthCodes();
+      }
+
+      if (!code) {
+        errElAuth.textContent = "请输入授权码。";
+        shakeCard();
+        return;
+      }
+
+      if (!Object.prototype.hasOwnProperty.call(AUTH_CODES, code)) {
+        errElAuth.textContent = "授权码无效，请确认后重新输入。";
+        shakeCard();
+        return;
+      }
+
+      errElAuth.textContent = "";
+      showApp(code);
+    }
+
+    function showApp(code) {
+      authScreen.style.display = "none";
+      appRoot.style.display = "block";
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ code, ts: Date.now() }));
+      } catch (e) {}
+    }
+
+    (async function bootstrapAuth() {
+      await loadAuthCodes();
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.code && AUTH_CODES[parsed.code]) {
+            showApp(parsed.code);
+          }
+        }
+      } catch (e) {}
+    })();
+
+    btn.addEventListener("click", handleAuth);
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") handleAuth();
+    });
+
+    window.addEventListener("load", function() {
+      setTimeout(() => input.focus(), 80);
+    });
+  </script>
+</body>
+</html>

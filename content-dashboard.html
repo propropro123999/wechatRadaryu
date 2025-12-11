@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>内容数据函数分析工具（函数运行在浏览器）</title>
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    /* ===== 授权登录层样式 ===== */
+    * {
+      box-sizing: border-box;
+    }
+    #auth-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, rgba(56,189,248,0.15), transparent 55%),
+                  radial-gradient(circle at bottom, rgba(129,140,248,0.2), transparent 55%),
+                  rgba(15,23,42,0.96);
+      z-index: 9999;
+    }
+    .auth-card {
+      width: 360px;
+      max-width: 90vw;
+      padding: 24px 24px 20px;
+      border-radius: 20px;
+      background: rgba(15,23,42,0.92);
+      border: 1px solid rgba(148,163,184,0.25);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.7);
+      backdrop-filter: blur(18px);
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: conic-gradient(from 140deg,
+        rgba(56,189,248,0.12),
+        rgba(94,234,212,0.08),
+        rgba(129,140,248,0.05),
+        transparent 55%);
+      opacity: 0.5;
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+    .auth-inner {
+      position: relative;
+      z-index: 1;
+    }
+    .auth-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #e5e7eb;
+    }
+    .auth-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(52,211,153,0.7);
+      color: #bbf7d0;
+      background: linear-gradient(to right, rgba(22,163,74,0.25), rgba(15,118,110,0.35));
+    }
+    .auth-subtitle {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 16px;
+    }
+    .auth-label {
+      font-size: 12px;
+      color: #cbd5f5;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .auth-input {
+      width: 100%;
+      padding: 10px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(15,23,42,0.9);
+      color: #e5e7eb;
+      outline: none;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      transition: border-color 0.18s, box-shadow 0.18s, background 0.18s, transform 0.12s;
+    }
+    .auth-input::placeholder {
+      color: #6b7280;
+      letter-spacing: 0;
+    }
+    .auth-input:focus {
+      border-color: rgba(56,189,248,0.85);
+      box-shadow: 0 0 0 1px rgba(56,189,248,0.45);
+      background: rgba(15,23,42,0.98);
+      transform: translateY(-0.5px);
+    }
+    .auth-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      gap: 10px;
+    }
+    .auth-btn {
+      flex: 0 0 auto;
+      border: none;
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      background: linear-gradient(135deg,#38bdf8,#6366f1);
+      color: #f9fafb;
+      box-shadow: 0 12px 30px rgba(37,99,235,0.45);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: transform 0.12s, box-shadow 0.12s, filter 0.12s;
+      white-space: nowrap;
+    }
+    .auth-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+      box-shadow: 0 16px 40px rgba(37,99,235,0.55);
+    }
+    .auth-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 8px 24px rgba(15,23,42,0.9);
+      filter: brightness(0.97);
+    }
+    .auth-hint {
+      font-size: 11px;
+      color: #64748b;
+      text-align: left;
+      flex: 1;
+    }
+    .auth-meta {
+      margin-top: 12px;
+      font-size: 11px;
+      color: #64748b;
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .auth-error {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #fecaca;
+      min-height: 14px;
+    }
+    .auth-card.shake {
+      animation: shake 0.26s ease-in-out;
+    }
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-3px); }
+      100% { transform: translateX(0); }
+    }
+
+    /* Dashboard 根节点：初始隐藏，授权后显示 */
+    #app {
+      display: none;
+    }
+
+    /* ======== Dashboard 样式 ======== */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Microsoft YaHei",
+        sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f7;
+    }
+    .topbar {
+      background: #111827;
+      color: #e5e7eb;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar-title {
+      font-size: 16px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* 醒目的上传按钮（方案 A） */
+    .upload-btn {
+      background: linear-gradient(135deg,#3b82f6,#6366f1);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 4px 12px rgba(99,102,241,0.35);
+      transition: transform .12s, box-shadow .12s, filter .12s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 8px;
+      white-space: nowrap;
+    }
+    .upload-btn input {
+      display: none;
+    }
+    .upload-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+      box-shadow: 0 8px 20px rgba(99,102,241,0.45);
+    }
+
+    .topbar-spacer {
+      flex: 1;
+    }
+
+    /* 顶部提示条（方案 C） */
+    .upload-hint-bar {
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 12px;
+      padding: 6px 16px;
+      border-bottom: 1px solid #fcd34d;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .container {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+    h1 {
+      font-size: 26px;
+      margin-bottom: 6px;
+    }
+    h2 {
+      font-size: 20px;
+      margin: 24px 0 12px;
+    }
+    .sub-title {
+      color: #6b7280;
+      margin-bottom: 18px;
+      font-size: 13px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+    .card-label {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .card-value {
+      font-size: 22px;
+      font-weight: 600;
+      color: #111827;
+    }
+    .chart-block {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      margin-bottom: 20px;
+    }
+    .chart {
+      width: 100%;
+      height: 340px;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .data-table th,
+    .data-table td {
+      border: 1px solid #e5e7eb;
+      padding: 6px 8px;
+    }
+    .rank-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    #loading{font-size:12px;color:#6b7280;margin-top:6px;}
+    #error{font-size:12px;color:#b91c1c;margin-top:6px;}
+
+    /* ===== 使用说明卡片 UI ===== */
+    .usage-card {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 12px 16px 4px;
+      margin-bottom: 20px;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+      border: 1px solid rgba(148,163,184,0.35);
+    }
+    .usage-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .usage-icon-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 30% 20%, #e0f2fe, #eff6ff);
+      font-size: 18px;
+    }
+    .usage-title-block {
+      flex: 1;
+      min-width: 0;
+    }
+    .usage-title-main {
+      font-size: 15px;
+      font-weight: 600;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .usage-tag {
+      font-size: 11px;
+      padding: 1px 8px;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #16a34a;
+      border: 1px solid rgba(34,197,94,0.35);
+      white-space: nowrap;
+    }
+    .usage-title-sub {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+    .usage-chip {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: #4b5563;
+      margin-right: 6px;
+      white-space: nowrap;
+    }
+    .usage-chevron {
+      font-size: 16px;
+      color: #6b7280;
+      transition: transform 0.16s ease;
+    }
+    .usage-chevron.expanded {
+      transform: rotate(180deg);
+    }
+    .usage-card-body {
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.7;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed #e5e7eb;
+    }
+    .usage-card-body ul {
+      padding-left: 18px;
+      margin: 4px 0 10px;
+    }
+    .usage-card-body h4 {
+      margin: 10px 0 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    /* ===== 首次使用弹窗样式 ===== */
+    .usage-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9998;
+      backdrop-filter: blur(3px);
+    }
+    .usage-modal-card {
+      width: min(420px, 92vw);
+      background: #f9fafb;
+      border-radius: 18px;
+      padding: 18px 18px 14px;
+      box-shadow: 0 22px 60px rgba(15,23,42,0.45);
+      border: 1px solid rgba(148,163,184,0.5);
+    }
+    .usage-modal-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .usage-modal-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 30% 20%, #bfdbfe, #eff6ff);
+      font-size: 18px;
+    }
+    .usage-modal-title-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: #111827;
+    }
+    .usage-modal-body {
+      font-size: 13px;
+      color: #4b5563;
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+    .usage-modal-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .usage-modal-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      background: linear-gradient(135deg,#3b82f6,#6366f1);
+      color: #f9fafb;
+      box-shadow: 0 12px 30px rgba(37,99,235,0.45);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .usage-modal-btn:hover {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+    .usage-modal-skip {
+      font-size: 12px;
+      color: #6b7280;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 授权层 -->
+  <div id="auth-screen">
+    <div class="auth-card" id="auth-card">
+      <div class="auth-inner">
+        <div class="auth-title">
+          🔐 内部数据访问
+          <span class="auth-badge">Authorization Required</span>
+        </div>
+        <div class="auth-subtitle">
+          请输入授权码访问「内容表现 Dashboard」。本页仅供经授权的内部成员 / 合作方使用。
+        </div>
+
+        <label class="auth-label" for="auth-code">授权码</label>
+        <input
+          id="auth-code"
+          class="auth-input"
+          type="text"
+          placeholder="例如：ICV-2025-7QAF"
+          autocomplete="off"
+        />
+
+        <div class="auth-actions">
+          <div class="auth-hint">每个授权码对应一次发放对象，可按需分发。</div>
+          <button class="auth-btn" id="auth-btn">确认进入</button>
+        </div>
+
+        <div class="auth-error" id="auth-error"></div>
+
+        <div class="auth-meta">
+          <span id="auth-info-version">当前版本：WeChat 内容 Dashboard</span>
+          <span id="auth-info-tag">未授权</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 真正的 Dashboard 根节点：授权后显示 -->
+  <div id="app">
+    <div class="topbar">
+      <div class="topbar-title">内容数据函数分析工具（运行在浏览器）</div>
+      <label class="upload-btn">
+        📤 选择表格文件（CSV / XLSX）
+        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" />
+      </label>
+      <div class="topbar-spacer"></div>
+    </div>
+
+    <!-- 顶部提示条 -->
+    <div class="upload-hint-bar">
+      ⚠️ 使用前请先点击上方「📤 选择表格文件（CSV / XLSX）」导入公众号内容数据。
+    </div>
+
+    <div class="container">
+      <h1>内容数据函数分析工具</h1>
+      <div class="sub-title" id="dateRange">按内容维度的阅读、分享、转化分析</div>
+
+      <!-- 首次使用弹窗 -->
+      <div id="usageModal" class="usage-modal-backdrop">
+        <div class="usage-modal-card">
+          <div class="usage-modal-title">
+            <div class="usage-modal-icon">👋</div>
+            <div class="usage-modal-title-text">欢迎使用公众号内容表现 Dashboard</div>
+          </div>
+          <div class="usage-modal-body">
+            这是一个在 <b>本地浏览器运行</b> 的数据分析工具，不会把 Excel / CSV
+            上传到云端。<br />
+            建议先快速浏览一下下方的「使用说明」，再开始选取公众号导出的数据表。
+          </div>
+          <div class="usage-modal-actions">
+            <div class="usage-modal-skip" id="usageModalSkip">
+              直接进入，不再提示
+            </div>
+            <button class="usage-modal-btn" id="usageModalBtn">
+              👍 我知道了，开始使用
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 使用说明卡片（可折叠） -->
+      <div class="usage-card" id="usageCard">
+        <div class="usage-card-header" id="usageToggle">
+          <div class="usage-icon-wrap">📘</div>
+          <div class="usage-title-block">
+            <div class="usage-title-main">
+              使用说明 · Dashboard 使用指南
+              <span class="usage-tag">首次使用建议阅读</span>
+            </div>
+            <div class="usage-title-sub">
+              支持 CSV / XLSX，本地解析公众号内容维度数据，生成阅读 / 分享 / 完读 / 四象限等分析。如不会使用联系我 -luyu
+            </div>
+          </div>
+          <div class="usage-chip">点击折叠 / 展开</div>
+          <div class="usage-chevron expanded" id="usageChevron">⌄</div>
+        </div>
+        <div class="usage-card-body" id="usageBody">
+          <h4>0）Excel 从哪里下载？（公众号后台）</h4>
+          <ul>
+            <li>登录公众号后台，左侧导航进入 <b>「数据分析 &gt; 内容分析」</b>；</li>
+            <li>上方切换到 <b>「已发表内容 &gt; 已通知内容」</b>；</li>
+            <li>在右侧点击 <b>「下载数据明细」</b>，即可获得本工具使用的 Excel / CSV 文件。</li>
+          </ul>
+          <div style="margin:6px 0 14px;">
+            <img
+              src="wechat-export-location.png"
+              alt="公众号后台下载内容分析数据明细的位置示意图"
+              style="max-width:100%;border-radius:10px;border:1px solid #e5e7eb;display:block;"
+            />
+            <div style="font-size:11px;color:#6b7280;margin-top:4px;">
+              示例：在「数据分析 &gt; 内容分析 &gt; 已通知内容」右侧，点击「下载数据明细」导出 Excel。
+            </div>
+          </div>
+
+          <h4>1）工具简介</h4>
+          <ul>
+            <li>导入公众号后台导出的 CSV / XLSX 内容维度数据；</li>
+            <li>自动识别标题、阅读次数、分享次数、完读率等字段；</li>
+            <li>一键生成多种图表与 Top 榜单；</li>
+            <li>所有计算在本地浏览器完成，不上传任何数据。</li>
+          </ul>
+
+          <h4>2）基础使用流程</h4>
+          <ul>
+            <li><b>Step 1：</b> 输入授权码，进入 Dashboard 主界面；</li>
+            <li><b>Step 2：</b> 先顶部点击「📤 上传表格文件（CSV / XLSX）」并选择导出的数据表；</li>
+            <li><b>Step 3：</b> 等待解析完成，页面会自动刷新图表和榜单，无需手动运行。</li>
+          </ul>
+
+          <h4>3）页面模块概览</h4>
+          <ul>
+            <li>Summary 总览卡片：文章数、阅读、分享、完读率等核心指标；</li>
+            <li>Top10 阅读柱状图 &amp; 阅读 × 分享散点图；</li>
+            <li>完读率 / 送达阅读率排行榜（Top50）；</li>
+            <li>内容明细表（按阅读次数 Top100）；</li>
+            <li>11 组关键指标 TOP 榜单；</li>
+            <li>阅读 × 总分享次数四象限分析（附自动生成洞察说明）。</li>
+          </ul>
+
+          <h4>4）四象限图说明</h4>
+          <ul>
+            <li>以样本中位数为界，自动划分「高 / 低阅读」与「高 / 低分享」；</li>
+            <li>「高阅读 · 高分享」通常是头部爆款内容；</li>
+            <li>「低阅读 · 高分享」可以作为小众但高口碑内容参考；</li>
+            <li>文案优化或推送策略调整可以重点观察各象限占比变化。</li>
+          </ul>
+
+          <h4>5）小提示</h4>
+          <ul>
+            <li>建议使用 Chrome / Edge 浏览器访问；</li>
+            <li>尽量保留公众号默认导出的字段名，避免字段无法识别；</li>
+            <li>授权码仅保存在当前浏览器 localStorage 中，下次访问会自动登录。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div id="loading"></div>
+      <div id="error"></div>
+
+      <!-- Summary 卡片 -->
+      <div class="cards" id="summaryCards" style="display:none;">
+        <div class="card">
+          <div class="card-label">文章总数</div>
+          <div class="card-value" id="totalArticles">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">总阅读次数</div>
+          <div class="card-value" id="totalReadCount">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">总阅读人数</div>
+          <div class="card-value" id="totalReaders">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">总分享次数</div>
+          <div class="card-value" id="totalShareCount">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">总送达人数</div>
+          <div class="card-value" id="totalDelivered">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">平均送达阅读率</div>
+          <div class="card-value" id="avgDeliverReadRate">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">平均阅读完成率</div>
+          <div class="card-value" id="avgFinishRate">-</div>
+        </div>
+      </div>
+
+      <h2>二、Top 内容表现</h2>
+      <div class="chart-block">
+        <div class="chart-title">Top10 内容（按总阅读次数）</div>
+        <div id="topReadChart" class="chart"></div>
+      </div>
+
+      <div class="chart-block">
+        <div class="chart-title">阅读次数 vs 分享次数</div>
+        <div id="readShareScatter" class="chart"></div>
+      </div>
+
+      <h2>三、转化与完成度</h2>
+      <div class="chart-block">
+        <div class="chart-title">阅读完成率（Top50）</div>
+        <div id="finishRateChart" class="chart"></div>
+      </div>
+
+      <div class="chart-block">
+        <div class="chart-title">送达阅读率（Top50）</div>
+        <div id="deliverRateChart" class="chart"></div>
+      </div>
+
+      <h2>四、内容明细（Top100 按阅读次数）</h2>
+      <div class="chart-block">
+        <div class="chart-title">内容明细表</div>
+        <div id="detailTable"></div>
+      </div>
+
+      <h2>五、关键指标 TOP 榜单</h2>
+      <div class="chart-block">
+        <div class="chart-title">核心指标 Top3 榜单</div>
+        <div id="keyRanks" class="rank-grid"></div>
+      </div>
+
+      <!-- 六、阅读 × 总分享次数四象限分析 -->
+      <h2>六、阅读 × 总分享次数四象限分析</h2>
+      <div class="chart-block">
+        <div class="chart-title">阅读量 vs 总分享次数（四象限）</div>
+        <div id="quadrantChart" class="chart"></div>
+        <div id="quadrantInsight" style="font-size:12px;color:#6b7280;margin-top:8px;"></div>
+      </div>
+
+      <div class="footer" style="font-size:11px;color:#9ca3af;margin-top:24px;text-align:center;">
+        本页面仅在本地浏览器中运行，不会上传任何数据。
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Dashboard 脚本 ===== -->
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const loadingEl = document.getElementById("loading");
+    const errorEl = document.getElementById("error");
+
+    fileInput.addEventListener("change", handleFile);
+
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      loadingEl.textContent = "解析中，请稍候…";
+      errorEl.textContent = "";
+
+      const reader = new FileReader();
+      reader.onload = evt => {
+        try {
+          const workbook = XLSX.read(evt.target.result, { type: "array" });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+          process(rows);
+        } catch (err) {
+          console.error(err);
+          errorEl.textContent = "文件解析失败，请检查格式或另存为 UTF-8 后再试。";
+        }
+        loadingEl.textContent = "";
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function num(v) {
+      if (v === null || v === undefined || v === "") return 0;
+      return Number(String(v).replace(/,/g, "")) || 0;
+    }
+    function pct(v) {
+      if (!v) return 0;
+      const s = String(v).trim();
+      if (s.endsWith("%")) return parseFloat(s.slice(0, -1)) || 0;
+      return parseFloat(s) || 0;
+    }
+    function dateParse(v) {
+      let d = new Date(v);
+      if (!isNaN(d)) return d;
+      if (typeof v === "number")
+        return new Date(Math.round((v - 25569) * 86400 * 1000));
+      return null;
+    }
+    function dateFmt(d) {
+      if (!d) return "";
+      return (
+        d.getFullYear() +
+        "-" +
+        String(d.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(d.getDate()).padStart(2, "0")
+      );
+    }
+
+    function findCol(names, cols) {
+      for (const n of names) if (cols.includes(n)) return n;
+      return null;
+    }
+
+    function process(rows) {
+      if (!rows.length) {
+        errorEl.textContent = "文件为空";
+        return;
+      }
+
+      const cols = Object.keys(rows[0]);
+
+      const colTitle = findCol(["内容标题", "标题"], cols);
+      const colTime = findCol(["发表时间", "发布时间"], cols);
+      const colReadUser = findCol(["总阅读人数"], cols);
+      const colReadCount = findCol(["总阅读次数"], cols);
+      const colShareCount = findCol(["总分享次数"], cols);
+      const colFirstShare = findCol(["首次分享次数"], cols);
+      const colShareRead = findCol(["分享产生阅读次数"], cols);
+      const colFinishRate = findCol(["阅读完成率", "阅读完成率(%)"], cols);
+      const colDeliverRate = findCol(["送达阅读率", "送达阅读率(%)"], cols);
+      const colMsgRead = findCol(["公众号消息阅读次数"], cols);
+      const colDelivered = findCol(["送达人数"], cols);
+      const colFollow = findCol(["阅读后关注人数"], cols);
+
+      if (!colTitle || !colReadCount) {
+        errorEl.textContent = "缺少必要字段：内容标题、总阅读次数";
+        return;
+      }
+
+      let data = rows.map(r => {
+        const readUser = num(r[colReadUser]);
+        const shareCount = num(r[colShareCount]);
+        const firstShare = num(r[colFirstShare]);
+        const shareRead = num(r[colShareRead]);
+        const follow = num(r[colFollow]);
+        const time = dateParse(r[colTime]);
+
+        return {
+          title: r[colTitle],
+          time,
+          readUser,
+          readCount: num(r[colReadCount]),
+          shareCount,
+          firstShare,
+          shareRead,
+          finishRate: pct(r[colFinishRate]),
+          deliverRate: pct(r[colDeliverRate]),
+          msgRead: num(r[colMsgRead]),
+          delivered: num(r[colDelivered]),
+          follow,
+
+          // 首次分享率（%）
+          firstShareRate:
+            readUser > 0 ? (firstShare / readUser) * 100 : 0,
+
+          // 每次分享带来的阅读数
+          readPerShare:
+            shareCount > 0 ? (shareRead / shareCount) : 0,
+
+          // 阅读后关注率（%）
+          attentionRate:
+            readUser > 0
+              ? (follow / readUser) * 100
+              : 0
+        };
+      });
+
+      renderSummary(data);
+      renderTopRead(data);
+      renderReadShare(data);
+      renderFinishRate(data);
+      renderDeliverRate(data);
+      renderDetail(data);
+      renderRanks(data);
+      renderQuadrant(data); // 四象限分析
+    }
+
+    function renderSummary(data) {
+      document.getElementById("summaryCards").style.display = "grid";
+
+      document.getElementById("totalArticles").textContent = data.length;
+      document.getElementById("totalReadCount").textContent = sum(data, "readCount");
+      document.getElementById("totalReaders").textContent = sum(data, "readUser");
+      document.getElementById("totalShareCount").textContent = sum(data, "shareCount");
+      document.getElementById("totalDelivered").textContent = sum(data, "delivered");
+
+      document.getElementById("avgDeliverReadRate").textContent =
+        avg(data, "deliverRate").toFixed(2) + "%";
+      document.getElementById("avgFinishRate").textContent =
+        avg(data, "finishRate").toFixed(2) + "%";
+
+      const times = data.map(d => d.time).filter(Boolean);
+      if (times.length) {
+        const min = new Date(Math.min(...times));
+        const max = new Date(Math.max(...times));
+        document.getElementById("dateRange").textContent =
+          "时间范围：" + dateFmt(min) + " ~ " + dateFmt(max);
+      }
+    }
+
+    function sum(arr, key) {
+      return arr.reduce((a, b) => a + (b[key] || 0), 0);
+    }
+    function avg(arr, key) {
+      const v = arr.map(r => r[key]).filter(v => v > 0);
+      return v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0;
+    }
+
+    function topN(arr, key, n = 3) {
+      return arr
+        .filter(r => r[key] > 0)
+        .sort((a, b) => b[key] - a[key])
+        .slice(0, n);
+    }
+
+    function renderTopRead(data) {
+      const top = data
+        .slice()
+        .sort((a, b) => b.readCount - a.readCount)
+        .slice(0, 10);
+
+      Plotly.newPlot("topReadChart", [
+        {
+          x: top.map(x => x.title),
+          y: top.map(x => x.readCount),
+          type: "bar"
+        }
+      ], {
+        margin: { b: 120 }
+      });
+    }
+
+    function renderReadShare(data) {
+      Plotly.newPlot("readShareScatter", [
+        {
+          x: data.map(x => x.readCount),
+          y: data.map(x => x.shareCount),
+          mode: "markers",
+          type: "scatter",
+          text: data.map(x => x.title)
+        }
+      ], {
+        xaxis: { title: "阅读次数" },
+        yaxis: { title: "分享次数" }
+      });
+    }
+
+    function renderFinishRate(data) {
+      const list = data
+        .filter(x => x.finishRate > 0)
+        .sort((a, b) => b.finishRate - a.finishRate)
+        .slice(0, 50);
+
+      Plotly.newPlot("finishRateChart", [
+        {
+          x: list.map(x => x.title),
+          y: list.map(x => x.finishRate),
+          type: "bar"
+        }
+      ], { margin: { b: 120 } });
+    }
+
+    function renderDeliverRate(data) {
+      const list = data
+        .filter(x => x.deliverRate > 0)
+        .sort((a, b) => b.deliverRate - a.deliverRate)
+        .slice(0, 50);
+
+      Plotly.newPlot("deliverRateChart", [
+        {
+          x: list.map(x => x.title),
+          y: list.map(x => x.deliverRate),
+          type: "bar"
+        }
+      ], { margin: { b: 120 } });
+    }
+
+    function renderDetail(data) {
+      const top = data
+        .slice()
+        .sort((a, b) => b.readCount - a.readCount)
+        .slice(0, 100);
+
+      let html = "<table class='data-table'><thead><tr>";
+      const headers = [
+        "内容标题", "发表时间", "总阅读人数", "总阅读次数",
+        "总分享次数", "首次分享次数", "分享产生阅读次数",
+        "阅读完成率(%)", "送达阅读率(%)",
+        "公众号消息阅读次数", "送达人数", "阅读后关注人数"
+      ];
+      headers.forEach(h => html += `<th>${h}</th>`);
+      html += "</tr></thead><tbody>";
+
+      top.forEach(r => {
+        html += "<tr>";
+        html += `<td>${escapeHtml(r.title)}</td>`;
+        html += `<td>${r.time ? dateFmt(r.time) : ""}</td>`;
+        html += `<td>${r.readUser}</td>`;
+        html += `<td>${r.readCount}</td>`;
+        html += `<td>${r.shareCount}</td>`;
+        html += `<td>${r.firstShare}</td>`;
+        html += `<td>${r.shareRead}</td>`;
+        html += `<td>${r.finishRate.toFixed(2)}</td>`;
+        html += `<td>${r.deliverRate.toFixed(2)}</td>`;
+        html += `<td>${r.msgRead}</td>`;
+        html += `<td>${r.delivered}</td>`;
+        html += `<td>${r.follow}</td>`;
+        html += "</tr>";
+      });
+
+      html += "</tbody></table>";
+      document.getElementById("detailTable").innerHTML = html;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;");
+    }
+
+    function renderRanks(data) {
+      let html = "";
+
+      const rankItems = [
+        ["阅读表现 TOP3（按阅读次数）", "readCount", ""],
+        ["公众号消息阅读次数 TOP3", "msgRead", ""],
+        ["完读率 TOP3", "finishRate", "%"],
+        ["分享意愿 TOP3（按首次分享率）", "firstShareRate","%"],
+        ["分享动力 TOP3（按首次分享次数）", "firstShare", ""],
+        ["二次传播 TOP3（按分享产生阅读）", "shareRead", ""],
+        ["分享效率 TOP3（每次分享带来阅读）", "readPerShare",""],
+        ["分享规模 TOP3（总分享次数）", "shareCount", ""],
+        ["关注新增贡献 TOP3", "follow", ""],
+        ["标题吸引力 TOP3（送达阅读率）", "deliverRate", "%"],
+        ["用户关注引力 TOP3", "attentionRate", "%"]
+      ];
+
+      rankItems.forEach(([title, key, suffix]) => {
+        const top = topN(data, key, 3);
+        if (!top.length) return;
+
+        html += `<div class="rank-block-item">
+          <div style="font-size:13px;font-weight:600;margin-bottom:6px;">${title}</div>
+          <table class='data-table'><thead><tr>
+            <th>排名</th><th>内容标题</th><th>值</th>
+          </tr></thead><tbody>`;
+
+        top.forEach((r, i) => {
+          html += `<tr>
+            <td>${i + 1}</td>
+            <td>${escapeHtml(r.title)}</td>
+            <td>${r[key].toFixed ? r[key].toFixed(2) : r[key]}${suffix}</td>
+          </tr>`;
+        });
+
+        html += "</tbody></table></div>";
+      });
+
+      document.getElementById("keyRanks").innerHTML = html;
+    }
+
+    // 阅读 × 总分享次数四象限分析
+    function renderQuadrant(data) {
+      const points = data
+        .filter(d => d.readCount > 0 && d.shareCount > 0)
+        .map(d => ({
+          title: d.title,
+          read: d.readCount,
+          share: d.shareCount
+        }));
+
+      const insightEl = document.getElementById("quadrantInsight");
+
+      if (!points.length) {
+        insightEl.textContent = "暂无足够的阅读与分享数据，暂无法绘制四象限分析。";
+        return;
+      }
+
+      const reads = points.map(p => p.read).slice().sort((a, b) => a - b);
+      const shares = points.map(p => p.share).slice().sort((a, b) => a - b);
+
+      function median(arr) {
+        if (!arr.length) return 0;
+        const n = arr.length;
+        const mid = Math.floor(n / 2);
+        return n % 2 === 1
+          ? arr[mid]
+          : (arr[mid - 1] + arr[mid]) / 2;
+      }
+
+      const readMid = median(reads);
+      const shareMid = median(shares);
+
+      const minRead = Math.min(...reads);
+      const maxRead = Math.max(...reads);
+      const minShare = Math.min(...shares);
+      const maxShare = Math.max(...shares);
+
+      const xPadding = (maxRead - minRead) * 0.1;
+      const yPadding = (maxShare - minShare) * 0.1;
+
+      const xMinRange = Math.max(0, minRead - xPadding);
+      const xMaxRange = maxRead + xPadding;
+      const yMinRange = Math.max(0, minShare - yPadding);
+      const yMaxRange = maxShare + yPadding;
+
+      const xCenter = (xMinRange + xMaxRange) / 2;
+      const yCenter = (yMinRange + yMaxRange) / 2;
+
+      const q1 = [];
+      const q2 = [];
+      const q3 = [];
+      const q4 = [];
+
+      points.forEach(p => {
+        if (p.read >= readMid && p.share >= shareMid) {
+          q1.push(p);
+        } else if (p.read < readMid && p.share >= shareMid) {
+          q2.push(p);
+        } else if (p.read < readMid && p.share < shareMid) {
+          q3.push(p);
+        } else {
+          q4.push(p);
+        }
+      });
+
+      function makeTrace(list, name, symbol) {
+        return {
+          x: list.map(p => p.read),
+          y: list.map(p => p.share),
+          mode: "markers",
+          type: "scatter",
+          name,
+          text: list.map(p => p.title),
+          marker: {
+            size: 9,
+            symbol
+          }
+        };
+      }
+
+      Plotly.newPlot("quadrantChart", [
+        makeTrace(q1, "高阅读 · 高分享", "circle"),
+        makeTrace(q2, "低阅读 · 高分享", "triangle-up"),
+        makeTrace(q3, "低阅读 · 低分享", "square"),
+        makeTrace(q4, "高阅读 · 低分享", "diamond")
+      ], {
+        xaxis: {
+          title: "总阅读次数",
+          zeroline: false,
+          range: [xMinRange, xMaxRange]
+        },
+        yaxis: {
+          title: "总分享次数",
+          zeroline: false,
+          range: [yMinRange, yMaxRange]
+        },
+        shapes: [
+          {
+            type: "line",
+            x0: readMid,
+            x1: readMid,
+            y0: yMinRange,
+            y1: yMaxRange,
+            line: { dash: "dot", width: 1 }
+          },
+          {
+            type: "line",
+            x0: xMinRange,
+            x1: xMaxRange,
+            y0: shareMid,
+            y1: shareMid,
+            line: { dash: "dot", width: 1 }
+          }
+        ],
+        margin: { t: 30 }
+      });
+
+      const total = points.length;
+      const pct = n => ((n / total) * 100).toFixed(1);
+
+      insightEl.innerHTML =
+        `基于 ${total} 篇具备「阅读 + 总分享次数」数据的内容，使用样本中位数作为高/低分界：` +
+        `总阅读次数中位数约为 <b>${Math.round(readMid)}</b>，总分享次数中位数约为 <b>${Math.round(shareMid)}</b>。<br>` +
+        `各象限文章数量与占比分别为：` +
+        `高阅读·高分享 ${q1.length} 篇（${pct(q1.length)}%），` +
+        `低阅读·高分享 ${q2.length} 篇（${pct(q2.length)}%），` +
+        `低阅读·低分享 ${q3.length} 篇（${pct(q3.length)}%），` +
+        `高阅读·低分享 ${q4.length} 篇（${pct(q4.length)}%）。`;
+    }
+  </script>
+
+  <!-- ===== 授权逻辑脚本 + 使用说明交互 ===== -->
+  <script>
+    const TOOL_ID = "content-analysis";
+    const STORAGE_KEY = `wechat_dashboard_auth_${TOOL_ID}`;
+    const USAGE_INTRO_KEY = `wechat_dashboard_intro_seen_${TOOL_ID}`;
+    // 本地文件模式下（file://）无法 fetch，本地内置授权码兜底
+    const INLINE_AUTH_CODES = {
+      tools: {
+        "content-analysis": {
+          codes: {
+            "ICV-2025-7QAF": "标准授权",
+            "ICV-2025-P3ZD": "标准授权",
+            "ICV-2025-L8XK": "标准授权",
+            "ICV-2025-G2MW": "标准授权",
+            "ICV-2025-R9CE": "标准授权",
+            "ICV-2025-H4VU": "标准授权",
+            "ICV-2025-Y1SN": "标准授权",
+            "ICV-2025-K5BJ": "标准授权",
+            "ICV-2025-X7TP": "标准授权",
+            "ICV-2025-W6QD": "标准授权"
+          }
+        }
+      }
+    };
+
+    // 动态加载授权码
+    let AUTH_CODES = {};
+    let authLoaded = false;
+
+    function loadAuthCodes() {
+      // file:// 下直接用内置授权码，避免 fetch 被浏览器拦截
+      if (location.protocol === "file:") {
+        AUTH_CODES = INLINE_AUTH_CODES.tools?.[TOOL_ID]?.codes || {};
+        authLoaded = true;
+        console.log("使用内置授权码（file:// 模式）");
+        return Promise.resolve();
+      }
+      const url = "./auth-codes.json?" + Date.now();
+      console.log("尝试加载授权码文件：", url);
+
+      return fetch(url)
+        .then(async (res) => {
+          if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            console.error("auth-codes.json 响应异常：", res.status, res.statusText, text);
+            throw new Error("HTTP " + res.status);
+          }
+          return res.json();
+        })
+        .then((data) => {
+          console.log("auth-codes.json 加载成功：", data);
+          // 提取当前工具的授权码
+          if (data.tools && data.tools[TOOL_ID]) {
+            AUTH_CODES = data.tools[TOOL_ID].codes || {};
+          } else if (typeof data === 'object') {
+            // 兼容旧格式
+            AUTH_CODES = data;
+          }
+          authLoaded = true;
+        })
+        .catch((err) => {
+          console.error("授权码文件加载失败:", err);
+          // 兜底：如果有内置授权码则继续使用，避免阻断使用
+          AUTH_CODES = INLINE_AUTH_CODES.tools?.[TOOL_ID]?.codes || {};
+          authLoaded = true;
+          if (!Object.keys(AUTH_CODES).length) {
+            alert("授权码文件加载失败：\n" +
+              "1）确认根目录存在 auth-codes.json\n" +
+              "2）确认部署后可以直接访问 /auth-codes.json\n" +
+              "3）确认文件内容是合法 JSON（无多余逗号/注释）");
+          }
+        });
+    }
+
+    const authScreen = document.getElementById("auth-screen");
+    const appRoot = document.getElementById("app");
+    const input = document.getElementById("auth-code");
+    const btn = document.getElementById("auth-btn");
+    const errElAuth = document.getElementById("auth-error");
+    const cardEl = document.getElementById("auth-card");
+    const infoTag = document.getElementById("auth-info-tag");
+
+    function initUsageGuide() {
+      const card = document.getElementById("usageCard");
+      const body = document.getElementById("usageBody");
+      const chevron = document.getElementById("usageChevron");
+      const toggle = document.getElementById("usageToggle");
+      const modal = document.getElementById("usageModal");
+      const modalBtn = document.getElementById("usageModalBtn");
+      const modalSkip = document.getElementById("usageModalSkip");
+
+      if (!card || !body || !chevron || !toggle) return;
+
+      let expanded = true;
+      function setExpanded(state) {
+        expanded = state;
+        body.style.display = state ? "block" : "none";
+        if (state) {
+          chevron.classList.add("expanded");
+        } else {
+          chevron.classList.remove("expanded");
+        }
+      }
+
+      setExpanded(true);
+
+      toggle.addEventListener("click", function () {
+        setExpanded(!expanded);
+      });
+
+      const seen = (function () {
+        try {
+          return localStorage.getItem(USAGE_INTRO_KEY);
+        } catch (e) {
+          return null;
+        }
+      })();
+
+      if (!seen && modal) {
+        modal.style.display = "flex";
+      }
+
+      function closeModalAndRemember() {
+        if (modal) modal.style.display = "none";
+        try {
+          localStorage.setItem(USAGE_INTRO_KEY, "1");
+        } catch (e) {}
+      }
+
+      if (modalBtn) {
+        modalBtn.addEventListener("click", closeModalAndRemember);
+      }
+      if (modalSkip) {
+        modalSkip.addEventListener("click", closeModalAndRemember);
+      }
+    }
+
+    function showApp(code) {
+      const label = AUTH_CODES[code] || "已授权访问";
+      infoTag.textContent = label;
+      authScreen.style.display = "none";
+      appRoot.style.display = "block";
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ code, label, ts: Date.now() })
+        );
+      } catch (e) {}
+      try {
+        initUsageGuide();
+      } catch (e) {
+        console.warn("initUsageGuide error:", e);
+      }
+    }
+
+    function shakeCard() {
+      cardEl.classList.remove("shake");
+      void cardEl.offsetWidth;
+      cardEl.classList.add("shake");
+    }
+
+    async function handleAuth() {
+      const code = (input.value || "").trim();
+
+      if (!authLoaded) {
+        await loadAuthCodes();
+      }
+
+      if (!code) {
+        errElAuth.textContent = "请输入授权码。";
+        shakeCard();
+        return;
+      }
+      if (!Object.prototype.hasOwnProperty.call(AUTH_CODES, code)) {
+        errElAuth.textContent = "授权码无效，请确认后重新输入。";
+        shakeCard();
+        return;
+      }
+      errElAuth.textContent = "";
+      showApp(code);
+    }
+
+    (async function bootstrapAuth() {
+      await loadAuthCodes();
+
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.code && AUTH_CODES[parsed.code]) {
+          showApp(parsed.code);
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
+
+    btn.addEventListener("click", function () {
+      handleAuth();
+    });
+
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") handleAuth();
+    });
+
+    window.addEventListener("load", function() {
+      setTimeout(() => input.focus(), 80);
+    });
+  </script>
+</body>
+</html>
