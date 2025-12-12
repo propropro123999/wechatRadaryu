@@ -970,15 +970,23 @@
         });
       }
 
+      // 临时：直接跳过授权，显示应用（测试用）
+      const authScreenEl = document.getElementById("auth-screen");
+      const appRootEl = document.getElementById("app");
+      if (authScreenEl && appRootEl) {
+        console.log("跳过授权验证，直接显示应用");
+        authScreenEl.style.display = "none";
+        appRootEl.style.display = "block";
+        return;
+      }
+
+      // 如果上面的直接操作失败，使用原来的方式
       if (!initAuthElements()) {
         console.error("初始化授权元素失败");
         return;
       }
 
       console.log("授权元素初始化成功");
-
-      // 临时：直接跳过授权，显示应用
-      console.log("跳过授权验证，直接显示应用");
       showApp("test");
 
       // 注释掉授权相关代码，方便测试
