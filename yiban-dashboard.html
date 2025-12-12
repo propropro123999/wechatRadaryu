@@ -853,23 +853,35 @@
       return fetch(url)
         .then(async (res) => {
           if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            console.error("auth-codes.json 响应异常：", res.status, res.statusText, text);
             throw new Error("HTTP " + res.status);
           }
           return res.json();
         })
         .then((data) => {
-          console.log("auth-codes.json 加载成功");
+          console.log("auth-codes.json 加载成功：", data);
+          // 提取当前工具的授权码
           if (data.tools && data.tools[TOOL_ID]) {
             AUTH_CODES = data.tools[TOOL_ID].codes || {};
+          } else if (typeof data === 'object') {
+            // 兼容旧格式
+            AUTH_CODES = data;
           }
           authLoaded = true;
+          console.log("授权码加载完成，可用数量:", Object.keys(AUTH_CODES).length);
         })
         .catch((err) => {
           console.error("授权码文件加载失败:", err);
+          // 兜底：如果有内置授权码则继续使用，避免阻断使用
           AUTH_CODES = INLINE_AUTH_CODES.tools?.[TOOL_ID]?.codes || {};
           authLoaded = true;
+          console.log("使用内置授权码兜底，可用数量:", Object.keys(AUTH_CODES).length);
           if (!Object.keys(AUTH_CODES).length) {
-            alert("授权码文件加载失败，请检查 auth-codes.json");
+            alert("授权码文件加载失败：\n" +
+              "1）确认根目录存在 auth-codes.json\n" +
+              "2）确认部署后可以直接访问 /auth-codes.json\n" +
+              "3）确认文件内容是合法 JSON（无多余逗号/注释）");
           }
         });
     }
@@ -899,14 +911,17 @@
     }
 
     async function handleAuth() {
+      console.log("handleAuth 被调用");
       if (!input || !errElAuth) {
-        console.error("授权元素未初始化");
+        console.error("授权元素未初始化", { input, errElAuth });
         return;
       }
 
       const code = (input.value || "").trim();
+      console.log("输入的授权码:", code);
 
       if (!authLoaded) {
+        console.log("授权码未加载，开始加载...");
         await loadAuthCodes();
       }
 
@@ -917,14 +932,17 @@
       }
 
       console.log("验证授权码:", code);
-      console.log("可用授权码:", Object.keys(AUTH_CODES));
+      console.log("可用授权码列表:", Object.keys(AUTH_CODES));
+      console.log("授权码对象:", AUTH_CODES);
 
       if (!Object.prototype.hasOwnProperty.call(AUTH_CODES, code)) {
+        console.log("授权码验证失败:", code, "不在列表中");
         errElAuth.textContent = "授权码无效，请确认后重新输入。";
         shakeCard();
         return;
       }
 
+      console.log("授权码验证成功，显示应用");
       errElAuth.textContent = "";
       showApp(code);
     }
@@ -944,6 +962,7 @@
     }
 
     (async function bootstrapAuth() {
+      console.log("开始初始化授权系统");
       // 等待 DOM 加载完成
       if (document.readyState === "loading") {
         await new Promise((resolve) => {
@@ -956,6 +975,8 @@
         return;
       }
 
+      console.log("授权元素初始化成功");
+
       await loadAuthCodes();
       console.log("授权码加载完成，可用数量:", Object.keys(AUTH_CODES).length);
 
@@ -964,6 +985,7 @@
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed && parsed.code && AUTH_CODES[parsed.code]) {
+            console.log("发现已保存的授权码，自动登录");
             showApp(parsed.code);
             return;
           }
@@ -973,13 +995,25 @@
       }
 
       // 绑定事件
-      btn.addEventListener("click", handleAuth);
+      console.log("绑定事件监听器");
+      btn.addEventListener("click", function(e) {
+        console.log("按钮点击事件触发");
+        e.preventDefault();
+        handleAuth();
+      });
       input.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") handleAuth();
+        if (e.key === "Enter") {
+          console.log("回车键触发");
+          e.preventDefault();
+          handleAuth();
+        }
       });
 
       setTimeout(() => {
-        if (input) input.focus();
+        if (input) {
+          input.focus();
+          console.log("输入框已聚焦");
+        }
       }, 80);
     })();
   </script>
