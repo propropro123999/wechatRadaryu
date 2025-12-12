@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>壹伴数据分析工具（本地版）</title>
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    /* ===== 授权层样式 ===== */
+    * { box-sizing: border-box; }
+    #auth-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.96);
+      z-index: 9999;
+    }
+    .auth-card {
+      width: 360px;
+      max-width: 90vw;
+      padding: 24px;
+      border-radius: 16px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+    .auth-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #111827;
+    }
+    .auth-subtitle {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 16px;
+    }
+    .auth-label {
+      font-size: 12px;
+      color: #374151;
+      margin-bottom: 6px;
+      display: block;
+      font-weight: 500;
+    }
+    .auth-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+      color: #111827;
+      outline: none;
+      font-size: 13px;
+      margin-bottom: 14px;
+      box-sizing: border-box;
+    }
+    .auth-input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .auth-btn {
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      color: white;
+      box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+      transition: all 0.2s ease;
+    }
+    .auth-btn:hover {
+      transform: translateY(-2px);
+    }
+    .auth-error {
+      margin-top: 10px;
+      font-size: 11px;
+      color: #dc2626;
+      min-height: 16px;
+    }
+    .auth-card.shake {
+      animation: shake 0.3s ease-in-out;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(6px); }
+      75% { transform: translateX(-3px); }
+    }
+    #app { display: none; }
+
+    /* ===== Dashboard 样式 ===== */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Microsoft YaHei",
+        sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f7;
+    }
+    .topbar {
+      background: #111827;
+      color: #e5e7eb;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .file-input {
+      background: #111827;
+      border: 1px solid #4b5563;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: #e5e7eb;
+      cursor: pointer;
+    }
+    .hint {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+    .container {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+    h1 {
+      font-size: 26px;
+      margin-bottom: 6px;
+    }
+    h2 {
+      font-size: 20px;
+      margin: 24px 0 12px;
+    }
+    .sub-title {
+      color: #6b7280;
+      margin-bottom: 18px;
+      font-size: 13px;
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background-color: #eef2ff;
+      color: #4f46e5;
+      font-size: 11px;
+      margin-left: 8px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+    .card-label {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .card-value {
+      font-size: 22px;
+      font-weight: 600;
+      color: #111827;
+    }
+    .card-desc {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+    .chart-block {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      margin-bottom: 20px;
+    }
+    .chart-title {
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    .chart-subtitle {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+    .chart {
+      width: 100%;
+      height: 340px;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .data-table th,
+    .data-table td {
+      border: 1px solid #e5e7eb;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    .data-table th {
+      background-color: #f9fafb;
+      font-weight: 600;
+    }
+    .data-table tbody tr:nth-child(odd) {
+      background-color: #fdfdfd;
+    }
+    #loading {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 8px;
+    }
+    #error {
+      font-size: 13px;
+      color: #b91c1c;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <!-- 授权层 -->
+  <div id="auth-screen">
+    <div class="auth-card" id="auth-card">
+      <div class="auth-title">🔐 壹伴数据分析工具</div>
+      <div class="auth-subtitle">请输入授权码访问本工具</div>
+
+      <label class="auth-label" for="auth-code">授权码</label>
+      <input
+        id="auth-code"
+        class="auth-input"
+        type="text"
+        placeholder="例如：YB-2025-A1B2"
+        autocomplete="off"
+      />
+
+      <button class="auth-btn" id="auth-btn">确认进入</button>
+
+      <div class="auth-error" id="auth-error"></div>
+    </div>
+  </div>
+
+  <!-- 真正的应用 -->
+  <div id="app">
+    <div class="topbar">
+      <div class="topbar-title">壹伴数据分析工具（本地版）</div>
+      <label class="file-input">
+        选择 Excel 文件
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" />
+      </label>
+      <div class="hint">
+        支持壹伴插件导出的 Excel 表格，自动识别阅读、分享、互动等字段
+      </div>
+    </div>
+
+    <div class="container">
+      <h1>壹伴数据分析 Dashboard</h1>
+      <div class="sub-title" id="dateRange">
+        请先在上方选择壹伴导出的 Excel 文件
+        <span class="tag">离线本地分析，不会上传数据</span>
+      </div>
+
+      <div id="loading"></div>
+      <div id="error"></div>
+
+      <!-- 汇总卡片 -->
+      <div class="cards" id="summaryCards" style="display:none;">
+        <div class="card">
+          <div class="card-label">文章总数</div>
+          <div class="card-value" id="totalArticles">-</div>
+          <div class="card-desc">统计周期内的文章数量</div>
+        </div>
+        <div class="card">
+          <div class="card-label">总阅读人数</div>
+          <div class="card-value" id="totalReaders">-</div>
+          <div class="card-desc">累计阅读人数</div>
+        </div>
+        <div class="card">
+          <div class="card-label">总阅读量</div>
+          <div class="card-value" id="totalReadCount">-</div>
+          <div class="card-desc">累计阅读次数</div>
+        </div>
+        <div class="card">
+          <div class="card-label">总分享量</div>
+          <div class="card-value" id="totalShareCount">-</div>
+          <div class="card-desc">累计分享次数</div>
+        </div>
+        <div class="card">
+          <div class="card-label">总点赞数</div>
+          <div class="card-value" id="totalLikes">-</div>
+          <div class="card-desc">累计点赞数</div>
+        </div>
+        <div class="card">
+          <div class="card-label">新增关注</div>
+          <div class="card-value" id="totalFollows">-</div>
+          <div class="card-desc">累计新增关注人数</div>
+        </div>
+        <div class="card">
+          <div class="card-label">平均打开率</div>
+          <div class="card-value" id="avgOpenRate">-</div>
+          <div class="card-desc">平均打开率</div>
+        </div>
+        <div class="card">
+          <div class="card-label">平均分享率</div>
+          <div class="card-value" id="avgShareRate">-</div>
+          <div class="card-desc">平均分享率</div>
+        </div>
+      </div>
+
+      <!-- 一、阅读来源分析 -->
+      <h2>一、阅读来源分布</h2>
+      <div class="chart-block">
+        <div class="chart-title">阅读来源构成</div>
+        <div class="chart-subtitle">公众号、朋友圈、看一看、搜一搜等来源的阅读量分布</div>
+        <div id="readSourceChart" class="chart"></div>
+      </div>
+
+      <!-- 二、Top 内容表现 -->
+      <h2>二、Top 内容表现</h2>
+      <div class="chart-block">
+        <div class="chart-title">Top10 内容（按阅读人数）</div>
+        <div id="topReadChart" class="chart"></div>
+      </div>
+
+      <div class="chart-block">
+        <div class="chart-title">阅读人数 vs 分享量</div>
+        <div id="readShareScatter" class="chart"></div>
+      </div>
+
+      <!-- 三、互动分析 -->
+      <h2>三、互动表现</h2>
+      <div class="chart-block">
+        <div class="chart-title">点赞数 Top10</div>
+        <div id="topLikesChart" class="chart"></div>
+      </div>
+
+      <div class="chart-block">
+        <div class="chart-title">分享量 Top10</div>
+        <div id="topShareChart" class="chart"></div>
+      </div>
+
+      <!-- 四、转化率分析 -->
+      <h2>四、转化率分析</h2>
+      <div class="chart-block">
+        <div class="chart-title">打开率分布（Top20）</div>
+        <div id="openRateChart" class="chart"></div>
+      </div>
+
+      <div class="chart-block">
+        <div class="chart-title">分享率分布（Top20）</div>
+        <div id="shareRateChart" class="chart"></div>
+      </div>
+
+      <!-- 五、时间趋势 -->
+      <h2>五、发布趋势</h2>
+      <div class="chart-block">
+        <div class="chart-title">按日期发布数量</div>
+        <div id="dailyChart" class="chart"></div>
+      </div>
+
+      <div class="chart-block">
+        <div class="chart-title">按小时发布分布</div>
+        <div id="hourChart" class="chart"></div>
+      </div>
+
+      <!-- 六、内容明细 -->
+      <h2>六、内容明细（Top50 按阅读人数）</h2>
+      <div class="chart-block">
+        <div class="chart-title">内容明细表</div>
+        <div id="detailTable"></div>
+      </div>
+
+      <div class="footer" style="font-size:11px;color:#9ca3af;margin-top:24px;text-align:center;">
+        本页面仅在本地浏览器中处理你的 Excel 数据，不会上传到网络。
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const loadingEl = document.getElementById("loading");
+    const errorEl = document.getElementById("error");
+
+    fileInput.addEventListener("change", handleFile, false);
+
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      loadingEl.textContent = "正在读取并解析 Excel 数据，请稍候…";
+      errorEl.textContent = "";
+
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        try {
+          const data = evt.target.result;
+          const workbook = XLSX.read(data, { type: "array" });
+          const firstSheet = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheet];
+          const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+          processData(json);
+          loadingEl.textContent = "";
+        } catch (err) {
+          console.error(err);
+          errorEl.textContent = "解析 Excel 失败，请确认文件格式是否正确。";
+          loadingEl.textContent = "";
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function num(v) {
+      if (v === null || v === undefined || v === "") return 0;
+      const s = String(v).replace(/,/g, "").replace(/%/g, "");
+      const n = Number(s);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function pct(v) {
+      if (!v) return 0;
+      const s = String(v).trim();
+      if (s.endsWith("%")) return parseFloat(s.slice(0, -1)) || 0;
+      return parseFloat(s) || 0;
+    }
+
+    function parseDate(value) {
+      if (!value) return null;
+      if (value instanceof Date) return value;
+      if (typeof value === "number") {
+        return new Date(Math.round((value - 25569) * 86400 * 1000));
+      }
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return null;
+      return d;
+    }
+
+    function formatDate(d) {
+      if (!d) return "";
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function findCol(candidates, cols) {
+      for (const c of candidates) {
+        if (cols.includes(c)) return c;
+      }
+      return null;
+    }
+
+    function processData(rows) {
+      if (!rows || !rows.length) {
+        errorEl.textContent = "Excel 中没有数据。";
+        return;
+      }
+
+      const allCols = Object.keys(rows[0]);
+
+      // 根据壹伴表格字段进行匹配
+      const colMap = {
+        title: findCol(["标题", "文章标题", "内容标题"], allCols) || allCols[0],
+        date: findCol(["日期", "阅读", "发布时间", "发表时间"], allCols),
+        hour: findCol(["小时"], allCols),
+        readCount: findCol(["阅读量"], allCols),
+        readers: findCol(["阅读人数"], allCols),
+        officialAccount: findCol(["公众号"], allCols),
+        readingGroup: findCol(["阅读组"], allCols),
+        moments: findCol(["朋友圈"], allCols),
+        look: findCol(["看一看"], allCols),
+        search: findCol(["搜一搜"], allCols),
+        follows: findCol(["新增关注"], allCols),
+        shareCount: findCol(["分享量"], allCols),
+        sharers: findCol(["分享人数"], allCols),
+        sessionShare: findCol(["会话分享"], allCols),
+        officialShare: findCol(["公众号分享"], allCols),
+        otherShare: findCol(["其他分享"], allCols),
+        likes: findCol(["点赞数", "点赞量"], allCols),
+        dislikes: findCol(["点踩数"], allCols),
+        tips: findCol(["打赏数"], allCols),
+        openRate: findCol(["打开率"], allCols),
+        shareRate: findCol(["分享率"], allCols),
+        readConversionRate: findCol(["阅读转化率"], allCols),
+        completionRate: findCol(["完读率"], allCols),
+        interactionRate: findCol(["互动率"], allCols),
+      };
+
+      const data = [];
+      let minDate = null;
+      let maxDate = null;
+      const dailyMap = {};
+      const hourMap = {};
+
+      rows.forEach((row) => {
+        const title = row[colMap.title] || "";
+        const date = colMap.date ? parseDate(row[colMap.date]) : null;
+        const hour = colMap.hour ? num(row[colMap.hour]) : null;
+
+        const item = {
+          title,
+          date,
+          hour,
+          readCount: num(row[colMap.readCount]),
+          readers: num(row[colMap.readers]),
+          officialAccount: num(row[colMap.officialAccount]),
+          readingGroup: num(row[colMap.readingGroup]),
+          moments: num(row[colMap.moments]),
+          look: num(row[colMap.look]),
+          search: num(row[colMap.search]),
+          follows: num(row[colMap.follows]),
+          shareCount: num(row[colMap.shareCount]),
+          sharers: num(row[colMap.sharers]),
+          sessionShare: num(row[colMap.sessionShare]),
+          officialShare: num(row[colMap.officialShare]),
+          otherShare: num(row[colMap.otherShare]),
+          likes: num(row[colMap.likes]),
+          dislikes: num(row[colMap.dislikes]),
+          tips: num(row[colMap.tips]),
+          openRate: pct(row[colMap.openRate]),
+          shareRate: pct(row[colMap.shareRate]),
+          readConversionRate: pct(row[colMap.readConversionRate]),
+          completionRate: pct(row[colMap.completionRate]),
+          interactionRate: pct(row[colMap.interactionRate]),
+        };
+
+        data.push(item);
+
+        if (date) {
+          if (!minDate || date < minDate) minDate = date;
+          if (!maxDate || date > maxDate) maxDate = date;
+
+          const dayStr = formatDate(date);
+          dailyMap[dayStr] = (dailyMap[dayStr] || 0) + 1;
+
+          if (hour !== null && hour >= 0 && hour < 24) {
+            hourMap[hour] = (hourMap[hour] || 0) + 1;
+          }
+        }
+      });
+
+      if (minDate && maxDate) {
+        document.getElementById("dateRange").innerHTML =
+          `时间范围：${formatDate(minDate)} ~ ${formatDate(maxDate)}` +
+          `<span class="tag">用于数据分析展示</span>`;
+      }
+
+      renderSummary(data);
+      renderReadSource(data);
+      renderTopRead(data);
+      renderReadShare(data);
+      renderTopLikes(data);
+      renderTopShare(data);
+      renderOpenRate(data);
+      renderShareRate(data);
+      renderDailyChart(dailyMap);
+      renderHourChart(hourMap);
+      renderDetailTable(data);
+    }
+
+    function renderSummary(data) {
+      document.getElementById("summaryCards").style.display = "grid";
+
+      const total = data.length;
+      const totalReaders = data.reduce((s, r) => s + r.readers, 0);
+      const totalReadCount = data.reduce((s, r) => s + r.readCount, 0);
+      const totalShareCount = data.reduce((s, r) => s + r.shareCount, 0);
+      const totalLikes = data.reduce((s, r) => s + r.likes, 0);
+      const totalFollows = data.reduce((s, r) => s + r.follows, 0);
+
+      const openRates = data.map((r) => r.openRate).filter((v) => v > 0);
+      const avgOpenRate =
+        openRates.length > 0
+          ? (openRates.reduce((a, b) => a + b, 0) / openRates.length).toFixed(2)
+          : "0.00";
+
+      const shareRates = data.map((r) => r.shareRate).filter((v) => v > 0);
+      const avgShareRate =
+        shareRates.length > 0
+          ? (shareRates.reduce((a, b) => a + b, 0) / shareRates.length).toFixed(2)
+          : "0.00";
+
+      document.getElementById("totalArticles").textContent = total;
+      document.getElementById("totalReaders").textContent = totalReaders.toLocaleString();
+      document.getElementById("totalReadCount").textContent = totalReadCount.toLocaleString();
+      document.getElementById("totalShareCount").textContent = totalShareCount.toLocaleString();
+      document.getElementById("totalLikes").textContent = totalLikes.toLocaleString();
+      document.getElementById("totalFollows").textContent = totalFollows.toLocaleString();
+      document.getElementById("avgOpenRate").textContent = avgOpenRate + "%";
+      document.getElementById("avgShareRate").textContent = avgShareRate + "%";
+    }
+
+    function renderReadSource(data) {
+      const officialAccount = data.reduce((s, r) => s + r.officialAccount, 0);
+      const readingGroup = data.reduce((s, r) => s + r.readingGroup, 0);
+      const moments = data.reduce((s, r) => s + r.moments, 0);
+      const look = data.reduce((s, r) => s + r.look, 0);
+      const search = data.reduce((s, r) => s + r.search, 0);
+
+      Plotly.newPlot(
+        "readSourceChart",
+        [
+          {
+            x: ["公众号", "阅读组", "朋友圈", "看一看", "搜一搜"],
+            y: [officialAccount, readingGroup, moments, look, search],
+            type: "bar",
+          },
+        ],
+        { margin: { t: 20, r: 10, b: 40, l: 40 } }
+      );
+    }
+
+    function renderTopRead(data) {
+      const top = data
+        .slice()
+        .sort((a, b) => b.readers - a.readers)
+        .slice(0, 10);
+
+      Plotly.newPlot(
+        "topReadChart",
+        [
+          {
+            x: top.map((x) => x.title || "未命名"),
+            y: top.map((x) => x.readers),
+            type: "bar",
+          },
+        ],
+        { margin: { b: 120 } }
+      );
+    }
+
+    function renderReadShare(data) {
+      Plotly.newPlot(
+        "readShareScatter",
+        [
+          {
+            x: data.map((x) => x.readers),
+            y: data.map((x) => x.shareCount),
+            mode: "markers",
+            type: "scatter",
+            text: data.map((x) => x.title || "未命名"),
+          },
+        ],
+        {
+          xaxis: { title: "阅读人数" },
+          yaxis: { title: "分享量" },
+        }
+      );
+    }
+
+    function renderTopLikes(data) {
+      const top = data
+        .slice()
+        .sort((a, b) => b.likes - a.likes)
+        .slice(0, 10);
+
+      Plotly.newPlot(
+        "topLikesChart",
+        [
+          {
+            x: top.map((x) => x.title || "未命名"),
+            y: top.map((x) => x.likes),
+            type: "bar",
+          },
+        ],
+        { margin: { b: 120 } }
+      );
+    }
+
+    function renderTopShare(data) {
+      const top = data
+        .slice()
+        .sort((a, b) => b.shareCount - a.shareCount)
+        .slice(0, 10);
+
+      Plotly.newPlot(
+        "topShareChart",
+        [
+          {
+            x: top.map((x) => x.title || "未命名"),
+            y: top.map((x) => x.shareCount),
+            type: "bar",
+          },
+        ],
+        { margin: { b: 120 } }
+      );
+    }
+
+    function renderOpenRate(data) {
+      const list = data
+        .filter((x) => x.openRate > 0)
+        .sort((a, b) => b.openRate - a.openRate)
+        .slice(0, 20);
+
+      Plotly.newPlot(
+        "openRateChart",
+        [
+          {
+            x: list.map((x) => x.title || "未命名"),
+            y: list.map((x) => x.openRate),
+            type: "bar",
+          },
+        ],
+        { margin: { b: 120 }, yaxis: { title: "打开率 (%)" } }
+      );
+    }
+
+    function renderShareRate(data) {
+      const list = data
+        .filter((x) => x.shareRate > 0)
+        .sort((a, b) => b.shareRate - a.shareRate)
+        .slice(0, 20);
+
+      Plotly.newPlot(
+        "shareRateChart",
+        [
+          {
+            x: list.map((x) => x.title || "未命名"),
+            y: list.map((x) => x.shareRate),
+            type: "bar",
+          },
+        ],
+        { margin: { b: 120 }, yaxis: { title: "分享率 (%)" } }
+      );
+    }
+
+    function renderDailyChart(dailyMap) {
+      const dates = Object.keys(dailyMap).sort();
+      const counts = dates.map((d) => dailyMap[d]);
+
+      Plotly.newPlot(
+        "dailyChart",
+        [{ x: dates, y: counts, type: "bar" }],
+        { margin: { t: 20, r: 10, b: 60, l: 40 } }
+      );
+    }
+
+    function renderHourChart(hourMap) {
+      const hours = [];
+      const counts = [];
+      for (let h = 0; h < 24; h++) {
+        hours.push(h);
+        counts.push(hourMap[h] || 0);
+      }
+
+      Plotly.newPlot(
+        "hourChart",
+        [{ x: hours, y: counts, type: "bar" }],
+        { margin: { t: 20, r: 10, b: 40, l: 40 }, xaxis: { dtick: 1 } }
+      );
+    }
+
+    function renderDetailTable(data) {
+      const top = data
+        .slice()
+        .sort((a, b) => b.readers - a.readers)
+        .slice(0, 50);
+
+      let html = "<table class='data-table'><thead><tr>";
+      const headers = [
+        "标题",
+        "日期",
+        "阅读人数",
+        "阅读量",
+        "分享量",
+        "点赞数",
+        "新增关注",
+        "打开率",
+        "分享率",
+      ];
+      html += headers.map((h) => `<th>${h}</th>`).join("");
+      html += "</tr></thead><tbody>";
+
+      top.forEach((row) => {
+        html += "<tr>";
+        html += `<td>${escapeHtml(row.title || "")}</td>`;
+        html += `<td>${row.date ? formatDate(row.date) : ""}</td>`;
+        html += `<td>${row.readers}</td>`;
+        html += `<td>${row.readCount}</td>`;
+        html += `<td>${row.shareCount}</td>`;
+        html += `<td>${row.likes}</td>`;
+        html += `<td>${row.follows}</td>`;
+        html += `<td>${row.openRate.toFixed(2)}%</td>`;
+        html += `<td>${row.shareRate.toFixed(2)}%</td>`;
+        html += "</tr>";
+      });
+
+      html += "</tbody></table>";
+      document.getElementById("detailTable").innerHTML = html;
+    }
+
+    function escapeHtml(val) {
+      if (val === null || val === undefined) return "";
+      return String(val)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+  </script>
+
+  <!-- 授权层脚本 -->
+  <script>
+    const TOOL_ID = "yiban-analysis";
+    const STORAGE_KEY = `wechat_dashboard_auth_${TOOL_ID}`;
+    const INLINE_AUTH_CODES = {
+      tools: {
+        yiban-analysis: {
+          codes: {
+            "YB-2025-A1B2": "标准授权",
+            "YB-2025-C3D4": "标准授权",
+            "YB-2025-E5F6": "标准授权",
+            "YB-2025-G7H8": "标准授权",
+            "YB-2025-I9J0": "标准授权",
+            "YB-2025-K1L2": "标准授权",
+            "YB-2025-M3N4": "标准授权",
+            "YB-2025-O5P6": "标准授权",
+            "YB-2025-Q7R8": "标准授权",
+            "YB-2025-S9T0": "标准授权",
+          },
+        },
+      },
+    };
+
+    let AUTH_CODES = {};
+    let authLoaded = false;
+
+    function loadAuthCodes() {
+      if (location.protocol === "file:") {
+        AUTH_CODES = INLINE_AUTH_CODES.tools?.[TOOL_ID]?.codes || {};
+        authLoaded = true;
+        console.log("使用内置授权码（file:// 模式）");
+        return Promise.resolve();
+      }
+
+      const url = "./auth-codes.json?" + Date.now();
+      console.log("尝试加载授权码文件：", url);
+
+      return fetch(url)
+        .then(async (res) => {
+          if (!res.ok) {
+            throw new Error("HTTP " + res.status);
+          }
+          return res.json();
+        })
+        .then((data) => {
+          console.log("auth-codes.json 加载成功");
+          if (data.tools && data.tools[TOOL_ID]) {
+            AUTH_CODES = data.tools[TOOL_ID].codes || {};
+          }
+          authLoaded = true;
+        })
+        .catch((err) => {
+          console.error("授权码文件加载失败:", err);
+          AUTH_CODES = INLINE_AUTH_CODES.tools?.[TOOL_ID]?.codes || {};
+          authLoaded = true;
+          if (!Object.keys(AUTH_CODES).length) {
+            alert("授权码文件加载失败，请检查 auth-codes.json");
+          }
+        });
+    }
+
+    let authScreen, appRoot, input, btn, errElAuth, cardEl;
+
+    function initAuthElements() {
+      authScreen = document.getElementById("auth-screen");
+      appRoot = document.getElementById("app");
+      input = document.getElementById("auth-code");
+      btn = document.getElementById("auth-btn");
+      errElAuth = document.getElementById("auth-error");
+      cardEl = document.getElementById("auth-card");
+
+      if (!authScreen || !appRoot || !input || !btn || !errElAuth || !cardEl) {
+        console.error("授权元素未找到，请检查 DOM");
+        return false;
+      }
+      return true;
+    }
+
+    function shakeCard() {
+      if (!cardEl) return;
+      cardEl.classList.remove("shake");
+      void cardEl.offsetWidth;
+      cardEl.classList.add("shake");
+    }
+
+    async function handleAuth() {
+      if (!input || !errElAuth) {
+        console.error("授权元素未初始化");
+        return;
+      }
+
+      const code = (input.value || "").trim();
+
+      if (!authLoaded) {
+        await loadAuthCodes();
+      }
+
+      if (!code) {
+        errElAuth.textContent = "请输入授权码。";
+        shakeCard();
+        return;
+      }
+
+      console.log("验证授权码:", code);
+      console.log("可用授权码:", Object.keys(AUTH_CODES));
+
+      if (!Object.prototype.hasOwnProperty.call(AUTH_CODES, code)) {
+        errElAuth.textContent = "授权码无效，请确认后重新输入。";
+        shakeCard();
+        return;
+      }
+
+      errElAuth.textContent = "";
+      showApp(code);
+    }
+
+    function showApp(code) {
+      if (!authScreen || !appRoot) {
+        console.error("无法显示应用：元素未找到");
+        return;
+      }
+      authScreen.style.display = "none";
+      appRoot.style.display = "block";
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ code, ts: Date.now() }));
+      } catch (e) {
+        console.warn("localStorage 保存失败:", e);
+      }
+    }
+
+    (async function bootstrapAuth() {
+      // 等待 DOM 加载完成
+      if (document.readyState === "loading") {
+        await new Promise((resolve) => {
+          document.addEventListener("DOMContentLoaded", resolve);
+        });
+      }
+
+      if (!initAuthElements()) {
+        console.error("初始化授权元素失败");
+        return;
+      }
+
+      await loadAuthCodes();
+      console.log("授权码加载完成，可用数量:", Object.keys(AUTH_CODES).length);
+
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.code && AUTH_CODES[parsed.code]) {
+            showApp(parsed.code);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn("读取保存的授权信息失败:", e);
+      }
+
+      // 绑定事件
+      btn.addEventListener("click", handleAuth);
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") handleAuth();
+      });
+
+      setTimeout(() => {
+        if (input) input.focus();
+      }, 80);
+    })();
+  </script>
+</body>
+</html>
+
+
