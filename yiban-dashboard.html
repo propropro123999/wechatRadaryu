@@ -977,6 +977,12 @@
 
       console.log("授权元素初始化成功");
 
+      // 临时：直接跳过授权，显示应用
+      console.log("跳过授权验证，直接显示应用");
+      showApp("test");
+
+      // 注释掉授权相关代码，方便测试
+      /*
       await loadAuthCodes();
       console.log("授权码加载完成，可用数量:", Object.keys(AUTH_CODES).length);
 
@@ -1015,6 +1021,7 @@
           console.log("输入框已聚焦");
         }
       }, 80);
+      */
     })();
   </script>
 </body>
