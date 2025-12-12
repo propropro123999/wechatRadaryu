@@ -16,35 +16,20 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle at top, rgba(56,189,248,0.15), transparent 55%),
-                  radial-gradient(circle at bottom, rgba(129,140,248,0.2), transparent 55%),
-                  rgba(15,23,42,0.96);
+      background: rgba(255, 255, 255, 0.92);
       z-index: 9999;
+      backdrop-filter: blur(10px);
     }
     .auth-card {
       width: 360px;
       max-width: 90vw;
       padding: 24px 24px 20px;
-      border-radius: 20px;
-      background: rgba(15,23,42,0.92);
-      border: 1px solid rgba(148,163,184,0.25);
-      box-shadow: 0 24px 80px rgba(0,0,0,0.7);
-      backdrop-filter: blur(18px);
+      border-radius: 18px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 16px 48px rgba(15,23,42,0.16);
       position: relative;
       overflow: hidden;
-    }
-    .auth-card::before {
-      content: "";
-      position: absolute;
-      inset: -40%;
-      background: conic-gradient(from 140deg,
-        rgba(56,189,248,0.12),
-        rgba(94,234,212,0.08),
-        rgba(129,140,248,0.05),
-        transparent 55%);
-      opacity: 0.5;
-      mix-blend-mode: screen;
-      pointer-events: none;
     }
     .auth-inner {
       position: relative;
@@ -52,12 +37,12 @@
     }
     .auth-title {
       font-size: 18px;
-      font-weight: 600;
+      font-weight: 700;
       margin-bottom: 4px;
       display: flex;
       align-items: center;
       gap: 6px;
-      color: #e5e7eb;
+      color: #0f172a;
     }
     .auth-badge {
       font-size: 11px;
@@ -69,36 +54,37 @@
     }
     .auth-subtitle {
       font-size: 12px;
-      color: #94a3b8;
+      color: #475569;
       margin-bottom: 16px;
     }
     .auth-label {
       font-size: 12px;
-      color: #cbd5f5;
+      color: #475569;
       margin-bottom: 6px;
       display: block;
+      font-weight: 600;
     }
     .auth-input {
       width: 100%;
-      padding: 10px 11px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.35);
-      background: rgba(15,23,42,0.9);
-      color: #e5e7eb;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      background: #f8fafc;
+      color: #0f172a;
       outline: none;
       font-size: 13px;
-      letter-spacing: 0.04em;
-      transition: border-color 0.18s, box-shadow 0.18s, background 0.18s, transform 0.12s;
+      letter-spacing: 0.02em;
+      transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s ease;
     }
     .auth-input::placeholder {
-      color: #6b7280;
+      color: #94a3b8;
       letter-spacing: 0;
     }
     .auth-input:focus {
-      border-color: rgba(56,189,248,0.85);
-      box-shadow: 0 0 0 1px rgba(56,189,248,0.45);
-      background: rgba(15,23,42,0.98);
-      transform: translateY(-0.5px);
+      border-color: #bfdbfe;
+      box-shadow: 0 0 0 3px rgba(191,219,254,0.55);
+      background: #fff;
+      transform: translateY(-1px);
     }
     .auth-actions {
       display: flex;
@@ -110,30 +96,28 @@
     .auth-btn {
       flex: 0 0 auto;
       border: none;
-      border-radius: 999px;
-      padding: 9px 14px;
+      border-radius: 10px;
+      padding: 11px 16px;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 700;
       cursor: pointer;
-      background: linear-gradient(135deg,#38bdf8,#6366f1);
-      color: #f9fafb;
-      box-shadow: 0 12px 30px rgba(37,99,235,0.45);
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #ffffff;
+      box-shadow: 0 10px 24px rgba(37,99,235,0.25);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      transition: transform 0.12s, box-shadow 0.12s, filter 0.12s;
+      gap: 6px;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
       white-space: nowrap;
     }
     .auth-btn:hover {
       transform: translateY(-1px);
-      filter: brightness(1.05);
-      box-shadow: 0 16px 40px rgba(37,99,235,0.55);
+      box-shadow: 0 14px 36px rgba(37,99,235,0.32);
+      filter: brightness(1.02);
     }
     .auth-btn:active {
       transform: translateY(0);
-      box-shadow: 0 8px 24px rgba(15,23,42,0.9);
-      filter: brightness(0.97);
     }
     .auth-hint {
       font-size: 11px;
@@ -153,7 +137,7 @@
     .auth-error {
       margin-top: 8px;
       font-size: 11px;
-      color: #fecaca;
+      color: #dc2626;
       min-height: 14px;
     }
     .auth-card.shake {
@@ -179,37 +163,40 @@
         sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #f5f5f7;
+      background-color: #f7f8fa;
+      color: #0f172a;
     }
     .topbar {
-      background: #111827;
-      color: #e5e7eb;
-      padding: 10px 16px;
+      background: #ffffff;
+      color: #0f172a;
+      padding: 12px 16px;
       display: flex;
       align-items: center;
       gap: 12px;
       position: sticky;
       top: 0;
       z-index: 10;
+      border-bottom: 1px solid #e5e7eb;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
     }
     .topbar-title {
       font-size: 16px;
-      font-weight: 600;
+      font-weight: 700;
       white-space: nowrap;
     }
 
     /* 醒目的上传按钮（方案 A） */
     .upload-btn {
-      background: linear-gradient(135deg,#3b82f6,#6366f1);
+      background: linear-gradient(135deg,#3b82f6,#2563eb);
       color: #fff;
-      padding: 8px 16px;
+      padding: 9px 16px;
       border-radius: 999px;
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 13px;
+      font-weight: 700;
       cursor: pointer;
       border: none;
-      box-shadow: 0 4px 12px rgba(99,102,241,0.35);
-      transition: transform .12s, box-shadow .12s, filter .12s;
+      box-shadow: 0 8px 20px rgba(37,99,235,0.22);
+      transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -221,9 +208,10 @@
     }
     .upload-btn:hover {
       transform: translateY(-1px);
-      filter: brightness(1.08);
-      box-shadow: 0 8px 20px rgba(99,102,241,0.45);
+      box-shadow: 0 12px 28px rgba(37,99,235,0.3);
+      filter: brightness(1.02);
     }
+    .upload-btn:active { transform: translateY(0); }
 
     .topbar-spacer {
       flex: 1;
@@ -249,10 +237,12 @@
     h1 {
       font-size: 26px;
       margin-bottom: 6px;
+      color: #0f172a;
     }
     h2 {
       font-size: 20px;
       margin: 24px 0 12px;
+      color: #0f172a;
     }
     .sub-title {
       color: #6b7280;
@@ -261,15 +251,21 @@
     }
     .cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
     }
     .card {
       background: #fff;
-      border-radius: 12px;
-      padding: 14px 16px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      border-radius: 16px;
+      padding: 18px 20px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+      border: 1px solid #e5e7eb;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 26px rgba(37, 99, 235, 0.08);
     }
     .card-label {
       font-size: 13px;
@@ -277,16 +273,22 @@
       margin-bottom: 4px;
     }
     .card-value {
-      font-size: 22px;
-      font-weight: 600;
-      color: #111827;
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
     }
     .chart-block {
       background: #fff;
-      border-radius: 12px;
-      padding: 14px 16px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      border-radius: 16px;
+      padding: 18px 20px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
       margin-bottom: 20px;
+      border: 1px solid #e5e7eb;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+    .chart-block:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(37, 99, 235, 0.08);
     }
     .chart {
       width: 100%;
@@ -294,13 +296,28 @@
     }
     .data-table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0;
       font-size: 12px;
     }
     .data-table th,
     .data-table td {
-      border: 1px solid #e5e7eb;
-      padding: 6px 8px;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 10px 12px;
+      text-align: left;
+    }
+    .data-table th {
+      background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+      font-weight: 700;
+      color: #374151;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .data-table tbody tr:nth-child(odd) {
+      background-color: #fbfdff;
+    }
+    .data-table tbody tr:hover {
+      background-color: #f3f6ff;
+      transition: background-color 0.15s ease;
     }
     .rank-grid {
       display: grid;

@@ -14,67 +14,72 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(15, 23, 42, 0.96);
+      background: rgba(255, 255, 255, 0.92);
       z-index: 9999;
+      backdrop-filter: blur(8px);
     }
     .auth-card {
       width: 360px;
       max-width: 90vw;
       padding: 24px;
       border-radius: 16px;
-      background: white;
+      background: #ffffff;
       border: 1px solid #e5e7eb;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 16px 48px rgba(15, 23, 42, 0.12);
     }
     .auth-title {
       font-size: 18px;
-      font-weight: 600;
+      font-weight: 700;
       margin-bottom: 4px;
-      color: #111827;
+      color: #0f172a;
     }
     .auth-subtitle {
       font-size: 12px;
-      color: #6b7280;
+      color: #475569;
       margin-bottom: 16px;
     }
     .auth-label {
       font-size: 12px;
-      color: #374151;
+      color: #475569;
       margin-bottom: 6px;
       display: block;
-      font-weight: 500;
+      font-weight: 600;
     }
     .auth-input {
       width: 100%;
       padding: 10px 12px;
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid #d1d5db;
-      background: #f9fafb;
-      color: #111827;
+      background: #f8fafc;
+      color: #0f172a;
       outline: none;
       font-size: 13px;
       margin-bottom: 14px;
       box-sizing: border-box;
+      transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s ease;
     }
     .auth-input:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      border-color: #bfdbfe;
+      box-shadow: 0 0 0 3px rgba(191, 219, 254, 0.55);
+      transform: translateY(-1px);
     }
     .auth-btn {
       width: 100%;
       border: none;
-      border-radius: 8px;
-      padding: 10px 16px;
+      border-radius: 10px;
+      padding: 11px 16px;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
-      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
       color: white;
-      box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
-      transition: all 0.2s ease;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
     }
     .auth-btn:hover {
-      transform: translateY(-2px);
+      transform: translateY(-1px);
+      box-shadow: 0 14px 36px rgba(37, 99, 235, 0.32);
+      filter: brightness(1.02);
     }
     .auth-error {
       margin-top: 10px;
@@ -100,35 +105,44 @@
         sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #f5f5f7;
+      background-color: #f7f8fa;
+      color: #0f172a;
     }
     .topbar {
-      background: #111827;
-      color: #e5e7eb;
-      padding: 10px 16px;
+      background: #ffffff;
+      color: #0f172a;
+      padding: 12px 16px;
       display: flex;
       align-items: center;
       gap: 12px;
       position: sticky;
       top: 0;
       z-index: 10;
+      border-bottom: 1px solid #e5e7eb;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
     }
     .topbar-title {
       font-size: 16px;
-      font-weight: 600;
+      font-weight: 700;
     }
     .file-input {
-      background: #111827;
-      border: 1px solid #4b5563;
+      background: #ffffff;
+      border: 1px solid #d1d5db;
       border-radius: 999px;
-      padding: 4px 10px;
+      padding: 6px 12px;
       font-size: 12px;
-      color: #e5e7eb;
+      color: #0f172a;
       cursor: pointer;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+    }
+    .file-input:hover {
+      border-color: #bfdbfe;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.08);
+      transform: translateY(-1px);
     }
     .hint {
       font-size: 11px;
-      color: #9ca3af;
+      color: #6b7280;
     }
     .container {
       max-width: 1220px;
@@ -138,10 +152,12 @@
     h1 {
       font-size: 26px;
       margin-bottom: 6px;
+      color: #0f172a;
     }
     h2 {
       font-size: 20px;
       margin: 24px 0 12px;
+      color: #0f172a;
     }
     .sub-title {
       color: #6b7280;
@@ -159,15 +175,21 @@
     }
     .cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
     }
     .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 14px 16px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 18px 20px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 26px rgba(37, 99, 235, 0.08);
     }
     .card-label {
       font-size: 13px;
@@ -175,30 +197,38 @@
       margin-bottom: 4px;
     }
     .card-value {
-      font-size: 22px;
-      font-weight: 600;
-      color: #111827;
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
     }
     .card-desc {
       font-size: 11px;
-      color: #9ca3af;
-      margin-top: 4px;
+      color: #94a3b8;
+      margin-top: 6px;
     }
     .chart-block {
-      background: #fff;
-      border-radius: 12px;
-      padding: 14px 16px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 18px 20px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
       margin-bottom: 20px;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+    .chart-block:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(37, 99, 235, 0.08);
     }
     .chart-title {
-      font-size: 15px;
+      font-size: 16px;
       margin-bottom: 4px;
+      color: #0f172a;
+      font-weight: 700;
     }
     .chart-subtitle {
       font-size: 12px;
       color: #6b7280;
-      margin-bottom: 6px;
+      margin-bottom: 10px;
     }
     .chart {
       width: 100%;
@@ -206,21 +236,28 @@
     }
     .data-table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0;
       font-size: 12px;
     }
     .data-table th,
     .data-table td {
-      border: 1px solid #e5e7eb;
-      padding: 6px 8px;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 10px 12px;
       text-align: left;
     }
     .data-table th {
-      background-color: #f9fafb;
-      font-weight: 600;
+      background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+      font-weight: 700;
+      color: #374151;
+      border-bottom: 2px solid #e5e7eb;
     }
     .data-table tbody tr:nth-child(odd) {
-      background-color: #fdfdfd;
+      background-color: #fbfdff;
+    }
+    .data-table tbody tr:hover {
+      background-color: #f3f6ff;
+      transition: background-color 0.15s ease;
     }
     #loading {
       font-size: 13px;
@@ -1176,7 +1213,7 @@
     const STORAGE_KEY = `wechat_dashboard_auth_${TOOL_ID}`;
     const INLINE_AUTH_CODES = {
       tools: {
-        yiban-analysis: {
+        "yiban-analysis": {
           codes: {
             "YB-2025-A1B2": "标准授权",
             "YB-2025-C3D4": "标准授权",
