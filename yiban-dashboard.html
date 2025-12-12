@@ -484,8 +484,19 @@
     }
 
     function findCol(candidates, cols) {
+      // 先尝试精确匹配
       for (const c of candidates) {
         if (cols.includes(c)) return c;
+      }
+      // 再尝试忽略空格和大小写的匹配
+      const normalizedCols = cols.map(col => String(col).replace(/\s+/g, "").toLowerCase());
+      for (const c of candidates) {
+        const normalized = String(c).replace(/\s+/g, "").toLowerCase();
+        const index = normalizedCols.indexOf(normalized);
+        if (index !== -1) {
+          console.log(`字段匹配（忽略空格/大小写）: "${c}" → "${cols[index]}"`);
+          return cols[index];  // 返回原始字段名
+        }
       }
       return null;
     }
@@ -509,7 +520,7 @@
         officialAccount: findCol(["公众号"], allCols),
         readingGroup: findCol(["阅读组"], allCols),
         moments: findCol(["朋友圈"], allCols),
-        look: findCol(["看一看", "看一看精选", "看一看阅读数", "看一看阅读"], allCols),
+        look: findCol(["看一看", "看一看精选", "看一看阅读数", "看一看阅读", "精"], allCols),
         search: findCol(["搜一搜", "搜一搜阅读数", "搜一搜阅读"], allCols),
         follows: findCol(["新增关注", "阅读后关注", "阅读后关注人数", "关注人数", "新增关注人数"], allCols),
         shareCount: findCol(["分享量"], allCols),
@@ -522,6 +533,7 @@
         tips: findCol(["打赏数"], allCols),
         openRate: findCol(["打开率", "打开率(%)", "打开率%"], allCols),
         shareRate: findCol(["分享率", "分享率(%)", "分享率%"], allCols),
+        momentsOpenRate: findCol(["朋友圈打", "朋友圈打开率", "朋友圈打开率(%)", "朋友圈打开率%", "朋友圈打开"], allCols),
         readConversionRate: findCol(["阅读转化率"], allCols),
         completionRate: findCol(["完读率"], allCols),
         interactionRate: findCol(["互动率"], allCols),
@@ -530,6 +542,37 @@
 
       // 输出字段匹配结果，用于调试
       console.log("字段匹配结果:", colMap);
+      console.log("关键字段匹配详情:", {
+        look: colMap.look ? "✓ " + colMap.look : "✗ 未匹配",
+        momentsOpenRate: colMap.momentsOpenRate ? "✓ " + colMap.momentsOpenRate : "✗ 未匹配（将计算）",
+        moments: colMap.moments ? "✓ " + colMap.moments : "✗ 未匹配",
+        readers: colMap.readers ? "✓ " + colMap.readers : "✗ 未匹配"
+      });
+
+      // 如果字段未匹配，尝试自动查找（只执行一次）
+      if (!colMap.look) {
+        console.warn("⚠️ 看一看字段未匹配，尝试在所有字段中查找...");
+        const possibleCol = allCols.find(col => {
+          const colStr = String(col);
+          return colStr.includes("看") || colStr.toLowerCase().includes("look");
+        });
+        if (possibleCol) {
+          console.log("找到可能的字段:", possibleCol);
+          colMap.look = possibleCol;
+        }
+      }
+      if (!colMap.momentsOpenRate) {
+        console.warn("⚠️ 朋友圈打开率字段未匹配，尝试在所有字段中查找...");
+        const possibleCol = allCols.find(col => {
+          const colStr = String(col);
+          return (colStr.includes("朋友圈") && colStr.includes("打")) || 
+                 (colStr.includes("朋友圈") && (colStr.includes("打开") || colStr.includes("打开率")));
+        });
+        if (possibleCol) {
+          console.log("找到可能的字段:", possibleCol);
+          colMap.momentsOpenRate = possibleCol;
+        }
+      }
 
       const data = [];
       let minDate = null;
@@ -552,7 +595,13 @@
           readingGroup: num(row[colMap.readingGroup]),
           moments: num(row[colMap.moments]),
           look: (function() {
-            const rawValue = colMap.look ? row[colMap.look] : null;
+            if (!colMap.look) {
+              if (rows.indexOf(row) === 0) {
+                console.warn("⚠️ 看一看字段仍未匹配");
+              }
+              return 0;
+            }
+            const rawValue = row[colMap.look];
             const parsedValue = num(rawValue);
             if (rows.indexOf(row) === 0) {
               console.log("第一条数据的看一看字段:", {
@@ -624,10 +673,39 @@
           completionRate: pct(row[colMap.completionRate]),
           interactionRate: pct(row[colMap.interactionRate]),
           comments: num(row[colMap.comments]),
-          // 计算朋友圈打开率 = 朋友圈阅读数 / 阅读人数 * 100
+          // 朋友圈打开率：优先使用表头字段，如果没有则计算
           momentsOpenRate: (function() {
+            // 如果有现成的字段，直接使用
+            if (colMap.momentsOpenRate) {
+              const rawValue = row[colMap.momentsOpenRate];
+              const parsedValue = pct(rawValue);
+              if (rows.indexOf(row) === 0) {
+                console.log("第一条数据的朋友圈打开率（直接读取）:", {
+                  fieldName: colMap.momentsOpenRate,
+                  rawValue: rawValue,
+                  parsedValue: parsedValue
+                });
+              }
+              return parsedValue;
+            }
+            // 如果字段未匹配，尝试计算
+            if (rows.indexOf(row) === 0) {
+              console.warn("⚠️ 朋友圈打开率字段未匹配，将使用计算值");
+            }
+            // 计算：朋友圈阅读数 / 阅读人数 * 100
             const readers = num(row[colMap.readers]);
-            return readers > 0 ? (num(row[colMap.moments]) / readers * 100) : 0;
+            const moments = num(row[colMap.moments]);
+            const rate = readers > 0 ? (moments / readers * 100) : 0;
+            if (rows.indexOf(row) === 0) {
+              console.log("第一条数据的朋友圈打开率（计算）:", {
+                readersField: colMap.readers,
+                readersValue: readers,
+                momentsField: colMap.moments,
+                momentsValue: moments,
+                calculatedRate: rate
+              });
+            }
+            return rate;
           })(),
           // 计算留言率 = 留言数 / 阅读人数 * 100
           commentRate: (function() {
@@ -925,8 +1003,12 @@
         total: data.length,
         hasData: data.filter(item => item.look > 0).length,
         maxValue: data.length > 0 ? Math.max(...data.map(item => item.look)) : 0,
-        sampleValues: data.slice(0, 3).map(item => ({ title: item.title, look: item.look }))
+        allValues: data.map(item => item.look).slice(0, 10),  // 显示前10条的值
+        sampleValues: data.slice(0, 5).map(item => ({ title: item.title, look: item.look }))
       });
+      if (topLook.length === 0) {
+        console.warn("⚠️ 看一看 TOP 5 为空，可能原因：字段匹配失败或所有数据都是0");
+      }
       renderTop5Table("topLookTable", topLook, "看一看阅读数", (item) => item.look.toLocaleString());
 
       // 4. 分享量 TOP 5 - 只显示有数据的（>0）
@@ -970,8 +1052,17 @@
         total: data.length,
         hasData: data.filter(item => item.momentsOpenRate > 0).length,
         maxValue: data.length > 0 ? Math.max(...data.map(item => item.momentsOpenRate)) : 0,
-        sampleValues: data.slice(0, 3).map(item => ({ title: item.title, momentsOpenRate: item.momentsOpenRate }))
+        allValues: data.map(item => item.momentsOpenRate).slice(0, 10),  // 显示前10条的值
+        sampleValues: data.slice(0, 5).map(item => ({ 
+          title: item.title, 
+          momentsOpenRate: item.momentsOpenRate,
+          moments: item.moments,
+          readers: item.readers
+        }))
       });
+      if (topMomentsOpenRate.length === 0) {
+        console.warn("⚠️ 朋友圈打开率 TOP 5 为空，可能原因：字段匹配失败或所有数据都是0");
+      }
       renderTop5Table("topMomentsOpenRateTable", topMomentsOpenRate, "朋友圈打开率", (item) => item.momentsOpenRate.toFixed(2) + "%");
 
       // 7. 留言率 TOP 5 - 只显示有数据的（>0）
