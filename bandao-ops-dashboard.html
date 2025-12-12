@@ -7,6 +7,8 @@
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <!-- SheetJS 读取 Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- 词云 -->
+  <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.js"></script>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -390,6 +392,14 @@
       <div class="chart-subtitle">可支持“头部作者”“腰部作者”分层说明</div>
       <div id="publisherChart" class="chart"></div>
     </div>
+    <div class="chart-block">
+      <div class="chart-title">发布者 TOP 20（按发文数）</div>
+      <div class="chart-subtitle">发文数优先，其次按点赞数、评论数排序；支持导出 TOP 50 数据</div>
+      <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+        <button class="upload-btn" id="authorExportBtn" style="margin-left:0;">导出 TOP 50 CSV</button>
+      </div>
+      <div id="authorTopTable"></div>
+    </div>
 
     <!-- 四、Top 内容 -->
     <h2>四、爆款内容 Top 10（按点赞）</h2>
@@ -414,6 +424,9 @@
         支持“动态标题 / 产业动态标题 / 标题”等字段，依据标题统计高频词，可据此在外部工具生成词云。
       </div>
       <div id="keywordChart" class="chart"></div>
+      <div style="height:320px; margin-top:12px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(15,23,42,0.06);">
+        <canvas id="keywordCloud" style="width:100%; height:100%;"></canvas>
+      </div>
     </div>
 
     <!-- 七、主题聚类 -->
@@ -696,6 +709,33 @@
         }
       );
 
+      // 发布者 TOP20（按发文数）- 表格显示
+      // 发布者 TOP50（按发文数）- 用于导出
+      const authorTopAll = publisherNames
+        .map((name) => ({
+          发布者: name,
+          发文数: publisherMap[name].posts,
+          总点赞数: publisherMap[name].likes,
+          总评论数: publisherMap[name].comments,
+        }))
+        .sort((a, b) => {
+          if (b.发文数 !== a.发文数) return b.发文数 - a.发文数;
+          if (b.总点赞数 !== a.总点赞数) return b.总点赞数 - a.总点赞数;
+          return b.总评论数 - a.总评论数;
+        })
+        .map((item, idx) => ({ 排名: idx + 1, ...item }));
+      
+      // 表格显示 TOP 20
+      const authorTop = authorTopAll.slice(0, 20);
+      renderGenericTable("authorTopTable", authorTop);
+      
+      // 导出支持 TOP 50
+      const authorTop50 = authorTopAll.slice(0, 50);
+      const exportBtn = document.getElementById("authorExportBtn");
+      if (exportBtn) {
+        exportBtn.onclick = () => exportCSV(authorTop50, "author-top50.csv");
+      }
+
       // 四、Top10（点赞）
       allForLikeSort.sort((a, b) => b.likes - a.likes);
       const top10Like = allForLikeSort.slice(0, 10);
@@ -893,6 +933,37 @@
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
+    }
+
+    function exportCSV(data, filename) {
+      if (!data || !data.length) {
+        alert("没有数据可导出");
+        return;
+      }
+      
+      const keys = Object.keys(data[0]);
+      const headers = keys.join(",");
+      const rows = data.map((item) => {
+        return keys.map((key) => {
+          const value = item[key] ?? "";
+          // 处理包含逗号、引号或换行符的值
+          if (String(value).includes(",") || String(value).includes('"') || String(value).includes("\n")) {
+            return `"${String(value).replace(/"/g, '""')}"`;
+          }
+          return value;
+        }).join(",");
+      });
+      
+      const csvContent = [headers, ...rows].join("\n");
+      const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     function classifyTheme(title) {
