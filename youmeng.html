@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>页面访问数据分析 Dashboard（多 Sheet）</title>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+
+<style>
+:root{
+  --bg:#f6f7fb;
+  --card:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --line:#e5e7eb;
+  --shadow:0 10px 30px rgba(15,23,42,.06);
+  --shadow2:0 2px 12px rgba(15,23,42,.06);
+  --r:16px;
+  --r2:12px;
+  --primary:#2563eb;
+  --primary2:#1d4ed8;
+  --ok:#16a34a;
+  --bad:#b91c1c;
+}
+
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  padding:22px;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Microsoft YaHei", Segoe UI, Arial, sans-serif;
+  background:
+    radial-gradient(1200px 700px at 20% 10%, #eef2ff 0%, transparent 60%),
+    radial-gradient(1200px 700px at 90% 20%, #ecfeff 0%, transparent 55%),
+    var(--bg);
+  color:var(--text);
+}
+.container{ max-width:1200px; margin:0 auto; }
+
+.header{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:14px;
+}
+h1{ font-size:22px; margin:0; letter-spacing:.2px; }
+.subtitle{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:6px;
+  line-height:1.5;
+}
+.top-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:999px;
+  background:rgba(37,99,235,.08);
+  color:var(--primary2);
+  font-size:12px;
+  border:1px solid rgba(37,99,235,.15);
+}
+
+.card{
+  background:var(--card);
+  border:1px solid rgba(229,231,235,.9);
+  border-radius:var(--r);
+  box-shadow:var(--shadow2);
+}
+.upload-box{ padding:14px; margin:14px 0 18px; }
+.row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.row .hint{ font-size:12px; color:var(--muted); }
+input[type=file]{
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:#fff;
+  cursor:pointer;
+  min-width:260px;
+}
+#status{ font-size:12px; margin-top:8px; }
+#status.ok{ color:var(--ok); }
+#status.error{ color:var(--bad); }
+#summary{ font-size:12px; color:var(--muted); margin-top:4px; }
+
+.section{ margin:18px 0; }
+.section h2{
+  font-size:16px;
+  margin:0 0 10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.section h2 .small{
+  font-size:12px;
+  color:var(--muted);
+  font-weight:400;
+}
+.block{
+  padding:14px;
+  border-radius:var(--r);
+  background:var(--card);
+  border:1px solid rgba(229,231,235,.9);
+  box-shadow:var(--shadow2);
+}
+.block-title{
+  font-size:13px;
+  font-weight:800;
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  color:#111827;
+}
+.btn{
+  border:none;
+  border-radius:12px;
+  padding:9px 12px;
+  background:var(--primary);
+  color:#fff;
+  font-size:12px;
+  cursor:pointer;
+  box-shadow:0 8px 18px rgba(37,99,235,.18);
+  transition:.15s ease;
+  white-space:nowrap;
+}
+.btn:hover{ background:var(--primary2); transform:translateY(-1px); }
+.btn:active{ transform:translateY(0); }
+.btn.secondary{
+  background:#fff;
+  color:var(--text);
+  border:1px solid var(--line);
+  box-shadow:none;
+}
+.btn.secondary:hover{ background:#f8fafc; }
+
+.cards{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap:12px;
+}
+.metric{
+  padding:12px;
+  border-radius:14px;
+  border:1px solid rgba(229,231,235,.9);
+  background:linear-gradient(180deg, #fff 0%, #fbfdff 100%);
+}
+.metric .label{ font-size:12px; color:var(--muted); }
+.metric .value{ font-size:20px; font-weight:900; margin-top:4px; }
+.metric .desc{ font-size:11px; color:#94a3b8; margin-top:4px; line-height:1.4; }
+
+.chart{ width:100%; height:320px; }
+
+/* 表格不溢出：横向滚动 + URL 换行 */
+.table-wrap{
+  width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#fff;
+}
+table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  font-size:12px;
+  min-width:980px;
+}
+th, td{
+  border-bottom:1px solid var(--line);
+  padding:8px 10px;
+  vertical-align:top;
+}
+thead th{
+  position:sticky;
+  top:0;
+  background:#f8fafc;
+  z-index:1;
+  font-weight:800;
+  color:#111827;
+}
+tbody tr:hover td{ background:#fbfdff; }
+td.url, th.url{
+  max-width:560px;
+  word-break:break-all;
+  white-space:normal;
+}
+a{ color:var(--primary2); text-decoration:none; }
+a:hover{ text-decoration:underline; }
+
+.small{ font-size:12px; color:var(--muted); }
+
+/* 预览区限高：不撑爆页面 */
+.preview-box{
+  max-height:420px;
+  overflow:auto;
+  border-radius:12px;
+}
+
+/* 自检区 */
+.debug-box{
+  padding:12px 14px;
+  border-radius:var(--r);
+  border:1px solid rgba(165,243,252,.9);
+  background:linear-gradient(180deg, #ecfeff 0%, #f0f9ff 100%);
+  color:#0369a1;
+  box-shadow:var(--shadow2);
+  margin:10px 0 14px;
+  font-size:12px;
+}
+.debug-box strong{ color:#075985; }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <div class="header">
+    <div>
+      <h1>页面访问数据分析 Dashboard（多 Sheet）</h1>
+      <div class="subtitle">
+        上传包含多个 Sheet（如 Q1/Q2/Q3/Q4）的「受访页面」报表，系统在本地浏览器解析并展示多维度分析。
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="badge">本地解析 · 不上传服务器</span>
+    </div>
+  </div>
+
+  <div class="debug-box">
+    <div><strong>🔎 匹配规则自检：</strong> <span id="selfTest"></span></div>
+  </div>
+
+  <div class="card upload-box">
+    <div class="row">
+      <div class="hint">请选择 Excel 文件（.xlsx / .xls / .csv）</div>
+      <input id="fileInput" type="file" accept=".csv,.xls,.xlsx" />
+    </div>
+    <div id="status"></div>
+    <div id="summary"></div>
+  </div>
+
+  <!-- 一、整体概况 -->
+  <div class="section" id="section-overview" style="display:none;">
+    <h2>一、整体访问概况 <span class="small">（合并所有 Sheet）</span></h2>
+    <div class="cards">
+      <div class="metric">
+        <div class="label">总浏览次数（PV）</div>
+        <div class="value" id="pvTotal">-</div>
+        <div class="desc">所有页面浏览次数之和。</div>
+      </div>
+      <div class="metric">
+        <div class="label">总独立访客（UV）</div>
+        <div class="value" id="uvTotal">-</div>
+        <div class="desc">独立访客总量。</div>
+      </div>
+      <div class="metric">
+        <div class="label">平均停留时间</div>
+        <div class="value" id="avgDuration">-</div>
+        <div class="desc">仅对停留 >0 的记录求平均。</div>
+      </div>
+      <div class="metric">
+        <div class="label">平均人均浏览页数</div>
+        <div class="value" id="avgPagesPerVisit">-</div>
+        <div class="desc">对人均浏览页数（>0）求均值。</div>
+      </div>
+      <div class="metric">
+        <div class="label">记录条数</div>
+        <div class="value" id="rowCount">-</div>
+        <div class="desc">合并后的原始行数。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 二、类型分布 -->
+  <div class="section" id="section-type" style="display:none;">
+    <h2>二、按页面类型分布</h2>
+    <div class="block">
+      <div class="block-title">页面类型 PV / UV 分布</div>
+      <div id="typeChart" class="chart"></div>
+      <div id="typeTable"></div>
+    </div>
+  </div>
+
+  <!-- 三、TOP 榜 -->
+  <div class="section" id="section-top" style="display:none;">
+    <h2>三、热门页面 Top 榜</h2>
+
+    <div class="block">
+      <div class="block-title">
+        <span>热门页面 TOP 20（按 PV，跨 Sheet 汇总）</span>
+        <div class="row" style="gap:8px;">
+          <button class="btn secondary" id="btnExportTopPV">导出 TOP500（PV）CSV</button>
+          <button class="btn secondary" id="btnExportAllAgg">导出 全部聚合排行 CSV</button>
+        </div>
+      </div>
+      <div id="topPvTable"></div>
+    </div>
+
+    <div class="block" style="margin-top:12px;">
+      <div class="block-title">
+        <span>高粘性页面 TOP 20（按 平均停留秒，过滤 0 秒，跨 Sheet 汇总）</span>
+        <button class="btn secondary" id="btnExportTopDur">导出 TOP500（停留）CSV</button>
+      </div>
+      <div id="topDurationTable"></div>
+    </div>
+  </div>
+
+  <!-- 四、按 Sheet 对比 -->
+  <div class="section" id="section-sheet" style="display:none;">
+    <h2>四、按 Sheet（季度）对比</h2>
+    <div class="block">
+      <div class="block-title">各 Sheet 访问表现</div>
+      <div id="sheetTable"></div>
+      <div id="sheetChart" class="chart"></div>
+    </div>
+  </div>
+
+  <!-- 五、预览 & 调试 -->
+  <div class="section" id="section-preview" style="display:none;">
+    <h2>五、解析数据预览 & URL 类型检查 <span class="small">（排错用）</span></h2>
+
+    <div class="block">
+      <div class="block-title">前 50 行预览（支持滚动 / 横向滚动）</div>
+      <div class="preview-box">
+        <div id="preview"></div>
+      </div>
+    </div>
+
+    <div class="block" style="margin-top:12px;">
+      <div class="block-title">URL 与页面类型调试（前 20 条）</div>
+      <div id="urlTypeDebug"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/** 展示/导出数量 */
+const DISPLAY_TOP_N = 20;   // 页面展示
+const EXPORT_TOP_N  = 500;  // 导出 TOP500
+
+// ----------- 工具函数 -----------
+function num(v){
+  if(v===null || v===undefined || v==="") return 0;
+  const n = Number(String(v).replace(/,/g,""));
+  return isNaN(n) ? 0 : n;
+}
+
+// 强制从任何单元格形态里提取 URL
+function normalizeUrl(val){
+  if(val == null) return "";
+
+  const cleanUrl = (u) => (u || "")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "") // 零宽字符
+    .trim()
+    .replace(/[#?].*$/, "");              // 去 query/hash
+
+  if(typeof val === "string"){
+    const m = val.match(/https?:\/\/[^\s"']+/i);
+    return cleanUrl(m ? m[0] : val);
+  }
+
+  if(typeof val === "object"){
+    const candidates = [];
+    const keys = ["Target","target","Hyperlink","hyperlink","text","Text","url","URL","h","t","v","w"];
+    for(const k of keys){
+      if(val[k]) candidates.push(String(val[k]));
+    }
+    if(val.l && (val.l.Target || val.l.target)) candidates.push(String(val.l.Target || val.l.target));
+    try { candidates.push(JSON.stringify(val)); } catch(e) { candidates.push(String(val)); }
+
+    for(const c of candidates){
+      const m = String(c).match(/https?:\/\/[^\s"']+/i);
+      if(m) return cleanUrl(m[0]);
+    }
+    return cleanUrl(candidates[0] || "");
+  }
+
+  return cleanUrl(String(val));
+}
+
+// 去掉表头空格便于匹配
+function normalizeRowsKey(rows){
+  return rows.map(r=>{
+    const o={};
+    Object.keys(r).forEach(k=>{
+      const nk = String(k).replace(/\s+/g,"").trim();
+      o[nk] = r[k];
+    });
+    return o;
+  });
+}
+
+// 停留时间统一转秒（兼容：xx秒 / x分y秒 / 00:01:23 / 83s）
+function parseDuration(str){
+  if(!str) return 0;
+  str = String(str).trim();
+  if(!str) return 0;
+
+  if(/^\d{1,2}:\d{2}:\d{2}$/.test(str)){
+    const [h,m,s]=str.split(":").map(x=>parseInt(x,10)||0);
+    return h*3600 + m*60 + s;
+  }
+  if(/^\d{1,2}:\d{2}$/.test(str)){
+    const [m,s]=str.split(":").map(x=>parseInt(x,10)||0);
+    return m*60 + s;
+  }
+  if(/^\d+(\.\d+)?\s*[sS]$/.test(str)){
+    return parseFloat(str) || 0;
+  }
+  if(str.endsWith("秒")) return parseFloat(str) || 0;
+  if(str.includes("分")){
+    const [m,s] = str.split("分");
+    return (parseFloat(m)||0)*60 + (parseFloat(String(s).replace("秒","")) || 0);
+  }
+  return 0;
+}
+
+// 页面 ID 提取
+function extractPageId(url){
+  const u = (url || "").toString().toLowerCase();
+  if(!u) return "";
+  let m;
+  m = u.match(/postdetail\/(\d+)/);        if(m) return m[1];
+  m = u.match(/post\/(\d+)/);              if(m) return m[1];
+  m = u.match(/news\/(\d+)/);              if(m) return m[1];
+  m = u.match(/specialactivity\/(\d+)/);   if(m) return m[1];
+  m = u.match(/product\/(\d+)/);           if(m) return m[1];
+  m = u.match(/video\/(\d+)/);             if(m) return m[1];
+  return "";
+}
+
+/** ✅ 你最新的细化规则：完整 detectPageType（最终版） */
+function detectPageType(url){
+  const u = (url || "").toString().toLowerCase();
+  if(!u) return "其他";
+
+  // 半导纵横首页（根域名首页：不带路径）
+  // https://www.icviews.cn/
+  if(/^https?:\/\/(www\.)?icviews\.cn\/?$/.test(u)) return "半导纵横-首页";
+
+  // ---------------- 半导圈（semiCommunity）细分规则 ----------------
+  // 半导圈首页
+  if(u.includes("/semicommunity/latest")) return "半导圈-首页";
+
+  // 半导圈创作发布页
+  if(u.includes("/semicommunity/writepost")) return "半导圈-创作发布页";
+
+  // 半导圈专栏集合页
+  if(u.includes("/semicommunity/column")) return "半导圈-专栏集合页";
+
+  // 半导圈专栏内容页（带 ID）
+  if(/\/semicommunity\/postdetail\/\d+/.test(u)) return "半导圈-专栏内容页";
+
+  // 半导圈其他页面（兜底）
+  if(u.includes("/semicommunity/")) return "半导圈-其他";
+
+  // ---------------- 资讯（news）细分规则 ----------------
+  // 产业政策
+  if(u.includes("/news/industpolicy")) return "产业政策";
+
+  // 产研前线
+  if(u.includes("/news/prodfront")) return "产研前线";
+
+  // 产业动态（兼容 industDynamic / industryDynamic）
+  if(u.includes("/news/industrydynamic") || u.includes("/news/industdynamic")) return "产业动态";
+
+  // 资讯推荐页
+  if(u.includes("/news/recommend")) return "资讯推荐页";
+
+  // 资讯池文章（数字 ID）
+  if(u.includes("/news/") && /\/news\/\d+/.test(u)) return "资讯池文章";
+
+  // ---------------- 会议 / 活动 ----------------
+  if(u.includes("conference.icviews.cn") || u.includes("/conference/")) return "会议活动";
+  if(u.includes("/specialactivity/")) return "活动页面";
+
+  // ---------------- 产品 / 视频 / 作者 ----------------
+  if(u.includes("/products")) return "产品汇";
+  if(u.includes("/product/"))  return "产品汇";
+  if(u.includes("/video/"))    return "视频内容";
+  if(u.includes("/usercenter/")) return "作者主页";
+
+  // ---------------- 站内兜底 ----------------
+  if(u.includes("icviews.cn")) return "站内其他";
+  return "其他";
+}
+
+// CSV 导出
+function downloadCsv(filename, rows){
+  if(!rows || !rows.length){
+    alert("无数据可导出");
+    return;
+  }
+  const cols = Object.keys(rows[0]);
+  const esc = (v) => {
+    const s = (v===null || v===undefined) ? "" : String(v);
+    const needs = /[,"\n\r]/.test(s);
+    const t = s.replace(/"/g,'""');
+    return needs ? `"${t}"` : t;
+  };
+  const csv = [cols.join(",")]
+    .concat(rows.map(r => cols.map(c => esc(r[c])).join(",")))
+    .join("\n");
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// 按 URL 跨 Sheet 聚合（用于 TOP 展示 & 导出）
+function aggregateByUrl(data){
+  const m = new Map();
+
+  data.forEach(r=>{
+    const url = (r.页面URL || "").trim();
+    if(!url) return;
+
+    if(!m.has(url)){
+      m.set(url, {
+        页面URL: url,
+        页面类型: r.页面类型 || detectPageType(url),
+        页面ID: r.页面ID || extractPageId(url),
+
+        PV: 0,
+        UV: 0,
+        IP: 0,
+        输出PV: 0,
+
+        人均浏览页数_sum: 0,
+        人均浏览页数_cnt: 0,
+
+        停留秒_sum: 0,
+        停留秒_cnt: 0,
+
+        覆盖Sheet_set: new Set()
+      });
+    }
+
+    const a = m.get(url);
+    a.PV += num(r.浏览次数);
+    a.UV += num(r.独立访客);
+    a.IP += num(r.IP);
+    a.输出PV += num(r.输出PV);
+
+    const p = num(r.人均浏览页数);
+    if(p > 0){
+      a.人均浏览页数_sum += p;
+      a.人均浏览页数_cnt += 1;
+    }
+
+    const d = num(r.停留时间_秒);
+    if(d > 0){
+      a.停留秒_sum += d;
+      a.停留秒_cnt += 1;
+    }
+
+    if(r.来源Sheet) a.覆盖Sheet_set.add(r.来源Sheet);
+  });
+
+  return Array.from(m.values()).map(a=>({
+    页面URL: a.页面URL,
+    页面类型: a.页面类型,
+    页面ID: a.页面ID,
+
+    PV: a.PV,
+    UV: a.UV,
+    IP: a.IP,
+    输出PV: a.输出PV,
+
+    平均停留秒: a.停留秒_cnt ? (a.停留秒_sum / a.停留秒_cnt) : 0,
+    平均人均浏览页数: a.人均浏览页数_cnt ? (a.人均浏览页数_sum / a.人均浏览页数_cnt) : 0,
+
+    覆盖Sheet数: a.覆盖Sheet_set.size,
+    覆盖Sheet: Array.from(a.覆盖Sheet_set).join("、")
+  }));
+}
+
+// 预览表（前 50 行）
+function renderPreview(data){
+  const el = document.getElementById("preview");
+  if(!data.length){
+    el.innerHTML = "<div class='small'>无数据可预览</div>";
+    return;
+  }
+  const cols = Object.keys(data[0]);
+  let html = "<table><thead><tr>";
+  cols.forEach(c=> html += `<th class="${c.includes("URL") ? "url":""}">${c}</th>`);
+  html += "</tr></thead><tbody>";
+  data.slice(0,50).forEach(row=>{
+    html += "<tr>";
+    cols.forEach(c=>{
+      const v = (row[c] ?? "");
+      const cls = (c.includes("URL") ? "url" : "");
+      html += `<td class="${cls}">${String(v).replace(/</g,"&lt;").replace(/>/g,"&gt;")}</td>`;
+    });
+    html += "</tr>";
+  });
+  html += "</tbody></table>";
+  el.innerHTML = `<div class="table-wrap">${html}</div>`;
+}
+
+// URL + 类型调试（前 20 条）
+function renderUrlTypeDebug(data){
+  const el = document.getElementById("urlTypeDebug");
+  if(!data.length){
+    el.innerHTML = "<div class='small'>无数据</div>";
+    return;
+  }
+  let html = "<table><thead><tr>"
+    + "<th>#</th><th class='url'>页面URL</th><th>页面类型</th><th>页面ID</th>"
+    + "</tr></thead><tbody>";
+  data.slice(0,20).forEach((r,i)=>{
+    html += "<tr>"
+      + `<td>${i+1}</td>`
+      + `<td class="url"><a href="${r.页面URL}" target="_blank" rel="noopener">${r.页面URL}</a></td>`
+      + `<td>${r.页面类型}</td>`
+      + `<td>${r.页面ID}</td>`
+      + "</tr>";
+  });
+  html += "</tbody></table>";
+  el.innerHTML = `<div class="table-wrap">${html}</div>`;
+}
+
+// ---------- 全局变量 ----------
+let mergedData = [];
+let perSheetData = {};
+let aggAll = [];
+let pvSorted = [];
+let durSorted = [];
+
+const statusEl  = document.getElementById("status");
+const summaryEl = document.getElementById("summary");
+
+// 自检
+function runSelfTest(){
+  const samples = [
+    "https://www.icviews.cn/",
+    "https://www.icviews.cn/semiCommunity/latest",
+    "https://www.icviews.cn/semiCommunity/postDetail/5846",
+    "https://www.icviews.cn/semiCommunity/column",
+    "https://www.icviews.cn/semiCommunity/writePost",
+    "https://www.icviews.cn/news/industPolicy",
+    "https://www.icviews.cn/news/prodFront",
+    "https://www.icviews.cn/news/industDynamic",
+    "https://www.icviews.cn/news/recommend",
+    "https://conference.icviews.cn/ADA"
+  ];
+  document.getElementById("selfTest").textContent =
+    samples.map(u => `${u.replace(/[#?].*$/,"")} → ${detectPageType(u)}`).join("  |  ");
+}
+runSelfTest();
+
+// 文件上传
+document.getElementById("fileInput").addEventListener("change", function(){
+  const file = this.files[0];
+  if(!file) return;
+
+  mergedData = [];
+  perSheetData = {};
+  aggAll = [];
+  pvSorted = [];
+  durSorted = [];
+
+  statusEl.textContent = "正在解析文件…";
+  statusEl.className = "";
+  summaryEl.textContent = "";
+
+  ["section-overview","section-type","section-top","section-sheet","section-preview"]
+    .forEach(id => document.getElementById(id).style.display = "none");
+
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    try{
+      const wb = XLSX.read(evt.target.result, { type:"binary" });
+      let totalSheets = 0, totalRows = 0, skipped = [];
+
+      wb.SheetNames.forEach(sheetName=>{
+        const sheet = wb.Sheets[sheetName];
+        const raw   = XLSX.utils.sheet_to_json(sheet, { defval:"", raw:true });
+        const rows  = normalizeRowsKey(raw);
+        if(!rows.length) return;
+
+        const cols = Object.keys(rows[0]);
+
+        // ① 优先“受访页面”/URL/链接关键词
+        const urlColCandidates = cols.filter(c=>{
+          const ck = String(c).toLowerCase();
+          return ck.includes("受访") || ck.includes("url") || ck.includes("链接");
+        });
+
+        // ② 再找包含 http 的列
+        if(urlColCandidates.length===0){
+          const colWithHttp = cols.find(c => rows.some(r => {
+            const v = normalizeUrl(r[c]);
+            return v && v.toLowerCase().startsWith("http");
+          }));
+          if(colWithHttp) urlColCandidates.push(colWithHttp);
+        }
+
+        if(urlColCandidates.length===0){
+          skipped.push(sheetName);
+          return;
+        }
+
+        const urlCol = urlColCandidates[0];
+
+        totalSheets++;
+        const parsed = rows.map(r=>{
+          const url = normalizeUrl(r[urlCol]);
+          const durStr = r["平均页面停留时间"] || r["平均停留时间"] || "";
+          return {
+            来源Sheet: sheetName,
+            页面URL: url,
+            页面类型: detectPageType(url),
+            页面ID: extractPageId(url),
+            浏览次数: num(r["浏览次数"]),
+            独立访客: num(r["独立访客"]),
+            IP:       num(r["IP"] || r["ip"]),
+            人均浏览页数: num(r["人均浏览页数"]),
+            输出PV:   num(r["输出PV"] || r["输出Pv"] || r["输出pv"]),
+            平均页面停留时间: durStr,
+            停留时间_秒: parseDuration(durStr)
+          };
+        });
+
+        perSheetData[sheetName] = parsed;
+        mergedData.push(...parsed);
+        totalRows += parsed.length;
+      });
+
+      if(!mergedData.length){
+        statusEl.textContent = "解析失败：未找到 URL 列";
+        statusEl.className  = "error";
+        return;
+      }
+
+      statusEl.textContent = "解析成功";
+      statusEl.className   = "ok";
+      let msg = `共解析 ${totalSheets} 个 Sheet，${totalRows} 行记录。`;
+      if(skipped.length){
+        msg += ` 跳过未检测到 URL 的 Sheet：${skipped.join("、")}`;
+      }
+      summaryEl.textContent = msg;
+
+      // 聚合 + 排序
+      aggAll = aggregateByUrl(mergedData);
+
+      const totalPvAll = aggAll.reduce((s,r)=> s + num(r.PV), 0) || 0;
+      const totalUvAll = aggAll.reduce((s,r)=> s + num(r.UV), 0) || 0;
+
+      aggAll = aggAll.map(r => ({
+        ...r,
+        PV占比: totalPvAll ? (num(r.PV) / totalPvAll) : 0,
+        UV占比: totalUvAll ? (num(r.UV) / totalUvAll) : 0
+      }));
+
+      pvSorted = aggAll.slice().sort((a,b)=> num(b.PV) - num(a.PV));
+      durSorted = aggAll.filter(r=> num(r.平均停留秒) > 0)
+        .slice()
+        .sort((a,b)=> num(b.平均停留秒) - num(a.平均停留秒));
+
+      // 渲染
+      renderOverview(mergedData);
+      renderTypeAnalysis(mergedData);
+      renderTopAnalysis();
+      renderSheetComparison(perSheetData);
+      renderPreview(mergedData);
+      renderUrlTypeDebug(mergedData);
+
+      ["section-overview","section-type","section-top","section-sheet","section-preview"]
+        .forEach(id => document.getElementById(id).style.display = "block");
+
+    }catch(e){
+      console.error(e);
+      statusEl.textContent = "解析失败，请检查文件格式";
+      statusEl.className   = "error";
+    }
+  };
+  reader.readAsBinaryString(file);
+});
+
+// ---------- 一、整体概况 ----------
+function renderOverview(data){
+  const pv = data.reduce((s,r)=>s+num(r.浏览次数),0);
+  const uv = data.reduce((s,r)=>s+num(r.独立访客),0);
+
+  const durSum = data.reduce((s,r)=>s+num(r.停留时间_秒),0);
+  const durCnt = data.filter(r=>num(r.停留时间_秒)>0).length;
+  const avgDur = durCnt ? durSum/durCnt : 0;
+
+  const pagesArr = data.map(r=>num(r.人均浏览页数)).filter(v=>v>0);
+  const avgPages = pagesArr.length ? pagesArr.reduce((a,b)=>a+b)/pagesArr.length : 0;
+
+  document.getElementById("pvTotal").textContent          = pv.toLocaleString();
+  document.getElementById("uvTotal").textContent          = uv.toLocaleString();
+  document.getElementById("rowCount").textContent         = data.length;
+  document.getElementById("avgDuration").textContent      = avgDur.toFixed(2) + " 秒";
+  document.getElementById("avgPagesPerVisit").textContent = avgPages.toFixed(2);
+}
+
+// ---------- 二、类型分析 ----------
+function renderTypeAnalysis(data){
+  const agg={};
+  data.forEach(r=>{
+    const t=r.页面类型 || "其他";
+    if(!agg[t]) agg[t]={pv:0,uv:0,count:0,durSum:0,durCnt:0};
+    agg[t].pv += num(r.浏览次数);
+    agg[t].uv += num(r.独立访客);
+    agg[t].count++;
+    if(num(r.停留时间_秒)>0){
+      agg[t].durSum += num(r.停留时间_秒);
+      agg[t].durCnt++;
+    }
+  });
+
+  const types = Object.keys(agg);
+  const pvArr = types.map(t=>agg[t].pv);
+  const uvArr = types.map(t=>agg[t].uv);
+
+  Plotly.newPlot("typeChart",[
+    {x:types,y:pvArr,name:"PV",type:"bar"},
+    {x:types,y:uvArr,name:"UV",type:"bar"}
+  ],{
+    barmode:"group",
+    margin:{t:10,r:10,b:70,l:55},
+    legend:{orientation:"h",y:-0.2}
+  });
+
+  let html="<table><thead><tr><th>页面类型</th><th>PV</th><th>UV</th><th>记录数</th><th>平均停留秒</th></tr></thead><tbody>";
+  types.forEach(t=>{
+    const a=agg[t];
+    const avgDur=a.durCnt?(a.durSum/a.durCnt).toFixed(2):"-";
+    html+=`<tr>
+      <td>${t}</td>
+      <td>${a.pv.toLocaleString()}</td>
+      <td>${a.uv.toLocaleString()}</td>
+      <td>${a.count}</td>
+      <td>${avgDur}</td>
+    </tr>`;
+  });
+  html+="</tbody></table>";
+  document.getElementById("typeTable").innerHTML = `<div class="table-wrap">${html}</div>`;
+}
+
+// ---------- 三、TOP（展示 TOP20，导出 TOP500） ----------
+function renderTopAnalysis(){
+  const topPvShow  = pvSorted.slice(0, DISPLAY_TOP_N);
+  const topDurShow = durSorted.slice(0, DISPLAY_TOP_N);
+
+  // TOP PV
+  let htmlPv = "<table><thead><tr>"
+    + "<th>#</th><th>类型</th><th>ID</th><th class='url'>URL</th>"
+    + "<th>PV</th><th>UV</th><th>IP</th><th>输出PV</th>"
+    + "<th>平均停留秒</th><th>平均人均浏览</th><th>覆盖Sheet数</th><th>PV占比</th><th>UV占比</th>"
+    + "</tr></thead><tbody>";
+
+  topPvShow.forEach((r,i)=>{
+    htmlPv += "<tr>"
+      + `<td>${i+1}</td>`
+      + `<td>${r.页面类型}</td>`
+      + `<td>${r.页面ID}</td>`
+      + `<td class="url"><a href="${r.页面URL}" target="_blank" rel="noopener">${r.页面URL}</a></td>`
+      + `<td>${num(r.PV).toLocaleString()}</td>`
+      + `<td>${num(r.UV).toLocaleString()}</td>`
+      + `<td>${num(r.IP).toLocaleString()}</td>`
+      + `<td>${num(r.输出PV).toLocaleString()}</td>`
+      + `<td>${num(r.平均停留秒).toFixed(2)}</td>`
+      + `<td>${num(r.平均人均浏览页数).toFixed(2)}</td>`
+      + `<td>${r.覆盖Sheet数}</td>`
+      + `<td>${(num(r.PV占比)*100).toFixed(2)}%</td>`
+      + `<td>${(num(r.UV占比)*100).toFixed(2)}%</td>`
+      + "</tr>";
+  });
+  htmlPv += "</tbody></table>";
+  document.getElementById("topPvTable").innerHTML = `<div class="table-wrap">${htmlPv}</div>`;
+
+  // TOP 停留
+  let htmlDur = "<table><thead><tr>"
+    + "<th>#</th><th>类型</th><th>ID</th><th class='url'>URL</th>"
+    + "<th>平均停留秒</th><th>PV</th><th>UV</th><th>IP</th><th>输出PV</th>"
+    + "<th>平均人均浏览</th><th>覆盖Sheet数</th>"
+    + "</tr></thead><tbody>";
+
+  topDurShow.forEach((r,i)=>{
+    htmlDur += "<tr>"
+      + `<td>${i+1}</td>`
+      + `<td>${r.页面类型}</td>`
+      + `<td>${r.页面ID}</td>`
+      + `<td class="url"><a href="${r.页面URL}" target="_blank" rel="noopener">${r.页面URL}</a></td>`
+      + `<td>${num(r.平均停留秒).toFixed(2)}</td>`
+      + `<td>${num(r.PV).toLocaleString()}</td>`
+      + `<td>${num(r.UV).toLocaleString()}</td>`
+      + `<td>${num(r.IP).toLocaleString()}</td>`
+      + `<td>${num(r.输出PV).toLocaleString()}</td>`
+      + `<td>${num(r.平均人均浏览页数).toFixed(2)}</td>`
+      + `<td>${r.覆盖Sheet数}</td>`
+      + "</tr>";
+  });
+  htmlDur += "</tbody></table>";
+  document.getElementById("topDurationTable").innerHTML = `<div class="table-wrap">${htmlDur}</div>`;
+
+  // 导出：TOP500 PV
+  document.getElementById("btnExportTopPV").onclick = () => {
+    const rows = pvSorted.slice(0, EXPORT_TOP_N).map((r,idx)=>({
+      排名: idx+1,
+      页面类型: r.页面类型,
+      页面ID: r.页面ID,
+      页面URL: r.页面URL,
+      PV: r.PV,
+      UV: r.UV,
+      IP: r.IP,
+      输出PV: r.输出PV,
+      平均停留秒: Number(num(r.平均停留秒).toFixed(2)),
+      平均人均浏览页数: Number(num(r.平均人均浏览页数).toFixed(2)),
+      覆盖Sheet数: r.覆盖Sheet数,
+      覆盖Sheet: r.覆盖Sheet,
+      PV占比百分比: Number((num(r.PV占比)*100).toFixed(4)),
+      UV占比百分比: Number((num(r.UV占比)*100).toFixed(4))
+    }));
+    downloadCsv(`TOP${EXPORT_TOP_N}-PV.csv`, rows);
+  };
+
+  // 导出：TOP500 停留
+  document.getElementById("btnExportTopDur").onclick = () => {
+    const rows = durSorted.slice(0, EXPORT_TOP_N).map((r,idx)=>({
+      排名: idx+1,
+      页面类型: r.页面类型,
+      页面ID: r.页面ID,
+      页面URL: r.页面URL,
+      平均停留秒: Number(num(r.平均停留秒).toFixed(2)),
+      PV: r.PV,
+      UV: r.UV,
+      IP: r.IP,
+      输出PV: r.输出PV,
+      平均人均浏览页数: Number(num(r.平均人均浏览页数).toFixed(2)),
+      覆盖Sheet数: r.覆盖Sheet数,
+      覆盖Sheet: r.覆盖Sheet
+    }));
+    downloadCsv(`TOP${EXPORT_TOP_N}-停留.csv`, rows);
+  };
+
+  // 导出：全量聚合（PV排序）
+  document.getElementById("btnExportAllAgg").onclick = () => {
+    const rows = pvSorted.map((r,idx)=>({
+      PV排名: idx+1,
+      页面类型: r.页面类型,
+      页面ID: r.页面ID,
+      页面URL: r.页面URL,
+      PV: r.PV,
+      UV: r.UV,
+      IP: r.IP,
+      输出PV: r.输出PV,
+      平均停留秒: Number(num(r.平均停留秒).toFixed(2)),
+      平均人均浏览页数: Number(num(r.平均人均浏览页数).toFixed(2)),
+      覆盖Sheet数: r.覆盖Sheet数,
+      覆盖Sheet: r.覆盖Sheet,
+      PV占比百分比: Number((num(r.PV占比)*100).toFixed(4)),
+      UV占比百分比: Number((num(r.UV占比)*100).toFixed(4))
+    }));
+    downloadCsv(`全部聚合排行-PV排序.csv`, rows);
+  };
+}
+
+// ---------- 四、按 Sheet 对比 ----------
+function renderSheetComparison(map){
+  const rows=[];
+  for(const sheet in map){
+    const list=map[sheet];
+    const pv=list.reduce((s,r)=>s+num(r.浏览次数),0);
+    const uv=list.reduce((s,r)=>s+num(r.独立访客),0);
+    const durSum=list.reduce((s,r)=>s+num(r.停留时间_秒),0);
+    const durCnt=list.filter(r=>num(r.停留时间_秒)>0).length;
+    rows.push({
+      sheet,
+      pv,
+      uv,
+      dur:durCnt?durSum/durCnt:0,
+      count:list.length
+    });
+  }
+
+  let html="<table><thead><tr><th>Sheet</th><th>记录数</th><th>PV</th><th>UV</th><th>平均停留秒</th></tr></thead><tbody>";
+  rows.forEach(r=>{
+    html+=`<tr>
+      <td>${r.sheet}</td>
+      <td>${r.count}</td>
+      <td>${r.pv.toLocaleString()}</td>
+      <td>${r.uv.toLocaleString()}</td>
+      <td>${r.dur.toFixed(2)}</td>
+    </tr>`;
+  });
+  html+="</tbody></table>";
+  document.getElementById("sheetTable").innerHTML = `<div class="table-wrap">${html}</div>`;
+
+  Plotly.newPlot("sheetChart",[
+    {x:rows.map(r=>r.sheet),y:rows.map(r=>r.pv),name:"PV",type:"bar"},
+    {x:rows.map(r=>r.sheet),y:rows.map(r=>r.uv),name:"UV",type:"bar"}
+  ],{
+    barmode:"group",
+    margin:{t:10,r:10,b:60,l:55},
+    legend:{orientation:"h",y:-0.2}
+  });
+}
+</script>
+</body>
+</html>
