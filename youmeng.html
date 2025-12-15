@@ -341,17 +341,17 @@ a:hover{ text-decoration:underline; }
 
 <body>
 <!-- 授权层 -->
-<div id="auth-screen" style="display: none !important;">
+<div id="auth-screen">
   <div class="auth-card" id="auth-card">
     <div class="auth-title">🔐 友盟多表流量工具</div>
-    <div class="auth-subtitle">请输入授权码访问本工具</div>
+    <div class="auth-subtitle">请输入密码访问本工具</div>
 
-    <label class="auth-label" for="auth-code">授权码</label>
+    <label class="auth-label" for="auth-code">密码</label>
     <input
       id="auth-code"
       class="auth-input"
       type="text"
-      placeholder="请输入授权码"
+      placeholder="请输入密码"
       autocomplete="off"
     />
 
@@ -362,7 +362,7 @@ a:hover{ text-decoration:underline; }
 </div>
 
 <!-- 真正的应用 -->
-<div id="app" style="display: block !important;">
+<div id="app" style="display: none;">
 <div class="container">
 
   <div class="header">
