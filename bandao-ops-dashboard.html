@@ -491,15 +491,23 @@
   </div>
 
   <script>
-    const fileInput = document.getElementById("fileInput");
-    const loadingEl = document.getElementById("loading");
-    const errorEl = document.getElementById("error");
+    // 延迟脚本执行，确保 DOM 已加载
+    document.addEventListener('DOMContentLoaded', function() {
+      const fileInput = document.getElementById("fileInput");
+      const loadingEl = document.getElementById("loading");
+      const errorEl = document.getElementById("error");
 
-    fileInput.addEventListener("change", handleFile, false);
+      if (!fileInput) return; // 安全检查
+
+      fileInput.addEventListener("change", handleFile, false);
+    });
 
     function handleFile(e) {
       const file = e.target.files[0];
       if (!file) return;
+      const loadingEl = document.getElementById("loading");
+      const errorEl = document.getElementById("error");
+
       loadingEl.textContent = "正在读取并解析 Excel 数据，请稍候…";
       errorEl.textContent = "";
 
@@ -1124,8 +1132,8 @@
 
     (async function bootstrapAuth() {
       // 确保初始状态：显示授权层，隐藏应用
-      authScreen.style.display = "flex";
-      appRoot.style.display = "none";
+      if (authScreen) authScreen.style.display = "flex";
+      if (appRoot) appRoot.style.display = "none";
 
       await loadAuthCodes();
       try {
@@ -1140,8 +1148,8 @@
       } catch (e) {}
 
       // 如果没有有效授权，显示授权层（双重保障）
-      authScreen.style.display = "flex";
-      appRoot.style.display = "none";
+      if (authScreen) authScreen.style.display = "flex";
+      if (appRoot) appRoot.style.display = "none";
     })();
 
     btn.addEventListener("click", handleAuth);
