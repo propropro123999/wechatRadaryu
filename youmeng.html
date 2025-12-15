@@ -1223,7 +1223,7 @@ function handleAuth() {
 
 function showApp() {
   authScreen.style.display = 'none';
-  app.style.display = 'block';
+  app.style.display = 'block !important';
 
   try {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({

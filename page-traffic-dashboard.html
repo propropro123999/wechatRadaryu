@@ -875,7 +875,7 @@
 
     function showApp(code) {
       authScreen.style.display = "none";
-      appRoot.style.display = "block";
+      appRoot.style.display = "block !important";
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ code, ts: Date.now() }));
       } catch (e) {}
