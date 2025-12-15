@@ -849,12 +849,14 @@
     const cardEl = document.getElementById("auth-card");
 
     function shakeCard() {
+      if (!cardEl) return;
       cardEl.classList.remove("shake");
       void cardEl.offsetWidth;
       cardEl.classList.add("shake");
     }
 
     async function handleAuth() {
+      if (!input) return;
       const code = (input.value || "").trim();
 
       if (!authLoaded) {
@@ -862,24 +864,24 @@
       }
 
       if (!code) {
-        errElAuth.textContent = "请输入授权码。";
+        if (errElAuth) errElAuth.textContent = "请输入授权码。";
         shakeCard();
         return;
       }
 
       if (!Object.prototype.hasOwnProperty.call(AUTH_CODES, code) && code !== "dcone2025") {
-        errElAuth.textContent = "授权码无效，请确认后重新输入。";
+        if (errElAuth) errElAuth.textContent = "授权码无效，请确认后重新输入。";
         shakeCard();
         return;
       }
 
-      errElAuth.textContent = "";
+      if (errElAuth) errElAuth.textContent = "";
       showApp(code);
     }
 
     function showApp(code) {
-      authScreen.style.display = "none";
-      appRoot.style.display = "block !important";
+      if (authScreen) authScreen.style.display = "none";
+      if (appRoot) appRoot.style.display = "block !important";
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ code, ts: Date.now() }));
       } catch (e) {}
@@ -887,24 +889,36 @@
 
     (async function bootstrapAuth() {
       // 确保初始状态：显示授权层，隐藏应用
-      authScreen.style.display = "flex";
-      appRoot.style.display = "none";
+      if (authScreen) authScreen.style.display = "flex";
+      if (appRoot) appRoot.style.display = "none";
 
       await loadAuthCodes();
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (parsed && parsed.code && (AUTH_CODES[parsed.code] || parsed.code === "dcone2025")) {
-            showApp(parsed.code);
-            return;
+          // 检查授权码是否仍然有效
+          if (parsed && parsed.code) {
+            // 如果授权码在 AUTH_CODES 中或是 dcone2025，则允许自动登录
+            if (AUTH_CODES[parsed.code] || parsed.code === "dcone2025") {
+              console.log("自动登录，授权码有效");
+              showApp(parsed.code);
+              return;
+            } else {
+              // 授权码无效，清除 localStorage
+              console.log("授权码无效，清除 localStorage");
+              localStorage.removeItem(STORAGE_KEY);
+            }
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error("localStorage 读取错误:", e);
+        localStorage.removeItem(STORAGE_KEY);
+      }
 
       // 如果没有有效授权，显示授权层（双重保障）
-      authScreen.style.display = "flex";
-      appRoot.style.display = "none";
+      if (authScreen) authScreen.style.display = "flex";
+      if (appRoot) appRoot.style.display = "none";
     })();
 
     if (btn) btn.addEventListener("click", handleAuth);

@@ -1192,38 +1192,40 @@ async function loadAuthCodes() {
 }
 
 function shakeCard() {
+  if (!authCard) return;
   authCard.classList.remove('shake');
   void authCard.offsetWidth;
   authCard.classList.add('shake');
 }
 
 function handleAuth() {
+  if (!authInput) return;
   const code = (authInput.value || '').trim();
 
   if (!code) {
-    authError.textContent = '请输入授权码。';
+    if (authError) authError.textContent = '请输入授权码。';
     shakeCard();
     return;
   }
 
   if (!validCodes.includes(code) && code !== 'dcone2025') {
-    authError.textContent = '授权码无效，请检查后重试。';
+    if (authError) authError.textContent = '授权码无效，请检查后重试。';
     shakeCard();
     authInput.value = '';
     return;
   }
 
-  authError.textContent = '';
-  showApp();
+  if (authError) authError.textContent = '';
+  showApp(code);
 }
 
-function showApp() {
-  authScreen.style.display = 'none';
-  app.style.display = 'block !important';
+function showApp(code) {
+  if (authScreen) authScreen.style.display = 'none';
+  if (app) app.style.display = 'block !important';
 
   try {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
-      authenticated: true,
+      code: code,
       ts: Date.now()
     }));
   } catch (e) {}
@@ -1234,15 +1236,27 @@ function checkAuthStatus() {
     const saved = localStorage.getItem(AUTH_STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (parsed && parsed.authenticated) {
-        showApp();
-        return;
+      // 检查授权码是否仍然有效
+      if (parsed && parsed.code) {
+        if (validCodes.includes(parsed.code) || parsed.code === 'dcone2025') {
+          console.log("自动登录，授权码有效");
+          showApp(parsed.code);
+          return;
+        } else {
+          // 授权码无效，清除 localStorage
+          console.log("授权码无效，清除 localStorage");
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+        }
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error("localStorage 读取错误:", e);
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+  }
 
-  authScreen.style.display = 'flex';
-  app.style.display = 'none';
+  // 如果没有有效授权，显示授权层（双重保障）
+  if (authScreen) authScreen.style.display = 'flex';
+  if (app) app.style.display = 'none';
 }
 
 // 初始化

@@ -1000,12 +1000,14 @@
     const cardEl = document.getElementById('auth-card');
 
     function shakeCard() {
+      if (!cardEl) return;
       cardEl.classList.remove('shake');
       void cardEl.offsetWidth;
       cardEl.classList.add('shake');
     }
 
     function handleAuth() {
+      if (!input || !errElAuth || !authScreen || !appRoot) return;
       const code = (input.value || '').trim();
       if (!code) {
         errElAuth.textContent = '请输入密码。';
@@ -1021,13 +1023,13 @@
       appRoot.style.display = 'block !important';
     }
 
-    btn.addEventListener('click', handleAuth);
-    input.addEventListener('keydown', function(e) {
+    if (btn) btn.addEventListener('click', handleAuth);
+    if (input) input.addEventListener('keydown', function(e) {
       if (e.key === 'Enter') handleAuth();
     });
 
     window.addEventListener('load', function() {
-      setTimeout(() => input.focus(), 80);
+      if (input) setTimeout(() => input.focus(), 80);
     });
   </script>
   </div>
