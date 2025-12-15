@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>敏感词检测工具 - 内容合规检查</title>
+
+  <link rel="stylesheet" href="design-system-modern.css" />
+  <link rel="stylesheet" href="tool-pages-interactions.css" />
+
+  <style>
+    /* ===== 页面特定样式 ===== */
+    body {
+      background: linear-gradient(135deg, #f8f9fa 0%, #f0f4f8 100%);
+      min-height: 100vh;
+    }
+
+    /* ===== 导航栏 ===== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      background: var(--color-bg-primary);
+      border-bottom: 1px solid var(--color-border-light);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      z-index: 100;
+      padding: var(--space-lg) var(--space-2xl);
+    }
+
+    .navbar-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .navbar-title {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-primary);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .navbar-icon {
+      font-size: 28px;
+    }
+
+    .navbar-badges {
+      display: flex;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: var(--color-primary-bg);
+      color: var(--color-primary);
+      padding: var(--space-xs) var(--space-md);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: var(--font-weight-semibold);
+      border: 1px solid var(--color-primary-light);
+    }
+
+    /* 返回按钮 */
+    .navbar-home {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-lg);
+      background: var(--color-bg-secondary);
+      color: var(--color-text-primary);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-sm);
+      font-weight: var(--font-weight-semibold);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--transition-base);
+      border: 1px solid var(--color-border-light);
+    }
+
+    .navbar-home:hover {
+      background: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    /* ===== 主容器 ===== */
+    .main-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: var(--space-3xl) var(--space-lg);
+    }
+
+    /* ===== 介绍卡片 ===== */
+    .intro-card {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+      color: white;
+      padding: var(--space-3xl);
+      border-radius: var(--radius-xl);
+      margin-bottom: var(--space-3xl);
+      box-shadow: 0 12px 32px rgba(59, 130, 246, 0.2);
+    }
+
+    .intro-title {
+      font-size: var(--text-3xl);
+      font-weight: var(--font-weight-bold);
+      margin-bottom: var(--space-md);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .intro-desc {
+      font-size: var(--text-lg);
+      opacity: 0.95;
+      line-height: 1.6;
+    }
+
+    /* ===== 内容网格 ===== */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-2xl);
+    }
+
+    /* ===== 卡片 ===== */
+    .card {
+      background: var(--color-bg-primary);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-lg);
+      padding: var(--space-2xl);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      transition: all var(--transition-base);
+    }
+
+    .card:hover {
+      border-color: var(--color-primary);
+      box-shadow: 0 8px 16px rgba(59, 130, 246, 0.12);
+    }
+
+    .card-title {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-weight-bold);
+      margin-bottom: var(--space-2xl);
+      color: var(--color-text-primary);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .card-icon {
+      font-size: 28px;
+    }
+
+    /* ===== 表单元素 ===== */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-lg);
+    }
+
+    .form-label {
+      font-size: var(--text-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+    }
+
+    .textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: var(--space-lg);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-lg);
+      font-family: var(--font-family-base);
+      font-size: var(--text-base);
+      color: var(--color-text-primary);
+      background: var(--color-bg-secondary);
+      transition: all var(--transition-base);
+      resize: vertical;
+    }
+
+    .textarea:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      background: var(--color-bg-primary);
+    }
+
+    /* ===== 按钮 ===== */
+    .btn {
+      padding: var(--space-md) var(--space-2xl);
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-semibold);
+      cursor: pointer;
+      transition: all var(--transition-base);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      color: white;
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: var(--color-bg-secondary);
+      color: var(--color-text-primary);
+      border: 1px solid var(--color-border-light);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ===== 结果显示 ===== */
+    .result-box {
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-lg);
+      padding: var(--space-2xl);
+      margin-top: var(--space-lg);
+      display: none;
+    }
+
+    .result-box.show {
+      display: block;
+      animation: slideIn 0.3s ease-in-out;
+    }
+
+    .result-status {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+      padding: var(--space-lg);
+      border-radius: var(--radius-lg);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .result-status.safe {
+      background: var(--color-success-light);
+      color: var(--color-success);
+      border: 1px solid var(--color-success);
+    }
+
+    .result-status.unsafe {
+      background: var(--color-error-light);
+      color: var(--color-error);
+      border: 1px solid var(--color-error);
+    }
+
+    .result-status.warning {
+      background: var(--color-warning-light);
+      color: var(--color-warning);
+      border: 1px solid var(--color-warning);
+    }
+
+    .result-icon {
+      font-size: 20px;
+    }
+
+    .result-content {
+      margin-bottom: var(--space-lg);
+    }
+
+    .result-item {
+      background: var(--color-bg-primary);
+      border-left: 3px solid var(--color-primary);
+      padding: var(--space-md) var(--space-lg);
+      margin-bottom: var(--space-md);
+      border-radius: var(--radius-md);
+    }
+
+    .result-word {
+      display: inline-block;
+      background: var(--color-error-light);
+      color: var(--color-error);
+      padding: var(--space-xs) var(--space-md);
+      border-radius: var(--radius-sm);
+      font-weight: var(--font-weight-semibold);
+      margin: 0 var(--space-xs);
+    }
+
+    .result-detail {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      margin-top: var(--space-sm);
+    }
+
+    /* ===== 操作按钮组 ===== */
+    .action-group {
+      display: flex;
+      gap: var(--space-lg);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-lg);
+    }
+
+    /* ===== 加载状态 ===== */
+    .loading {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(59, 130, 246, 0.2);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ===== 响应式 ===== */
+    @media (max-width: 768px) {
+      .navbar-container {
+        flex-wrap: wrap;
+        gap: var(--space-lg);
+      }
+
+      .navbar-title {
+        font-size: var(--text-xl);
+      }
+
+      .main-container {
+        padding: var(--space-2xl) var(--space-md);
+      }
+
+      .intro-card {
+        padding: var(--space-2xl);
+      }
+
+      .intro-title {
+        font-size: var(--text-2xl);
+      }
+
+      .textarea {
+        min-height: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <div class="navbar-title">
+        <span class="navbar-icon">🔍</span>
+        <span>敏感词检测工具</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: var(--space-lg);">
+        <div class="navbar-badges">
+          <div class="badge">✓ 实时检测</div>
+          <div class="badge">✓ 云端处理</div>
+          <div class="badge">✓ 隐私保护</div>
+        </div>
+        <a href="index-modern.html" class="navbar-home">← 返回首页</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 主容器 -->
+  <div class="main-container">
+    <!-- 介绍卡片 -->
+    <div class="intro-card">
+      <div class="intro-title">🚀 智能内容合规检查</div>
+      <div class="intro-desc">
+        使用先进的敏感词检测算法，实时识别文本中的敏感词、不当用语等内容，帮助确保内容的合规性。支持多种检测模式和处理方式。
+      </div>
+    </div>
+
+    <!-- 内容网格 -->
+    <div class="content-grid">
+      <!-- 检测工具卡片 -->
+      <div class="card">
+        <div class="card-title">
+          <span class="card-icon">📝</span>
+          文本检测
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="inputText">输入要检测的文本</label>
+          <textarea
+            id="inputText"
+            class="textarea"
+            placeholder="粘贴或输入你要检测的文本内容..."></textarea>
+        </div>
+
+        <div class="action-group">
+          <button class="btn btn-primary" onclick="detectContains()">
+            <span>🔎 检查敏感词</span>
+          </button>
+          <button class="btn btn-secondary" onclick="detectAll()">
+            <span>📊 查找全部</span>
+          </button>
+          <button class="btn btn-secondary" onclick="replaceWords()">
+            <span>🛡️ 替换敏感词</span>
+          </button>
+          <button class="btn btn-secondary" onclick="clearInput()">
+            <span>🗑️ 清空</span>
+          </button>
+        </div>
+
+        <!-- 结果展示 -->
+        <div id="resultBox" class="result-box">
+          <div id="resultStatus" class="result-status"></div>
+          <div id="resultContent" class="result-content"></div>
+        </div>
+      </div>
+
+      <!-- 替换配置卡片 -->
+      <div class="card">
+        <div class="card-title">
+          <span class="card-icon">⚙️</span>
+          替换配置
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="replacementChar">替换字符</label>
+          <input
+            type="text"
+            id="replacementChar"
+            class="textarea"
+            value="*"
+            style="min-height: 40px; height: 40px;"
+            placeholder="输入用来替换敏感词的字符，默认为 *"
+          />
+          <div class="result-detail">提示：可以用 * 或其他字符替换敏感词，敏感词长度对应替换的字符数</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">检测选项</label>
+          <div style="display: flex; gap: var(--space-md); flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: var(--space-sm); cursor: pointer;">
+              <input type="checkbox" id="caseSensitive" />
+              区分大小写
+            </label>
+            <label style="display: flex; align-items: center; gap: var(--space-sm); cursor: pointer;">
+              <input type="checkbox" id="fuzzyMatch" />
+              模糊匹配
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 说明卡片 -->
+      <div class="card">
+        <div class="card-title">
+          <span class="card-icon">ℹ️</span>
+          使用说明
+        </div>
+
+        <div style="font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.8;">
+          <p><strong>🔎 检查敏感词</strong><br>快速检查文本中是否包含任何敏感词</p>
+
+          <p style="margin-top: var(--space-lg);"><strong>📊 查找全部</strong><br>显示文本中所有敏感词的位置和详细信息</p>
+
+          <p style="margin-top: var(--space-lg);"><strong>🛡️ 替换敏感词</strong><br>将敏感词替换为指定字符，适用于内容过滤</p>
+
+          <p style="margin-top: var(--space-lg);"><strong>⚙️ 检测配置</strong><br>自定义替换字符和检测选项，增强检测效果</p>
+
+          <p style="margin-top: var(--space-lg); padding-top: var(--space-lg); border-top: 1px solid var(--color-border-light);"><strong>隐私说明</strong><br>文本数据仅在云端处理，不会被保存或用于其他目的</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = '/api/detect';
+
+    /**
+     * 发送检测请求
+     */
+    async function sendDetectRequest(action, text, options = {}) {
+      const btn = event.target;
+      const originalText = btn.textContent;
+
+      try {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> 处理中...';
+
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action,
+            text,
+            ...options
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        displayResult(action, result);
+
+      } catch (error) {
+        console.error('检测错误:', error);
+        showError('检测失败: ' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    /**
+     * 显示检测结果
+     */
+    function displayResult(action, result) {
+      const resultBox = document.getElementById('resultBox');
+      const resultStatus = document.getElementById('resultStatus');
+      const resultContent = document.getElementById('resultContent');
+
+      resultBox.classList.add('show');
+
+      if (action === 'contains') {
+        const hasSensitive = result.hasSensitive;
+        resultStatus.className = `result-status ${hasSensitive ? 'unsafe' : 'safe'}`;
+        resultStatus.innerHTML = hasSensitive
+          ? '<span class="result-icon">⚠️</span> 检测到敏感词'
+          : '<span class="result-icon">✅</span> 内容安全';
+        resultContent.innerHTML = '<p>文本已检查完成。</p>';
+
+      } else if (action === 'findAll') {
+        const matches = result.matches || [];
+        resultStatus.className = matches.length > 0 ? 'result-status unsafe' : 'result-status safe';
+        resultStatus.innerHTML = matches.length > 0
+          ? `<span class="result-icon">⚠️</span> 找到 ${matches.length} 个敏感词`
+          : '<span class="result-icon">✅</span> 未找到敏感词';
+
+        if (matches.length > 0) {
+          resultContent.innerHTML = matches.map((match, i) => `
+            <div class="result-item">
+              <div><strong>#${i + 1}</strong> <span class="result-word">${match.word}</span></div>
+              <div class="result-detail">位置: ${match.index} | 长度: ${match.length}</div>
+            </div>
+          `).join('');
+        } else {
+          resultContent.innerHTML = '<p>文本中未发现敏感词。</p>';
+        }
+
+      } else if (action === 'replace') {
+        resultStatus.className = 'result-status warning';
+        resultStatus.innerHTML = `<span class="result-icon">🛡️</span> 已处理 ${result.matchCount} 个敏感词`;
+        resultContent.innerHTML = `
+          <div style="margin-bottom: var(--space-lg);">
+            <p><strong>原始文本:</strong></p>
+            <div style="background: var(--color-bg-primary); padding: var(--space-lg); border-radius: var(--radius-lg); word-break: break-all;">${result.originalText}</div>
+          </div>
+          <div>
+            <p><strong>处理后文本:</strong></p>
+            <div style="background: var(--color-success-light); padding: var(--space-lg); border-radius: var(--radius-lg); word-break: break-all;">${result.replacedText}</div>
+          </div>
+        `;
+      }
+    }
+
+    /**
+     * 显示错误信息
+     */
+    function showError(message) {
+      const resultBox = document.getElementById('resultBox');
+      const resultStatus = document.getElementById('resultStatus');
+      const resultContent = document.getElementById('resultContent');
+
+      resultBox.classList.add('show');
+      resultStatus.className = 'result-status unsafe';
+      resultStatus.innerHTML = `<span class="result-icon">❌</span> ${message}`;
+      resultContent.innerHTML = '';
+    }
+
+    /**
+     * 检查文本中是否包含敏感词
+     */
+    function detectContains() {
+      const text = document.getElementById('inputText').value.trim();
+      if (!text) {
+        showError('请输入要检测的文本');
+        return;
+      }
+      sendDetectRequest('contains', text);
+    }
+
+    /**
+     * 查找文本中的所有敏感词
+     */
+    function detectAll() {
+      const text = document.getElementById('inputText').value.trim();
+      if (!text) {
+        showError('请输入要检测的文本');
+        return;
+      }
+      sendDetectRequest('findAll', text);
+    }
+
+    /**
+     * 替换敏感词
+     */
+    function replaceWords() {
+      const text = document.getElementById('inputText').value.trim();
+      const replacement = document.getElementById('replacementChar').value || '*';
+
+      if (!text) {
+        showError('请输入要检测的文本');
+        return;
+      }
+      sendDetectRequest('replace', text, { replacement });
+    }
+
+    /**
+     * 清空输入
+     */
+    function clearInput() {
+      document.getElementById('inputText').value = '';
+      document.getElementById('replacementChar').value = '*';
+      document.getElementById('resultBox').classList.remove('show');
+    }
+  </script>
+</body>
+</html>

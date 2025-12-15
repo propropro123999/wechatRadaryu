@@ -1,0 +1,17 @@
+{
+  "name": "wechat-radar-tools",
+  "version": "1.0.0",
+  "description": "WeChat data analysis tools",
+  "main": "api/detect.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build required'"
+  },
+  "dependencies": {
+    "sensitive-word": "^1.11.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": "18.x"
+  }
+}

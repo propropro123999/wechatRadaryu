@@ -188,6 +188,32 @@
       white-space: nowrap;
     }
 
+    /* 返回首页按钮 */
+    .topbar-home {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #f3f4f6;
+      color: #0f172a;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.18s ease;
+      border: 1px solid #d1d5db;
+      white-space: nowrap;
+      margin-left: auto;
+    }
+    .topbar-home:hover {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
+    }
+
     /* 醒目的上传按钮（方案 A） */
     .upload-btn {
       background: linear-gradient(135deg,#3b82f6,#2563eb);
@@ -543,7 +569,7 @@
         📤 选择表格文件（CSV / XLSX）
         <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" />
       </label>
-      <div class="topbar-spacer"></div>
+      <a href="index-modern.html" class="topbar-home">← 返回首页</a>
     </div>
 
     <!-- 顶部提示条 -->

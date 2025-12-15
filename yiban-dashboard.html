@@ -118,6 +118,9 @@
       padding: var(--space-lg) var(--space-2xl);
       z-index: 100;
       box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     .topbar-title {
@@ -150,6 +153,31 @@
       font-size: var(--text-xs);
       color: var(--color-text-tertiary);
       margin-top: var(--space-sm);
+    }
+
+    /* 返回首页按钮 */
+    .topbar-home {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-lg);
+      background: var(--color-bg-secondary);
+      color: var(--color-text-primary);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-sm);
+      font-weight: var(--font-weight-semibold);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--transition-base);
+      border: 1px solid var(--color-border-light);
+    }
+
+    .topbar-home:hover {
+      background: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
 
     .container {
@@ -397,13 +425,18 @@
   <!-- 真正的应用 -->
   <div id="app">
     <div class="topbar">
-      <div class="topbar-title">壹伴数据分析工具（本地版）</div>
-      <label class="file-input">
-        选择 Excel 文件
-        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" />
-      </label>
-      <div class="hint">
-        支持壹伴插件导出的 Excel 表格，自动识别阅读、分享、互动等字段
+      <div>
+        <div class="topbar-title">壹伴数据分析工具（本地版）</div>
+        <div class="hint">
+          支持壹伴插件导出的 Excel 表格，自动识别阅读、分享、互动等字段
+        </div>
+      </div>
+      <div style="display: flex; gap: var(--space-lg); align-items: center;">
+        <label class="file-input">
+          选择 Excel 文件
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" />
+        </label>
+        <a href="index-modern.html" class="topbar-home">← 返回首页</a>
       </div>
     </div>
 

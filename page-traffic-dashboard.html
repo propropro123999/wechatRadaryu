@@ -56,6 +56,28 @@
       font-size: 11px;
       color: #6b7280;
     }
+    .topbar-home {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #f3f4f6;
+      color: #0f172a;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.18s ease;
+      border: 1px solid #d1d5db;
+    }
+    .topbar-home:hover {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
+    }
     .container {
       max-width: 1220px;
       margin: 0 auto;
@@ -317,13 +339,18 @@
   <!-- 真正的应用 -->
   <div id="app">
   <div class="topbar">
-    <div class="topbar-title">页面流量分析 Dashboard（带自动解析标题）</div>
-    <label class="file-input">
-      选择数据文件（CSV / XLSX）
-      <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none" />
-    </label>
-    <div class="hint">
-      表头建议：受访页面 / 浏览次数 / 独立访客 / IP / 人均浏览页数 / 输出PV / 平均页面停留时间（例如 9.08秒）
+    <div style="flex:1;">
+      <div class="topbar-title">页面流量分析 Dashboard（带自动解析标题）</div>
+      <div class="hint">
+        表头建议：受访页面 / 浏览次数 / 独立访客 / IP / 人均浏览页数 / 输出PV / 平均页面停留时间（例如 9.08秒）
+      </div>
+    </div>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <label class="file-input">
+        选择数据文件（CSV / XLSX）
+        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none" />
+      </label>
+      <a href="index-modern.html" class="topbar-home">← 返回首页</a>
     </div>
   </div>
 

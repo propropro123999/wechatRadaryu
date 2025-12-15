@@ -58,6 +58,28 @@
       font-size: 11px;
       color: #6b7280;
     }
+    .topbar-home {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #f3f4f6;
+      color: #0f172a;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.18s ease;
+      border: 1px solid #d1d5db;
+    }
+    .topbar-home:hover {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
+    }
     .container {
       max-width: 1220px;
       margin: 0 auto;
@@ -319,13 +341,18 @@
   <!-- 真正的应用 -->
   <div id="app">
   <div class="topbar">
-    <div class="topbar-title">专栏 / 帖子工具（本地版）</div>
-    <label class="file-input">
-      选择 Excel 文件
-      <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" />
-    </label>
-    <div class="hint">
-      支持的列名示例：动态ID / 动态标题 / 产业动态标题 / 发布者 / 作者 / 来源 / 点赞数 / 评论数 / 创建时间 / 发布时间 / 更新时间（点赞和评论可选）
+    <div style="flex:1;">
+      <div class="topbar-title">专栏 / 帖子工具（本地版）</div>
+      <div class="hint">
+        支持的列名示例：动态ID / 动态标题 / 产业动态标题 / 发布者 / 作者 / 来源 / 点赞数 / 评论数 / 创建时间 / 发布时间 / 更新时间（点赞和评论可选）
+      </div>
+    </div>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <label class="file-input">
+        选择 Excel 文件
+        <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" />
+      </label>
+      <a href="index-modern.html" class="topbar-home">← 返回首页</a>
     </div>
   </div>
 
