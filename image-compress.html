@@ -3,150 +3,595 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>图片压缩工具（本地版）</title>
+  <title>图片压缩工具 - 高效压缩，本地处理</title>
+
+  <!-- 设计系统 -->
+  <link rel="stylesheet" href="design-system-modern.css" />
+  <link rel="stylesheet" href="tool-pages-interactions.css" />
+
+  <!-- JSZip 用于下载 -->
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
   <style>
-    * { box-sizing: border-box; }
+    /* ===== 页面特定样式 ===== */
     body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Microsoft YaHei",
-        sans-serif;
-      background: #0b1021;
-      color: #e5e7eb;
+      background: linear-gradient(135deg, #f8f9fa 0%, #f0f4f8 100%);
       min-height: 100vh;
     }
-    .topbar {
+
+    /* ===== 导航栏 ===== */
+    .navbar {
       position: sticky;
       top: 0;
-      z-index: 10;
-      background: rgba(15,23,42,0.9);
-      border-bottom: 1px solid rgba(148,163,184,0.35);
-      backdrop-filter: blur(8px);
-      padding: 12px 18px;
+      background: var(--color-bg-primary);
+      border-bottom: 1px solid var(--color-border-light);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      z-index: 100;
+      padding: var(--space-lg) var(--space-2xl);
+    }
+
+    .navbar-container {
+      max-width: 1400px;
+      margin: 0 auto;
       display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: space-between;
     }
-    .title { font-size: 16px; font-weight: 700; color: #f8fafc; }
-    .pill { font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(148,163,184,0.35); }
-    .container { max-width: 1100px; margin: 0 auto; padding: 20px 16px 36px; }
-    .panel {
-      background: #0f172a;
-      border: 1px solid rgba(148,163,184,0.3);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 16px 60px rgba(0,0,0,0.25);
-      margin-bottom: 16px;
+
+    .navbar-title {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-primary);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
     }
-    .panel h2 { margin: 0 0 10px; font-size: 16px; color: #f8fafc; }
-    .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
-    .field { display: flex; flex-direction: column; gap: 6px; background: rgba(255,255,255,0.02); border: 1px solid rgba(148,163,184,0.2); padding: 10px; border-radius: 10px; }
-    .label { font-size: 12px; color: #cbd5e1; }
-    input[type="number"], select, input[type="range"] {
-      width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(148,163,184,0.35);
-      background: rgba(255,255,255,0.04); color: #e5e7eb; outline: none;
+
+    .navbar-icon {
+      font-size: 28px;
     }
-    input[type="range"] { padding: 0; }
-    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-    .btn {
-      border: none; border-radius: 10px; padding: 10px 14px; font-weight: 700; cursor: pointer;
-      background: linear-gradient(135deg, #22d3ee, #6366f1); color: #0b1021;
-      box-shadow: 0 12px 30px rgba(99,102,241,0.35); transition: transform .12s ease, box-shadow .12s ease;
+
+    .navbar-badges {
+      display: flex;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
     }
-    .btn.secondary {
-      background: rgba(255,255,255,0.06);
-      color: #e5e7eb;
-      box-shadow: none;
-      border: 1px solid rgba(148,163,184,0.3);
+
+    .badge {
+      background: var(--color-primary-bg);
+      color: var(--color-primary);
+      padding: var(--space-xs) var(--space-md);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: var(--font-weight-semibold);
+      border: 1px solid var(--color-primary-light);
     }
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 16px 40px rgba(99,102,241,0.45); }
-    .btn.secondary:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(0,0,0,0.25); }
-    .table {
-      width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px;
+
+    /* ===== 主容器 ===== */
+    .main-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: var(--space-3xl) var(--space-lg);
     }
-    .table th, .table td { border: 1px solid rgba(148,163,184,0.2); padding: 8px 10px; text-align: left; }
-    .table th { background: rgba(255,255,255,0.04); color: #cbd5e1; }
-    .table tbody tr:nth-child(odd) { background: rgba(255,255,255,0.02); }
-    .muted { color: #94a3b8; }
-    .status { font-size: 12px; color: #cbd5e1; margin-top: 6px; min-height: 16px; }
-    .ratio-good { color: #4ade80; }
-    .ratio-bad { color: #fbbf24; }
+
+    /* ===== 顶部卡片 ===== */
+    .intro-card {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+      color: white;
+      padding: var(--space-3xl);
+      border-radius: var(--radius-xl);
+      margin-bottom: var(--space-3xl);
+      box-shadow: 0 12px 32px rgba(59, 130, 246, 0.2);
+    }
+
+    .intro-title {
+      font-size: var(--text-3xl);
+      font-weight: var(--font-weight-bold);
+      margin-bottom: var(--space-md);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .intro-desc {
+      font-size: var(--text-lg);
+      opacity: 0.95;
+      line-height: 1.6;
+    }
+
+    /* ===== 内容网格 ===== */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-2xl);
+    }
+
+    /* ===== 卡片 ===== */
+    .card {
+      background: var(--color-bg-primary);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-lg);
+      padding: var(--space-2xl);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      transition: all var(--transition-base);
+    }
+
+    .card:hover {
+      border-color: var(--color-primary);
+      box-shadow: 0 8px 16px rgba(59, 130, 246, 0.12);
+    }
+
+    .card-title {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-weight-bold);
+      margin-bottom: var(--space-2xl);
+      color: var(--color-text-primary);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .card-icon {
+      font-size: 28px;
+    }
+
+    /* ===== 控制面板 ===== */
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--space-lg);
+      margin-bottom: var(--space-2xl);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .form-label {
+      font-size: var(--text-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-label-value {
+      color: var(--color-primary);
+      font-weight: var(--font-weight-bold);
+      font-size: var(--text-md);
+    }
+
+    .form-input,
+    .form-select {
+      padding: var(--space-md);
+      border: 1px solid var(--color-border-medium);
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      background: var(--color-bg-secondary);
+      color: var(--color-text-primary);
+      transition: all var(--transition-base);
+      font-family: inherit;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      background: var(--color-bg-primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-input[type="range"] {
+      padding: 0;
+      height: 6px;
+      cursor: pointer;
+      accent-color: var(--color-primary);
+    }
+
+    /* ===== 拖拽区 ===== */
     .dropzone {
-      margin-top: 10px;
-      border: 1px dashed rgba(125,211,252,0.5);
-      background: rgba(14,165,233,0.08);
-      border-radius: 12px;
-      padding: 14px;
+      border: 2px dashed var(--color-border-medium);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3xl);
       text-align: center;
-      color: #bae6fd;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      background: var(--color-bg-secondary);
+      position: relative;
+    }
+
+    .dropzone:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-bg);
+    }
+
+    .dropzone.active {
+      border-color: var(--color-primary);
+      background: var(--color-primary-bg);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .dropzone-icon {
+      font-size: 48px;
+      margin-bottom: var(--space-md);
+      opacity: 0.6;
+    }
+
+    .dropzone-text {
+      font-size: var(--text-lg);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-sm);
+    }
+
+    .dropzone-hint {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+    }
+
+    /* ===== 隐藏文件输入 ===== */
+    .file-input {
+      display: none;
+    }
+
+    /* ===== 按钮组 ===== */
+    .button-group {
+      display: flex;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+      margin-top: var(--space-2xl);
+    }
+
+    .btn {
+      padding: var(--space-md) var(--space-2xl);
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-semibold);
+      cursor: pointer;
+      transition: all var(--transition-base);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+      color: white;
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: var(--color-bg-primary);
+      color: var(--color-text-primary);
+      border: 1px solid var(--color-border-light);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ===== 状态消息 ===== */
+    .status {
+      padding: var(--space-md) var(--space-lg);
+      border-radius: var(--radius-md);
+      margin: var(--space-lg) 0 0;
+      font-size: var(--text-sm);
+      animation: slideInUp var(--transition-base);
+    }
+
+    .status-info {
+      background: var(--color-info-bg);
+      color: var(--color-info);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+    }
+
+    .status-success {
+      background: var(--color-success-light);
+      color: var(--color-success);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-error {
+      background: var(--color-error-bg);
+      color: var(--color-error);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    /* ===== 表格 ===== */
+    .table-container {
+      overflow-x: auto;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border-light);
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--color-bg-primary);
+    }
+
+    .table th {
+      background: var(--color-bg-secondary);
+      border-bottom: 2px solid var(--color-border-light);
+      padding: var(--space-md) var(--space-lg);
+      text-align: left;
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      font-size: var(--text-sm);
+      white-space: nowrap;
+    }
+
+    .table td {
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--color-border-light);
+      color: var(--color-text-primary);
+      font-size: var(--text-sm);
+    }
+
+    .table tbody tr {
+      transition: background var(--transition-fast);
+    }
+
+    .table tbody tr:hover {
+      background: var(--color-bg-secondary);
+    }
+
+    .table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* ===== 压缩率指示器 ===== */
+    .ratio-good {
+      color: var(--color-success);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .ratio-warning {
+      color: var(--color-warning);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .ratio-bad {
+      color: var(--color-error);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    /* ===== 空状态 ===== */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-3xl);
+      color: var(--color-text-secondary);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: var(--space-md);
+      opacity: 0.4;
+    }
+
+    .empty-text {
+      font-size: var(--text-lg);
+      color: var(--color-text-secondary);
+    }
+
+    /* ===== 响应式 ===== */
+    @media (max-width: 768px) {
+      .navbar-container {
+        flex-direction: column;
+        gap: var(--space-lg);
+        align-items: flex-start;
+      }
+
+      .navbar-title {
+        font-size: var(--text-xl);
+      }
+
+      .intro-card {
+        padding: var(--space-2xl);
+      }
+
+      .intro-title {
+        font-size: var(--text-2xl);
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .table {
+        font-size: 12px;
+      }
+
+      .table th,
+      .table td {
+        padding: var(--space-sm) var(--space-md);
+      }
+    }
+
+    /* ===== 加载动画 ===== */
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(59, 130, 246, 0.2);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="title">图片压缩工具（本地运行，不上传）</div>
-    <span class="pill">JPG / PNG / WebP</span>
-    <span class="pill">多图批量</span>
-  </div>
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <div class="navbar-title">
+        <span class="navbar-icon">🖼️</span>
+        <span>图片压缩工具</span>
+      </div>
+      <div class="navbar-badges">
+        <div class="badge">✓ 本地处理</div>
+        <div class="badge">✓ 无需上传</div>
+        <div class="badge">JPG / PNG / WebP</div>
+      </div>
+    </div>
+  </nav>
 
-  <div class="container">
-    <div class="panel">
-      <h2>选择图片 & 参数</h2>
-      <div class="controls">
-        <div class="field">
-          <div class="label">选择图片（支持多选）</div>
-          <input type="file" id="fileInput" accept="image/*" multiple />
-          <div class="dropzone" id="dropzone">拖拽图片到此处</div>
-        </div>
-        <div class="field">
-          <div class="label">输出格式</div>
-          <select id="format">
-            <option value="auto">保持原格式</option>
-            <option value="image/jpeg">JPEG</option>
-            <option value="image/webp">WebP</option>
-            <option value="image/png">PNG</option>
-          </select>
-        </div>
-        <div class="field">
-          <div class="label">质量（0.1 - 1） <span id="qVal" class="muted"></span></div>
-          <input type="range" id="quality" min="0.1" max="1" step="0.05" value="0.8" />
-        </div>
-        <div class="field">
-          <div class="label">最大宽度 (px)</div>
-          <input type="number" id="maxW" value="1920" min="100" />
-        </div>
-        <div class="field">
-          <div class="label">最大高度 (px)</div>
-          <input type="number" id="maxH" value="1080" min="100" />
-        </div>
+  <!-- 主容器 -->
+  <div class="main-container">
+    <!-- 介绍卡片 -->
+    <div class="intro-card">
+      <div class="intro-title">🚀 快速压缩您的图片</div>
+      <div class="intro-desc">
+        在浏览器中完全处理，无需上传到服务器。支持 JPG、PNG 和 WebP 格式，可批量压缩和下载。
       </div>
-      <div class="btn-row">
-        <button class="btn" id="btnCompress">压缩所有并预览</button>
-        <button class="btn secondary" id="btnDownloadAll">下载全部（ZIP）</button>
-        <button class="btn secondary" id="btnClear">清空列表</button>
-      </div>
-      <div class="status" id="status"></div>
     </div>
 
-    <div class="panel">
-      <h2>文件列表</h2>
-      <table class="table" id="table">
-        <thead>
-          <tr>
-            <th>文件名</th>
-            <th>原尺寸</th>
-            <th>原大小</th>
-            <th>压后尺寸</th>
-            <th>压后大小</th>
-            <th>压缩率</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody id="tbody">
-          <tr><td colspan="7" class="muted">未选择文件</td></tr>
-        </tbody>
-      </table>
+    <!-- 内容网格 -->
+    <div class="content-grid">
+      <!-- 参数设置卡片 -->
+      <div class="card">
+        <div class="card-title">
+          <span class="card-icon">⚙️</span>
+          <span>选择图片 & 参数设置</span>
+        </div>
+
+        <!-- 文件输入 -->
+        <input type="file" id="fileInput" class="file-input" accept="image/*" multiple />
+
+        <!-- 拖拽区 -->
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-icon">📁</div>
+          <div class="dropzone-text">拖拽图片到此处</div>
+          <div class="dropzone-hint">或点击选择多个文件</div>
+        </div>
+
+        <!-- 控制参数 -->
+        <div class="controls">
+          <div class="form-group">
+            <label class="form-label">
+              <span>输出格式</span>
+            </label>
+            <select id="format" class="form-select">
+              <option value="auto">保持原格式</option>
+              <option value="image/jpeg">JPEG</option>
+              <option value="image/webp">WebP</option>
+              <option value="image/png">PNG</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <span>质量</span>
+              <span class="form-label-value"><span id="qVal">0.8</span></span>
+            </label>
+            <input type="range" id="quality" class="form-input" min="0.1" max="1" step="0.05" value="0.8" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">最大宽度 (px)</label>
+            <input type="number" id="maxW" class="form-input" value="1920" min="100" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">最大高度 (px)</label>
+            <input type="number" id="maxH" class="form-input" value="1080" min="100" />
+          </div>
+        </div>
+
+        <!-- 按钮组 -->
+        <div class="button-group">
+          <button class="btn btn-primary" id="btnCompress">
+            <span>⚡</span>
+            <span>压缩所有</span>
+          </button>
+          <button class="btn btn-secondary" id="btnDownloadAll">
+            <span>📦</span>
+            <span>下载 ZIP</span>
+          </button>
+          <button class="btn btn-secondary" id="btnClear">
+            <span>🗑️</span>
+            <span>清空</span>
+          </button>
+        </div>
+
+        <!-- 状态消息 -->
+        <div id="status"></div>
+      </div>
+
+      <!-- 文件列表卡片 -->
+      <div class="card">
+        <div class="card-title">
+          <span class="card-icon">📋</span>
+          <span>文件列表</span>
+        </div>
+
+        <div class="table-container">
+          <table class="table" id="table">
+            <thead>
+              <tr>
+                <th>文件名</th>
+                <th>原尺寸</th>
+                <th>原大小</th>
+                <th>压后尺寸</th>
+                <th>压后大小</th>
+                <th>压缩率</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody">
+              <tr>
+                <td colspan="7">
+                  <div class="empty-state">
+                    <div class="empty-icon">📸</div>
+                    <div class="empty-text">未选择文件</div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -160,45 +605,77 @@
     const maxWEl = document.getElementById("maxW");
     const maxHEl = document.getElementById("maxH");
     const dropzone = document.getElementById("dropzone");
+    const btnCompress = document.getElementById("btnCompress");
+    const btnDownloadAll = document.getElementById("btnDownloadAll");
+    const btnClear = document.getElementById("btnClear");
 
     let files = [];
     let results = {};
 
+    // 质量显示更新
     qVal.textContent = qualityEl.value;
     qualityEl.addEventListener("input", () => qVal.textContent = qualityEl.value);
 
+    // 格式化字节
     function fmtBytes(bytes) {
       if (bytes === 0) return "0 B";
       const k = 1024;
-      const sizes = ["B","KB","MB","GB"];
+      const sizes = ["B", "KB", "MB", "GB"];
       const i = Math.floor(Math.log(bytes) / Math.log(k));
       return (bytes / Math.pow(k, i)).toFixed(2) + " " + sizes[i];
     }
 
+    // 显示状态消息
+    function showStatus(message, type = "info") {
+      statusEl.innerHTML = `<div class="status status-${type}">${message}</div>`;
+    }
+
+    // 渲染表格
     function renderTable() {
       if (!files.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="muted">未选择文件</td></tr>`;
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <div class="empty-icon">📸</div>
+                <div class="empty-text">未选择文件</div>
+              </div>
+            </td>
+          </tr>
+        `;
         return;
       }
+
       tbody.innerHTML = "";
-      files.forEach((f, idx) => {
+      files.forEach((f) => {
         const r = results[f.name];
-        const ratioText = r ? ((r.size / f.size * 100).toFixed(1) + "%") : "-";
-        const ratioClass = r && r.size <= f.size * 0.6 ? "ratio-good" : "ratio-bad";
+        const ratioPercent = r ? (r.size / f.size * 100).toFixed(1) : "-";
+        let ratioClass = "";
+
+        if (r) {
+          if (r.size <= f.size * 0.5) ratioClass = "ratio-good";
+          else if (r.size <= f.size * 0.8) ratioClass = "ratio-warning";
+          else ratioClass = "ratio-bad";
+        }
+
+        const origDim = r?.origW ? `${r.origW} × ${r.origH}` : "-";
+        const compDim = r?.w ? `${r.w} × ${r.h}` : "-";
+
         tbody.innerHTML += `
           <tr>
-            <td>${f.name}</td>
-            <td>${r?.origW ? `${r.origW}×${r.origH}` : "-"}</td>
+            <td><strong>${f.name}</strong></td>
+            <td>${origDim}</td>
             <td>${fmtBytes(f.size)}</td>
-            <td>${r?.w ? `${r.w}×${r.h}` : "-"}</td>
+            <td>${compDim}</td>
             <td>${r ? fmtBytes(r.size) : "-"}</td>
-            <td class="${r ? ratioClass : ""}">${r ? ratioText : "-"}</td>
+            <td class="${ratioClass}">${r ? ratioPercent + "%" : "-"}</td>
             <td>
-              ${r ? `<button class="btn secondary" data-name="${f.name}" data-dl>下载</button>` : `<span class="muted">未压缩</span>`}
+              ${r ? `<button class="btn btn-secondary" data-name="${f.name}" data-dl style="font-size: 12px; padding: 6px 12px;">下载</button>` : '<span style="color: var(--color-text-tertiary);">未压缩</span>'}
             </td>
           </tr>
         `;
       });
+
       tbody.querySelectorAll("button[data-dl]").forEach(btn => {
         btn.addEventListener("click", () => {
           const name = btn.getAttribute("data-name");
@@ -215,6 +692,7 @@
       });
     }
 
+    // 压缩单个文件
     async function compressOne(file) {
       const format = formatEl.value;
       const quality = parseFloat(qualityEl.value);
@@ -238,6 +716,7 @@
       let { width, height } = img;
       const origW = width, origH = height;
       const ratio = Math.min(1, maxW / width, maxH / height);
+
       if (ratio < 1) {
         width = Math.round(width * ratio);
         height = Math.round(height * ratio);
@@ -251,9 +730,10 @@
 
       const outType = format === "auto" ? (file.type || "image/jpeg") : format;
       const blob = await new Promise(resolve => canvas.toBlob(resolve, outType, quality));
-      if (!blob) throw new Error("toBlob 失败");
+      if (!blob) throw new Error("压缩失败");
 
-      const outputName = (file.name.replace(/\.[^.]+$/, "")) + (outType === "image/png" ? ".png" : outType === "image/webp" ? ".webp" : ".jpg");
+      const ext = outType === "image/png" ? ".png" : outType === "image/webp" ? ".webp" : ".jpg";
+      const outputName = file.name.replace(/\.[^.]+$/, "") + ext;
 
       results[file.name] = {
         blob,
@@ -266,80 +746,106 @@
       };
     }
 
+    // 压缩所有
     async function compressAll() {
       if (!files.length) {
-        statusEl.textContent = "请先选择图片";
+        showStatus("请先选择图片", "error");
         return;
       }
-      statusEl.textContent = "压缩中...";
+
+      btnCompress.disabled = true;
+      showStatus('<span class="loading"></span> 压缩中...', "info");
       results = {};
-      for (const f of files) {
-        try {
+
+      try {
+        for (const f of files) {
           await compressOne(f);
-        } catch (e) {
-          console.error(e);
-          statusEl.textContent = `压缩失败：${f.name}`;
-          renderTable();
-          return;
         }
+        showStatus(`✓ 压缩完成，共 ${files.length} 个文件`, "success");
+        renderTable();
+      } catch (e) {
+        console.error(e);
+        showStatus(`✗ 压缩失败: ${e.message}`, "error");
+      } finally {
+        btnCompress.disabled = false;
       }
-      statusEl.textContent = "压缩完成";
-      renderTable();
     }
 
+    // 下载全部
     async function downloadAll() {
       if (!Object.keys(results).length) {
-        statusEl.textContent = "先压缩后再下载";
+        showStatus("先压缩后再下载", "error");
         return;
       }
-      const zip = new JSZip();
-      Object.entries(results).forEach(([name, r]) => {
-        zip.file(r.outputName, r.blob);
-      });
-      statusEl.textContent = "打包中...";
-      const blob = await zip.generateAsync({ type: "blob" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "compressed-images.zip";
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      statusEl.textContent = "已下载 ZIP";
+
+      btnDownloadAll.disabled = true;
+      showStatus('<span class="loading"></span> 打包中...', "info");
+
+      try {
+        const zip = new JSZip();
+        Object.entries(results).forEach(([name, r]) => {
+          zip.file(r.outputName, r.blob);
+        });
+        const blob = await zip.generateAsync({ type: "blob" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "compressed-images.zip";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showStatus("✓ 已下载 ZIP 文件", "success");
+      } catch (e) {
+        showStatus("✗ 下载失败", "error");
+      } finally {
+        btnDownloadAll.disabled = false;
+      }
     }
 
+    // 清空
     function clearAll() {
       files = [];
       results = {};
       fileInput.value = "";
+      statusEl.innerHTML = "";
       renderTable();
-      statusEl.textContent = "";
     }
 
+    // 事件监听：文件选择
     fileInput.addEventListener("change", (e) => {
       files = Array.from(e.target.files || []);
       renderTable();
-      statusEl.textContent = files.length ? `已选择 ${files.length} 个文件` : "";
+      if (files.length) {
+        showStatus(`已选择 ${files.length} 个文件`, "info");
+      }
     });
+
+    // 拖拽区事件
+    dropzone.addEventListener("click", () => fileInput.click());
 
     dropzone.addEventListener("dragover", (e) => {
       e.preventDefault();
-      dropzone.style.borderColor = "#7dd3fc";
+      dropzone.classList.add("active");
     });
-    dropzone.addEventListener("dragleave", () => dropzone.style.borderColor = "rgba(125,211,252,0.5)");
+
+    dropzone.addEventListener("dragleave", () => {
+      dropzone.classList.remove("active");
+    });
+
     dropzone.addEventListener("drop", (e) => {
       e.preventDefault();
-      dropzone.style.borderColor = "rgba(125,211,252,0.5)";
+      dropzone.classList.remove("active");
       const dropped = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
       if (dropped.length) {
         files = files.concat(dropped);
         renderTable();
-        statusEl.textContent = `已选择 ${files.length} 个文件`;
+        showStatus(`已选择 ${files.length} 个文件`, "info");
       }
     });
 
-    document.getElementById("btnCompress").addEventListener("click", compressAll);
-    document.getElementById("btnDownloadAll").addEventListener("click", downloadAll);
-    document.getElementById("btnClear").addEventListener("click", clearAll);
+    // 按钮事件
+    btnCompress.addEventListener("click", compressAll);
+    btnDownloadAll.addEventListener("click", downloadAll);
+    btnClear.addEventListener("click", clearAll);
   </script>
 </body>
 </html>

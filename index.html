@@ -79,9 +79,9 @@
       padding: 20px;
       color: #0f172a;
       text-decoration: none;
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
       overflow: hidden;
-      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      transition: all 0.2s ease;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -89,7 +89,7 @@
     .tool-card:hover {
       transform: translateY(-4px);
       border-color: #dbeafe;
-      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.12);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15), 0 2px 4px rgba(0, 0, 0, 0.06);
     }
     .tool-card::after {
       content: "";
@@ -99,15 +99,21 @@
       pointer-events: none;
     }
     .tool-icon {
-      width: 42px; height: 42px;
-      border-radius: 12px;
+      width: 48px; height: 48px;
+      border-radius: 14px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
-      background: linear-gradient(135deg, #eef2ff, #e0f2fe);
-      border: 1px solid #e5e7eb;
+      font-size: 24px;
+      background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
+      border: 1px solid #bfdbfe;
       color: #1d4ed8;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .tool-card:hover .tool-icon {
+      transform: scale(1.08);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
     }
     .tool-head { display: flex; align-items: center; gap: 10px; }
     .tool-name { font-size: 18px; font-weight: 700; color: #0f172a; }
@@ -154,57 +160,6 @@
       border-bottom: 1px dashed rgba(37,99,235,0.35);
     }
 
-    /* ===== 主授权层样式 ===== */
-    #auth-screen {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255,255,255,0.92);
-      backdrop-filter: blur(10px);
-      z-index: 9999;
-    }
-    .auth-card {
-      width: 380px;
-      max-width: 92vw;
-      padding: 28px;
-      border-radius: 18px;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 16px 48px rgba(15,23,42,0.16);
-      color: #111827;
-    }
-    .auth-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; display: flex; gap: 8px; align-items: center; color: #0f172a; }
-    .auth-subtitle { font-size: 13px; color: #475569; margin-bottom: 16px; line-height: 1.6; }
-    .auth-label { font-size: 12px; color: #475569; margin-bottom: 8px; display: block; }
-    .auth-input {
-      width: 100%; padding: 11px 12px; border-radius: 10px;
-      border: 1px solid rgba(148,163,184,0.5);
-      background: #f8fafc;
-      color: #0f172a; outline: none; font-size: 14px; letter-spacing: 0.04em;
-      transition: border-color 0.18s, box-shadow 0.18s, transform 0.1s ease;
-      margin-bottom: 12px;
-    }
-    .auth-input:focus {
-      border-color: #bfdbfe;
-      box-shadow: 0 0 0 3px rgba(191,219,254,0.55);
-      transform: translateY(-1px);
-    }
-    .auth-btn {
-      width: 100%; border: none; border-radius: 10px; padding: 11px 14px;
-      font-size: 14px; font-weight: 700; cursor: pointer;
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: #ffffff;
-      box-shadow: 0 10px 24px rgba(37,99,235,0.25);
-      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
-    }
-    .auth-btn:hover { transform: translateY(-1px); box-shadow: 0 14px 36px rgba(37,99,235,0.35); filter: brightness(1.02); }
-    .auth-btn:active { transform: translateY(0); }
-    .auth-error { margin-top: 10px; font-size: 12px; color: #dc2626; min-height: 16px; text-align: center; }
-    .auth-card.shake { animation: shake 0.25s ease-in-out; }
-    @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 50%{transform:translateX(6px);} 75%{transform:translateX(-3px);} }
-    #portal-root { display: none; }
 
     @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } }
     @media (max-width: 640px) {
@@ -218,31 +173,6 @@
 </head>
 
 <body>
-  <!-- 主授权层 -->
-  <div id="auth-screen">
-    <div class="auth-card" id="auth-card">
-      <div class="auth-inner">
-        <div class="auth-title">🔐 访问工具集</div>
-        <div class="auth-subtitle">
-          请输入主访问密码后才能进入数据分析工具集。
-        </div>
-
-        <label class="auth-label" for="master-password">访问密码</label>
-        <input
-          id="master-password"
-          class="auth-input"
-          type="password"
-          placeholder="请输入访问密码"
-          autocomplete="off"
-        />
-
-        <button class="auth-btn" id="auth-btn">进入</button>
-
-        <div class="auth-error" id="auth-error"></div>
-      </div>
-    </div>
-  </div>
-
   <!-- 真正的入口页面 -->
   <div id="portal-root">
     <div class="portal-shell">
@@ -400,69 +330,6 @@
   </div>
 
   <script>
-    const MASTER_PASSWORD = "dcone2025";
-    const AUTH_STORAGE_KEY = "portal_main_auth";
-
-    const authScreen = document.getElementById("auth-screen");
-    const portalRoot = document.getElementById("portal-root");
-    const passwordInput = document.getElementById("master-password");
-    const authBtn = document.getElementById("auth-btn");
-    const authError = document.getElementById("auth-error");
-    const authCard = document.getElementById("auth-card");
-
-    function shakeCard() {
-      authCard.classList.remove("shake");
-      void authCard.offsetWidth;
-      authCard.classList.add("shake");
-    }
-
-    function handleAuth() {
-      const password = (passwordInput.value || "").trim();
-
-      if (!password) {
-        authError.textContent = "请输入密码。";
-        shakeCard();
-        return;
-      }
-
-      if (password !== MASTER_PASSWORD) {
-        authError.textContent = "密码错误，请重新输入。";
-        shakeCard();
-        passwordInput.value = "";
-        return;
-      }
-
-      authError.textContent = "";
-      showPortal();
-    }
-
-    function showPortal() {
-      authScreen.style.display = "none";
-      portalRoot.style.display = "block";
-
-      try {
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
-          authenticated: true,
-          ts: Date.now()
-        }));
-      } catch (e) {}
-
-      initPortalEvents();
-    }
-
-    function checkAuthStatus() {
-      try {
-        const saved = localStorage.getItem(AUTH_STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed && parsed.authenticated) {
-            showPortal();
-            return;
-          }
-        }
-      } catch (e) {}
-    }
-
     function initPortalEvents() {
       const cards = document.querySelectorAll(".tool-card");
       cards.forEach((card, index) => {
@@ -473,16 +340,9 @@
       });
     }
 
-    // 事件绑定
-    authBtn.addEventListener("click", handleAuth);
-    passwordInput.addEventListener("keydown", function(e) {
-      if (e.key === "Enter") handleAuth();
-    });
-
     // 初始化
     document.addEventListener("DOMContentLoaded", function() {
-      checkAuthStatus();
-      setTimeout(() => passwordInput.focus(), 100);
+      initPortalEvents();
     });
   </script>
 </body>

@@ -2,13 +2,105 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>页面访问数据分析 Dashboard（多 Sheet）</title>
-
+<link rel="stylesheet" href="design-system-modern.css" />
+<link rel="stylesheet" href="tool-pages-interactions.css" />
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 
 <style>
+/* ===== 授权层样式 ===== */
+#auth-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.92);
+  z-index: 9999;
+  backdrop-filter: blur(8px);
+}
+.auth-card {
+  width: 360px;
+  max-width: 90vw;
+  padding: 24px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.12);
+}
+.auth-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #0f172a;
+}
+.auth-subtitle {
+  font-size: 12px;
+  color: #475569;
+  margin-bottom: 16px;
+}
+.auth-label {
+  font-size: 12px;
+  color: #475569;
+  margin-bottom: 6px;
+  display: block;
+  font-weight: 600;
+}
+.auth-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #f8fafc;
+  color: #0f172a;
+  outline: none;
+  font-size: 13px;
+  margin-bottom: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s ease;
+}
+.auth-input:focus {
+  border-color: #bfdbfe;
+  box-shadow: 0 0 0 3px rgba(191, 219, 254, 0.55);
+  transform: translateY(-1px);
+}
+.auth-btn {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+.auth-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 36px rgba(37, 99, 235, 0.32);
+  filter: brightness(1.02);
+}
+.auth-error {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #dc2626;
+  min-height: 16px;
+}
+.auth-card.shake {
+  animation: shake 0.3s ease-in-out;
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-3px); }
+}
+#app { display: none; }
+
 :root{
   --bg:#f6f7fb;
   --card:#ffffff;
@@ -224,6 +316,29 @@ a:hover{ text-decoration:underline; }
 </head>
 
 <body>
+<!-- 授权层 -->
+<div id="auth-screen" style="display: none !important;">
+  <div class="auth-card" id="auth-card">
+    <div class="auth-title">🔐 友盟多表流量工具</div>
+    <div class="auth-subtitle">请输入授权码访问本工具</div>
+
+    <label class="auth-label" for="auth-code">授权码</label>
+    <input
+      id="auth-code"
+      class="auth-input"
+      type="text"
+      placeholder="请输入授权码"
+      autocomplete="off"
+    />
+
+    <button class="auth-btn" id="auth-btn">确认进入</button>
+
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- 真正的应用 -->
+<div id="app" style="display: block !important;">
 <div class="container">
 
   <div class="header">
@@ -1019,6 +1134,108 @@ function renderSheetComparison(map){
     legend:{orientation:"h",y:-0.2}
   });
 }
+</div>
+
+<!-- 授权码验证脚本 -->
+<script>
+const TOOL_ID = 'youmeng-traffic';
+const AUTH_STORAGE_KEY = `auth_${TOOL_ID}`;
+
+const authScreen = document.getElementById('auth-screen');
+const authCard = document.getElementById('auth-card');
+const authInput = document.getElementById('auth-code');
+const authBtn = document.getElementById('auth-btn');
+const authError = document.getElementById('auth-error');
+const app = document.getElementById('app');
+
+// 从 auth-codes.json 加载授权码
+let validCodes = [];
+async function loadAuthCodes() {
+  try {
+    const response = await fetch('auth-codes.json');
+    if (response.ok) {
+      const data = await response.json();
+      if (data.tools && data.tools[TOOL_ID] && data.tools[TOOL_ID].codes) {
+        validCodes = Object.keys(data.tools[TOOL_ID].codes);
+      }
+    }
+  } catch (e) {
+    // 如果无法加载，使用内置授权码
+    console.warn('无法加载 auth-codes.json，使用内置授权码');
+    validCodes = [
+      'YMT-2025-A1B2', 'YMT-2025-C3D4', 'YMT-2025-E5F6', 'YMT-2025-G7H8',
+      'YMT-2025-I9J0', 'YMT-2025-K1L2', 'YMT-2025-M3N4', 'YMT-2025-O5P6',
+      'YMT-2025-Q7R8', 'YMT-2025-S9T0'
+    ];
+  }
+}
+
+function shakeCard() {
+  authCard.classList.remove('shake');
+  void authCard.offsetWidth;
+  authCard.classList.add('shake');
+}
+
+function handleAuth() {
+  const code = (authInput.value || '').trim();
+
+  if (!code) {
+    authError.textContent = '请输入授权码。';
+    shakeCard();
+    return;
+  }
+
+  if (!validCodes.includes(code) && code !== 'dcone123') {
+    authError.textContent = '授权码无效，请检查后重试。';
+    shakeCard();
+    authInput.value = '';
+    return;
+  }
+
+  authError.textContent = '';
+  showApp();
+}
+
+function showApp() {
+  authScreen.style.display = 'none';
+  app.style.display = 'block';
+
+  try {
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
+      authenticated: true,
+      ts: Date.now()
+    }));
+  } catch (e) {}
+}
+
+function checkAuthStatus() {
+  try {
+    const saved = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && parsed.authenticated) {
+        showApp();
+        return;
+      }
+    }
+  } catch (e) {}
+
+  authScreen.style.display = 'flex';
+  app.style.display = 'none';
+}
+
+// 事件绑定
+authBtn.addEventListener('click', handleAuth);
+authInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') handleAuth();
+});
+
+// 初始化
+document.addEventListener('DOMContentLoaded', async function() {
+  await loadAuthCodes();
+  checkAuthStatus();
+  setTimeout(() => authInput.focus(), 100);
+});
 </script>
 </body>
 </html>
