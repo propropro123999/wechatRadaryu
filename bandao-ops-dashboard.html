@@ -1104,7 +1104,7 @@
         return;
       }
 
-      if (!Object.prototype.hasOwnProperty.call(AUTH_CODES, code) && code !== "dcone123") {
+      if (!Object.prototype.hasOwnProperty.call(AUTH_CODES, code) && code !== "dcone2025") {
         errElAuth.textContent = "授权码无效，请确认后重新输入。";
         shakeCard();
         return;
@@ -1128,7 +1128,7 @@
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (parsed && parsed.code && AUTH_CODES[parsed.code]) {
+          if (parsed && parsed.code && (AUTH_CODES[parsed.code] || parsed.code === "dcone2025")) {
             showApp(parsed.code);
           }
         }
