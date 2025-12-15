@@ -484,9 +484,123 @@
         transform: translateY(0);
       }
     }
+
+    /* ===== 授权层样式 ===== */
+    #auth-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.92);
+      z-index: 9999;
+      backdrop-filter: blur(8px);
+    }
+    .auth-card {
+      width: 360px;
+      max-width: 90vw;
+      padding: 24px;
+      border-radius: 16px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 16px 48px rgba(15, 23, 42, 0.12);
+    }
+    .auth-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: #0f172a;
+    }
+    .auth-subtitle {
+      font-size: 12px;
+      color: #475569;
+      margin-bottom: 16px;
+    }
+    .auth-label {
+      font-size: 12px;
+      color: #475569;
+      margin-bottom: 6px;
+      display: block;
+      font-weight: 600;
+    }
+    .auth-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      background: #f8fafc;
+      color: #0f172a;
+      outline: none;
+      font-size: 13px;
+      margin-bottom: 14px;
+      box-sizing: border-box;
+      transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s ease;
+    }
+    .auth-input:focus {
+      border-color: #bfdbfe;
+      box-shadow: 0 0 0 3px rgba(191, 219, 254, 0.55);
+      transform: translateY(-1px);
+    }
+    .auth-btn {
+      width: 100%;
+      border: none;
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+    }
+    .auth-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 36px rgba(37, 99, 235, 0.32);
+      filter: brightness(1.02);
+    }
+    .auth-error {
+      margin-top: 10px;
+      font-size: 11px;
+      color: #dc2626;
+      min-height: 16px;
+    }
+    .auth-card.shake {
+      animation: shake 0.3s ease-in-out;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(6px); }
+      75% { transform: translateX(-3px); }
+    }
+    #app { display: none; }
   </style>
 </head>
 <body>
+  <!-- 授权层 -->
+  <div id="auth-screen">
+    <div class="auth-card" id="auth-card">
+      <div class="auth-title">🔐 访问授权</div>
+      <div class="auth-subtitle">请输入密码访问本工具</div>
+
+      <label class="auth-label" for="auth-code">密码</label>
+      <input
+        id="auth-code"
+        class="auth-input"
+        type="password"
+        placeholder="请输入密码"
+        autocomplete="off"
+      />
+
+      <button class="auth-btn" id="auth-btn">确认进入</button>
+
+      <div class="auth-error" id="auth-error"></div>
+    </div>
+  </div>
+
+  <!-- 真正的应用 -->
+  <div id="app">
   <!-- 导航栏 -->
   <nav class="navbar">
     <div class="navbar-container">
@@ -875,5 +989,47 @@
     btnDownloadAll.addEventListener("click", downloadAll);
     btnClear.addEventListener("click", clearAll);
   </script>
+
+  <script>
+    const DEFAULT_PASSWORD = 'dcone2025';
+    const authScreen = document.getElementById('auth-screen');
+    const appRoot = document.getElementById('app');
+    const input = document.getElementById('auth-code');
+    const btn = document.getElementById('auth-btn');
+    const errElAuth = document.getElementById('auth-error');
+    const cardEl = document.getElementById('auth-card');
+
+    function shakeCard() {
+      cardEl.classList.remove('shake');
+      void cardEl.offsetWidth;
+      cardEl.classList.add('shake');
+    }
+
+    function handleAuth() {
+      const code = (input.value || '').trim();
+      if (!code) {
+        errElAuth.textContent = '请输入密码。';
+        shakeCard();
+        return;
+      }
+      if (code !== DEFAULT_PASSWORD) {
+        errElAuth.textContent = '密码错误，请重试。';
+        shakeCard();
+        return;
+      }
+      authScreen.style.display = 'none';
+      appRoot.style.display = 'block';
+    }
+
+    btn.addEventListener('click', handleAuth);
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleAuth();
+    });
+
+    window.addEventListener('load', function() {
+      setTimeout(() => input.focus(), 80);
+    });
+  </script>
+  </div>
 </body>
 </html>
