@@ -1152,13 +1152,13 @@
       if (appRoot) appRoot.style.display = "none";
     })();
 
-    btn.addEventListener("click", handleAuth);
-    input.addEventListener("keydown", function (e) {
+    if (btn) btn.addEventListener("click", handleAuth);
+    if (input) input.addEventListener("keydown", function (e) {
       if (e.key === "Enter") handleAuth();
     });
 
     window.addEventListener("load", function() {
-      setTimeout(() => input.focus(), 80);
+      if (input) setTimeout(() => input.focus(), 80);
     });
   </script>
 </body>

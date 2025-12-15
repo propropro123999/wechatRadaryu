@@ -1166,12 +1166,8 @@ function renderSheetComparison(map){
 const TOOL_ID = 'youmeng-traffic';
 const AUTH_STORAGE_KEY = `auth_${TOOL_ID}`;
 
-const authScreen = document.getElementById('auth-screen');
-const authCard = document.getElementById('auth-card');
-const authInput = document.getElementById('auth-code');
-const authBtn = document.getElementById('auth-btn');
-const authError = document.getElementById('auth-error');
-const app = document.getElementById('app');
+// 声明变量，但延迟赋值
+let authScreen, authCard, authInput, authBtn, authError, app;
 
 // 从 auth-codes.json 加载授权码
 let validCodes = [];
@@ -1251,20 +1247,28 @@ function checkAuthStatus() {
 
 // 初始化
 document.addEventListener('DOMContentLoaded', async function() {
+  // 初始化 DOM 元素引用
+  authScreen = document.getElementById('auth-screen');
+  authCard = document.getElementById('auth-card');
+  authInput = document.getElementById('auth-code');
+  authBtn = document.getElementById('auth-btn');
+  authError = document.getElementById('auth-error');
+  app = document.getElementById('app');
+
   // 确保初始状态：显示授权层，隐藏应用
-  authScreen.style.display = 'flex';
-  app.style.display = 'none';
+  if (authScreen) authScreen.style.display = 'flex';
+  if (app) app.style.display = 'none';
 
   await loadAuthCodes();
   checkAuthStatus();
 
   // 事件绑定
-  authBtn.addEventListener('click', handleAuth);
-  authInput.addEventListener('keydown', function(e) {
+  if (authBtn) authBtn.addEventListener('click', handleAuth);
+  if (authInput) authInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') handleAuth();
   });
 
-  setTimeout(() => authInput.focus(), 100);
+  if (authInput) setTimeout(() => authInput.focus(), 100);
 });
 </script>
 </body>
