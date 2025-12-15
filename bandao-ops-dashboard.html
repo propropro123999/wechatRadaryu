@@ -1123,6 +1123,10 @@
     }
 
     (async function bootstrapAuth() {
+      // 确保初始状态：显示授权层，隐藏应用
+      authScreen.style.display = "flex";
+      appRoot.style.display = "none";
+
       await loadAuthCodes();
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -1130,9 +1134,14 @@
           const parsed = JSON.parse(saved);
           if (parsed && parsed.code && (AUTH_CODES[parsed.code] || parsed.code === "dcone2025")) {
             showApp(parsed.code);
+            return;
           }
         }
       } catch (e) {}
+
+      // 如果没有有效授权，显示授权层（双重保障）
+      authScreen.style.display = "flex";
+      appRoot.style.display = "none";
     })();
 
     btn.addEventListener("click", handleAuth);

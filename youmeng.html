@@ -1249,16 +1249,21 @@ function checkAuthStatus() {
   app.style.display = 'none';
 }
 
-// 事件绑定
-authBtn.addEventListener('click', handleAuth);
-authInput.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') handleAuth();
-});
-
 // 初始化
 document.addEventListener('DOMContentLoaded', async function() {
+  // 确保初始状态：显示授权层，隐藏应用
+  authScreen.style.display = 'flex';
+  app.style.display = 'none';
+
   await loadAuthCodes();
   checkAuthStatus();
+
+  // 事件绑定
+  authBtn.addEventListener('click', handleAuth);
+  authInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleAuth();
+  });
+
   setTimeout(() => authInput.focus(), 100);
 });
 </script>
