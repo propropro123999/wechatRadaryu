@@ -119,10 +119,7 @@ a:hover {
   flex-direction: column;
 }
 
-.flex-wrap {
-  flex-wrap: wrap;
-}
-
+/* Removed global flex-wrap to satisfy "prefer previous layout" */
 .gap-2 {
   gap: 8px;
 }
@@ -137,6 +134,12 @@ a:hover {
 
 .text-center {
   text-align: center;
+}
+
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .grid {
@@ -262,10 +265,7 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  /* Allow wrapping on small screens */
   gap: 16px;
-  /* Spacing when wrapped */
 }
 
 .gem-nav-title {
@@ -276,14 +276,14 @@ a:hover {
   align-items: center;
   gap: 12px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .gem-nav-actions {
   display: flex;
   gap: 12px;
   align-items: center;
-  flex-wrap: wrap;
-  /* Actions can wrap if needed */
+  flex-shrink: 0;
 }
 
 /* Tags/Chips */
