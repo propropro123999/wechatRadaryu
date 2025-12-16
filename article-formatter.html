@@ -388,14 +388,21 @@
 
                 if (articleContent) {
                     // Success!
-                    // We handle images specifically before inserting
-                    // WeChat uses data-src usually, we need to ensure src is set (browser might do it, but to be sure)
+                    // Process images:
+                    // 1. Promote data-src to src
+                    // 2. Add explicit no-referrer policy to individual images
+                    // 3. Reset max-width to ensure they fit
                     var images = articleContent.querySelectorAll('img');
                     images.forEach(img => {
-                        if (img.dataset.src) {
-                            img.src = img.dataset.src;
+                        var realSrc = img.getAttribute('data-src') || img.src;
+                        if (realSrc) {
+                            img.src = realSrc;
+                            img.setAttribute('referrerpolicy', 'no-referrer');
+                            img.style.maxWidth = '100%';
+                            img.style.height = 'auto'; // Prevent collapse
+                            img.style.display = 'block'; // Block display
+                            img.style.margin = '10px auto'; // Center
                         }
-                        // Ensure no-referrer is respected (meta tag on page handles this generally)
                     });
 
                     $('#editor').html(articleContent.innerHTML);
