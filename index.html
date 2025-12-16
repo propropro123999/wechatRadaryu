@@ -67,6 +67,27 @@
     .gem-card:hover .tool-link svg {
       transform: translateX(4px);
     }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 40px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .footer-link {
+      color: var(--gem-color-text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      transition: color 0.2s;
+      text-decoration: none;
+    }
+
+    .footer-link:hover {
+      color: var(--gem-color-accent);
+    }
   </style>
 </head>
 
@@ -191,8 +212,18 @@
 
     </div>
 
+    <!-- Footer Links -->
+    <div class="footer-links animate-fade-in delay-3">
+      <a href="https://www.icviews.cn/" target="_blank" class="footer-link">半导纵横首页</a>
+      <a href="https://www.icviews.cn/news/recommend" target="_blank" class="footer-link">资讯池</a>
+      <a href="https://www.icviews.cn/semiCommunity/latest" target="_blank" class="footer-link">半导圈</a>
+      <a href="https://www.icviews.cn/application" target="_blank" class="footer-link">视频场</a>
+      <a href="https://www.icviews.cn/products" target="_blank" class="footer-link">产品汇</a>
+    </div>
+
     <!-- Footer -->
-    <div style="text-align: center; margin-top: 48px; color: var(--gem-color-text-tertiary); font-size: 12px;">
+    <div
+      style="text-align: center; margin-top: 24px; color: var(--gem-color-text-tertiary); font-size: 12px; opacity: 0.8;">
       <p>💡 Designed with Gemini Aesthetics. Processing locally in your browser.</p>
     </div>
 
