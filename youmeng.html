@@ -558,7 +558,7 @@
           return;
         }
         const cols = Object.keys(data[0]);
-        let html = "<table><thead><tr>";
+        let html = "<table class='gem-table'><thead><tr>";
         cols.forEach(c => html += `<th class="${c.includes("URL") ? "url" : ""}">${c}</th>`);
         html += "</tr></thead><tbody>";
         data.slice(0, 50).forEach(row => {
@@ -581,7 +581,7 @@
           el.innerHTML = "<div class='small'>无数据</div>";
           return;
         }
-        let html = "<table><thead><tr>"
+        let html = "<table class='gem-table'><thead><tr>"
           + "<th>#</th><th class='url'>页面URL</th><th>页面类型</th><th>页面ID</th>"
           + "</tr></thead><tbody>";
         data.slice(0, 20).forEach((r, i) => {
@@ -801,7 +801,7 @@
           legend: { orientation: "h", y: -0.2 }
         });
 
-        let html = "<table><thead><tr><th>页面类型</th><th>PV</th><th>UV</th><th>记录数</th><th>平均停留秒</th></tr></thead><tbody>";
+        let html = "<table class='gem-table'><thead><tr><th>页面类型</th><th>PV</th><th>UV</th><th>记录数</th><th>平均停留秒</th></tr></thead><tbody>";
         types.forEach(t => {
           const a = agg[t];
           const avgDur = a.durCnt ? (a.durSum / a.durCnt).toFixed(2) : "-";
@@ -823,7 +823,7 @@
         const topDurShow = durSorted.slice(0, DISPLAY_TOP_N);
 
         // TOP PV
-        let htmlPv = "<table><thead><tr>"
+        let htmlPv = "<table class='gem-table'><thead><tr>"
           + "<th>#</th><th>类型</th><th>ID</th><th class='url'>URL</th>"
           + "<th>PV</th><th>UV</th><th>IP</th><th>输出PV</th>"
           + "<th>平均停留秒</th><th>平均人均浏览</th><th>覆盖Sheet数</th><th>PV占比</th><th>UV占比</th>"
@@ -850,7 +850,7 @@
         document.getElementById("topPvTable").innerHTML = `<div class="table-wrap">${htmlPv}</div>`;
 
         // TOP 停留
-        let htmlDur = "<table><thead><tr>"
+        let htmlDur = "<table class='gem-table'><thead><tr>"
           + "<th>#</th><th>类型</th><th>ID</th><th class='url'>URL</th>"
           + "<th>平均停留秒</th><th>PV</th><th>UV</th><th>IP</th><th>输出PV</th>"
           + "<th>平均人均浏览</th><th>覆盖Sheet数</th>"
@@ -954,7 +954,7 @@
           });
         }
 
-        let html = "<table><thead><tr><th>Sheet</th><th>记录数</th><th>PV</th><th>UV</th><th>平均停留秒</th></tr></thead><tbody>";
+        let html = "<table class='gem-table'><thead><tr><th>Sheet</th><th>记录数</th><th>PV</th><th>UV</th><th>平均停留秒</th></tr></thead><tbody>";
         rows.forEach(r => {
           html += `<tr>
       <td>${r.sheet}</td>
