@@ -14,7 +14,10 @@
             background-color: var(--gem-color-background);
             color: var(--gem-color-text-primary);
             font-family: 'Google Sans', 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
-            min-height: 100vh;
+            height: 100vh;
+            /* Fixed height */
+            overflow: hidden;
+            /* Prevent body scroll */
             display: flex;
             flex-direction: column;
         }
@@ -24,7 +27,9 @@
             margin: 0 auto;
             padding: 24px;
             width: 100%;
-            flex-grow: 1;
+            height: 100%;
+            /* Full height */
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
         }
@@ -34,6 +39,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 24px;
+            flex-shrink: 0;
+            /* Header doesn't shrink */
         }
 
         .back-link {
@@ -59,7 +66,8 @@
             display: flex;
             flex-direction: column;
             flex-grow: 1;
-            min-height: 600px;
+            min-height: 0;
+            /* Important for flex child scrolling */
         }
 
         .toolbar-container {
