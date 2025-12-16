@@ -184,6 +184,16 @@
         <!-- Interface -->
         <div class="editor-card">
             <div class="toolbar-container">
+
+                <!-- URL Import Section -->
+                <div
+                    style="width: 100%; display: flex; gap: 8px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px dashed #eee;">
+                    <input type="text" id="articleUrl" placeholder="🔗 粘贴微信公众号文章链接 (https://mp.weixin.qq.com/s/...)"
+                        style="flex-grow: 1; padding: 10px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none;">
+                    <button class="action-btn" onclick="importArticle()"
+                        style="background-color: var(--gem-color-primary);">📥 导入文章</button>
+                </div>
+
                 <div class="checkbox-group">
                     <label class="checkbox-item">
                         <input id="clearSign" name="clearSign" type="checkbox" checked="checked">
@@ -339,6 +349,67 @@
             setTimeout(function () {
                 $toast.removeClass('show');
             }, 2000);
+        }
+
+        async function importArticle() {
+            var url = $('#articleUrl').val().trim();
+            if (!url) {
+                showToast('⚠️ 请先输入文章链接');
+                return;
+            }
+
+            // Simple client-side validation
+            if (url.indexOf('mp.weixin.qq.com') < 0) {
+                showToast('⚠️ 仅支持微信公众号文章链接');
+                return;
+            }
+
+            var $btn = $('button[onclick="importArticle()"]');
+            var originalText = $btn.text();
+            $btn.text('⏳ 导入中...').prop('disabled', true).css('opacity', 0.7);
+
+            try {
+                // Call our Vercel API
+                const response = await fetch(`/api/fetch-article?url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Fetch failed');
+                }
+
+                if (!data.html) {
+                    throw new Error('No content received');
+                }
+
+                // Parse HTML to extract #js_content
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(data.html, 'text/html');
+                var articleContent = doc.querySelector('#js_content');
+
+                if (articleContent) {
+                    // Success!
+                    // We handle images specifically before inserting
+                    // WeChat uses data-src usually, we need to ensure src is set (browser might do it, but to be sure)
+                    var images = articleContent.querySelectorAll('img');
+                    images.forEach(img => {
+                        if (img.dataset.src) {
+                            img.src = img.dataset.src;
+                        }
+                        // Ensure no-referrer is respected (meta tag on page handles this generally)
+                    });
+
+                    $('#editor').html(articleContent.innerHTML);
+                    showToast('✅ 文章导入成功！');
+                } else {
+                    showToast('⚠️ 未能识别文章正文内容');
+                }
+
+            } catch (err) {
+                console.error(err);
+                showToast('❌ 导入失败: ' + err.message);
+            } finally {
+                $btn.text(originalText).prop('disabled', false).css('opacity', 1);
+            }
         }
     </script>
 </body>
