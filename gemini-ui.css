@@ -251,42 +251,136 @@ a:hover {
   border-color: #D1D5DB;
 }
 
-/* Navbar */
-.gem-nav {
+/* ——— Unified Navbar ——— */
+.gem-navbar {
   position: sticky;
   top: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.85);
-  /* Frost */
+  z-index: 1000;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  padding: 12px 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  padding: 0 24px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
-.gem-nav-title {
+.gem-navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--gem-color-text-primary);
   font-weight: 600;
   font-size: 18px;
-  color: var(--gem-color-text-primary);
+  transition: opacity 0.2s;
+}
+
+.gem-navbar-brand:hover {
+  opacity: 0.8;
+}
+
+.gem-navbar-icon {
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gem-navbar-actions {
   display: flex;
   align-items: center;
   gap: 12px;
-  white-space: nowrap;
-  flex-shrink: 0;
 }
 
-.gem-nav-actions {
+/* ——— App Switcher (Dropdown) ——— */
+.gem-app-switcher {
+  position: relative;
+  display: inline-block;
+}
+
+.gem-app-switcher-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   display: flex;
-  gap: 12px;
   align-items: center;
-  flex-shrink: 0;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--gem-color-text-secondary);
+  transition: all 0.2s;
+  background: transparent;
+  border: none;
+  font-size: 20px;
 }
 
-/* Tags/Chips */
+.gem-app-switcher-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--gem-color-accent);
+}
+
+.gem-app-switcher-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  width: 280px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 16px;
+  display: none;
+  /* Hidden by default */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: fadeInDropdown 0.2s forwards;
+}
+
+/* Ensure z-index is high enough */
+.gem-app-switcher:hover .gem-app-switcher-menu {
+  display: grid;
+}
+
+@keyframes fadeInDropdown {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gem-app-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  padding: 12px 4px;
+  border-radius: 12px;
+  color: var(--gem-color-text-secondary);
+  transition: all 0.2s;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.gem-app-item:hover {
+  background: #F0F4F9;
+  color: var(--gem-color-accent);
+  transform: scale(1.05);
+}
+
+.gem-app-icon {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+/* ——— Tags/Chips ——— */
 .gem-chip {
   display: inline-flex;
   padding: 4px 12px;

@@ -135,18 +135,32 @@
             padding: 40px;
             outline: none;
             overflow-y: auto;
+
+            /* WeChat Article Simulation Typography */
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans", "Microsoft YaHei", sans-serif;
             font-size: 16px;
-            line-height: 1.8;
+            line-height: 1.6;
+            letter-spacing: 0.034em;
             color: #333;
+            text-align: justify;
         }
 
+        /* Enhanced Empty State */
         .editor-content:empty:before {
-            content: '请在此处粘贴文章内容...';
+            content: '📝 粘贴文章内容，或上方导入链接...';
             color: #aaa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 16px;
+            opacity: 0.6;
         }
 
         .editor-content p {
-            margin-bottom: 1em;
+            margin-bottom: 1.5em;
+            /* WeChat style paragraph spacing */
         }
 
         .status-toast {
@@ -168,10 +182,87 @@
         .status-toast.show {
             opacity: 1;
         }
+
+        /* Loading Spinner */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 6px;
+        }
     </style>
 </head>
 
 <body>
+
+    <!-- Unified Navbar -->
+    <nav class="gem-navbar">
+        <a href="#" class="gem-navbar-brand">
+            <span class="gem-navbar-icon">📝</span>
+            <span>文章排版工具</span>
+        </a>
+
+        <div class="gem-navbar-actions">
+            <!-- App Switcher -->
+            <div class="gem-app-switcher">
+                <button class="gem-app-switcher-btn" title="切换工具">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                        <path
+                            d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" />
+                    </svg>
+                </button>
+                <div class="gem-app-switcher-menu">
+                    <a href="content-dashboard.html" class="gem-app-item">
+                        <span class="gem-app-icon">📈</span>
+                        <span>内容数据</span>
+                    </a>
+                    <a href="bandao-ops-dashboard.html" class="gem-app-item">
+                        <span class="gem-app-icon">🧭</span>
+                        <span>专栏/帖子</span>
+                    </a>
+                    <a href="page-traffic-dashboard.html" class="gem-app-item">
+                        <span class="gem-app-icon">🌐</span>
+                        <span>页面流量</span>
+                    </a>
+                    <a href="youmeng.html" class="gem-app-item">
+                        <span class="gem-app-icon">📄</span>
+                        <span>友盟多表</span>
+                    </a>
+                    <a href="image-compress.html" class="gem-app-item">
+                        <span class="gem-app-icon">🗜️</span>
+                        <span>图片压缩</span>
+                    </a>
+                    <a href="yiban-dashboard.html" class="gem-app-item">
+                        <span class="gem-app-icon">📊</span>
+                        <span>壹伴数据</span>
+                    </a>
+                    <a href="article-formatter.html" class="gem-app-item">
+                        <span class="gem-app-icon">📝</span>
+                        <span>文章排版</span>
+                    </a>
+                </div>
+            </div>
+
+            <a href="index.html" class="gem-btn gem-btn-secondary"
+                style="border-radius: 8px; padding: 6px 16px; font-size: 13px;">
+                🏠 首页
+            </a>
+        </div>
+    </nav>
 
     <div class="main-container animate-fade-in">
         <!-- Header -->
@@ -373,8 +464,8 @@
             }
 
             var $btn = $('button[onclick="importArticle()"]');
-            var originalText = $btn.text();
-            $btn.text('⏳ 导入中...').prop('disabled', true).css('opacity', 0.7);
+            var originalHtml = $btn.html();
+            $btn.html('<span class="spinner"></span> 导入中...').prop('disabled', true).css('opacity', 0.8);
 
             try {
                 // Call our Vercel API
@@ -423,7 +514,7 @@
                 console.error(err);
                 showToast('❌ 导入失败: ' + err.message);
             } finally {
-                $btn.text(originalText).prop('disabled', false).css('opacity', 1);
+                $btn.html(originalHtml).prop('disabled', false).css('opacity', 1);
             }
         }
     </script>

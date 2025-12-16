@@ -380,21 +380,65 @@
 
   <!-- 真正的应用 -->
   <div id="app">
-    <div class="topbar">
-      <div style="flex:1;">
-        <div class="topbar-title">专栏 / 帖子工具（本地版）</div>
-        <div class="hint">
-          支持的列名示例：动态ID / 动态标题 / 产业动态标题 / 发布者 / 作者 / 来源 / 点赞数 / 评论数 / 创建时间 / 发布时间 / 更新时间（点赞和评论可选）
-        </div>
-      </div>
-      <div style="display:flex; gap:12px; align-items:center;">
-        <label class="file-input">
-          选择 Excel 文件
-          <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" />
+    <!-- Unified Navbar -->
+    <nav class="gem-navbar">
+      <a href="#" class="gem-navbar-brand">
+        <span class="gem-navbar-icon">🧭</span>
+        <span>半导纵横专栏/帖子分析</span>
+      </a>
+
+      <div class="gem-navbar-actions">
+        <label class="gem-btn gem-btn-primary" style="padding: 8px 20px; font-size: 13px;">
+          📤 选择 CSV
+          <input type="file" id="fileInput" accept=".csv" style="display: none;" />
         </label>
-        <a href="index.html" class="topbar-home">← 返回首页</a>
+
+        <!-- App Switcher -->
+        <div class="gem-app-switcher">
+          <button class="gem-app-switcher-btn" title="切换工具">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+              <path
+                d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" />
+            </svg>
+          </button>
+          <div class="gem-app-switcher-menu">
+            <a href="content-dashboard.html" class="gem-app-item">
+              <span class="gem-app-icon">📈</span>
+              <span>内容数据</span>
+            </a>
+            <a href="bandao-ops-dashboard.html" class="gem-app-item">
+              <span class="gem-app-icon">🧭</span>
+              <span>专栏/帖子</span>
+            </a>
+            <a href="page-traffic-dashboard.html" class="gem-app-item">
+              <span class="gem-app-icon">🌐</span>
+              <span>页面流量</span>
+            </a>
+            <a href="youmeng.html" class="gem-app-item">
+              <span class="gem-app-icon">📄</span>
+              <span>友盟多表</span>
+            </a>
+            <a href="image-compress.html" class="gem-app-item">
+              <span class="gem-app-icon">🗜️</span>
+              <span>图片压缩</span>
+            </a>
+            <a href="yiban-dashboard.html" class="gem-app-item">
+              <span class="gem-app-icon">📊</span>
+              <span>壹伴数据</span>
+            </a>
+            <a href="article-formatter.html" class="gem-app-item">
+              <span class="gem-app-icon">📝</span>
+              <span>文章排版</span>
+            </a>
+          </div>
+        </div>
+
+        <a href="index.html" class="gem-btn gem-btn-secondary"
+          style="border-radius: 8px; padding: 6px 16px; font-size: 13px;">
+          🏠 首页
+        </a>
       </div>
-    </div>
+    </nav>
 
     <div class="container">
       <h1>专栏 / 帖子工具</h1>

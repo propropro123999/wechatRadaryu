@@ -7,6 +7,7 @@
   <title>图片压缩工具 - 高效压缩，本地处理</title>
 
   <!-- 设计系统 -->
+  <link rel="stylesheet" href="gemini-ui.css" />
   <link rel="stylesheet" href="design-system-modern.css" />
   <link rel="stylesheet" href="tool-pages-interactions.css" />
 
@@ -626,21 +627,64 @@
 
   <!-- 真正的应用 -->
   <div id="app">
-    <!-- 导航栏 -->
-    <nav class="navbar">
-      <div class="navbar-container">
-        <div class="navbar-title">
-          <span class="navbar-icon">🖼️</span>
-          <span>图片压缩工具</span>
+    <!-- Unified Navbar -->
+    <nav class="gem-navbar">
+      <a href="#" class="gem-navbar-brand">
+        <span class="gem-navbar-icon">🗜️</span>
+        <span>图片压缩工具</span>
+      </a>
+
+      <div class="gem-navbar-actions">
+        <!-- Badges inline (optional, or kept in hero) -->
+        <div style="display: flex; gap: 8px; margin-right: 16px;">
+          <span class="gem-chip">✓ 本地处理</span>
+          <span class="gem-chip">✓ 无需上传</span>
         </div>
-        <div style="display: flex; align-items: center; gap: var(--space-lg);">
-          <div class="navbar-badges">
-            <div class="badge">✓ 本地处理</div>
-            <div class="badge">✓ 无需上传</div>
-            <div class="badge">JPG / PNG / WebP</div>
+
+        <!-- App Switcher -->
+        <div class="gem-app-switcher">
+          <button class="gem-app-switcher-btn" title="切换工具">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+              <path
+                d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" />
+            </svg>
+          </button>
+          <div class="gem-app-switcher-menu">
+            <a href="content-dashboard.html" class="gem-app-item">
+              <span class="gem-app-icon">📈</span>
+              <span>内容数据</span>
+            </a>
+            <a href="bandao-ops-dashboard.html" class="gem-app-item">
+              <span class="gem-app-icon">🧭</span>
+              <span>专栏/帖子</span>
+            </a>
+            <a href="page-traffic-dashboard.html" class="gem-app-item">
+              <span class="gem-app-icon">🌐</span>
+              <span>页面流量</span>
+            </a>
+            <a href="youmeng.html" class="gem-app-item">
+              <span class="gem-app-icon">📄</span>
+              <span>友盟多表</span>
+            </a>
+            <a href="image-compress.html" class="gem-app-item">
+              <span class="gem-app-icon">🗜️</span>
+              <span>图片压缩</span>
+            </a>
+            <a href="yiban-dashboard.html" class="gem-app-item">
+              <span class="gem-app-icon">📊</span>
+              <span>壹伴数据</span>
+            </a>
+            <a href="article-formatter.html" class="gem-app-item">
+              <span class="gem-app-icon">📝</span>
+              <span>文章排版</span>
+            </a>
           </div>
-          <a href="index.html" class="navbar-home">← 返回首页</a>
         </div>
+
+        <a href="index.html" class="gem-btn gem-btn-secondary"
+          style="border-radius: 8px; padding: 6px 16px; font-size: 13px;">
+          🏠 首页
+        </a>
       </div>
     </nav>
 
