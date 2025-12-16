@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,6 +14,7 @@
     * {
       box-sizing: border-box;
     }
+
     #auth-screen {
       position: fixed;
       inset: 0;
@@ -23,6 +25,7 @@
       z-index: 9999;
       backdrop-filter: blur(10px);
     }
+
     .auth-card {
       width: 360px;
       max-width: 90vw;
@@ -30,14 +33,16 @@
       border-radius: 18px;
       background: #ffffff;
       border: 1px solid #e5e7eb;
-      box-shadow: 0 16px 48px rgba(15,23,42,0.16);
+      box-shadow: 0 16px 48px rgba(15, 23, 42, 0.16);
       position: relative;
       overflow: hidden;
     }
+
     .auth-inner {
       position: relative;
       z-index: 1;
     }
+
     .auth-title {
       font-size: 18px;
       font-weight: 700;
@@ -47,19 +52,22 @@
       gap: 6px;
       color: #0f172a;
     }
+
     .auth-badge {
       font-size: 11px;
       padding: 2px 8px;
       border-radius: 999px;
-      border: 1px solid rgba(52,211,153,0.7);
+      border: 1px solid rgba(52, 211, 153, 0.7);
       color: #bbf7d0;
-      background: linear-gradient(to right, rgba(22,163,74,0.25), rgba(15,118,110,0.35));
+      background: linear-gradient(to right, rgba(22, 163, 74, 0.25), rgba(15, 118, 110, 0.35));
     }
+
     .auth-subtitle {
       font-size: 12px;
       color: #475569;
       margin-bottom: 16px;
     }
+
     .auth-label {
       font-size: 12px;
       color: #475569;
@@ -67,6 +75,7 @@
       display: block;
       font-weight: 600;
     }
+
     .auth-input {
       width: 100%;
       padding: 10px 12px;
@@ -79,16 +88,19 @@
       letter-spacing: 0.02em;
       transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s ease;
     }
+
     .auth-input::placeholder {
       color: #94a3b8;
       letter-spacing: 0;
     }
+
     .auth-input:focus {
       border-color: #bfdbfe;
-      box-shadow: 0 0 0 3px rgba(191,219,254,0.55);
+      box-shadow: 0 0 0 3px rgba(191, 219, 254, 0.55);
       background: #fff;
       transform: translateY(-1px);
     }
+
     .auth-actions {
       display: flex;
       align-items: center;
@@ -96,6 +108,7 @@
       margin-top: 14px;
       gap: 10px;
     }
+
     .auth-btn {
       flex: 0 0 auto;
       border: none;
@@ -106,7 +119,7 @@
       cursor: pointer;
       background: linear-gradient(135deg, #3b82f6, #2563eb);
       color: #ffffff;
-      box-shadow: 0 10px 24px rgba(37,99,235,0.25);
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -114,20 +127,24 @@
       transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
       white-space: nowrap;
     }
+
     .auth-btn:hover {
       transform: translateY(-1px);
-      box-shadow: 0 14px 36px rgba(37,99,235,0.32);
+      box-shadow: 0 14px 36px rgba(37, 99, 235, 0.32);
       filter: brightness(1.02);
     }
+
     .auth-btn:active {
       transform: translateY(0);
     }
+
     .auth-hint {
       font-size: 11px;
       color: #64748b;
       text-align: left;
       flex: 1;
     }
+
     .auth-meta {
       margin-top: 12px;
       font-size: 11px;
@@ -137,21 +154,38 @@
       gap: 6px;
       flex-wrap: wrap;
     }
+
     .auth-error {
       margin-top: 8px;
       font-size: 11px;
       color: #dc2626;
       min-height: 14px;
     }
+
     .auth-card.shake {
       animation: shake 0.26s ease-in-out;
     }
+
     @keyframes shake {
-      0% { transform: translateX(0); }
-      25% { transform: translateX(-6px); }
-      50% { transform: translateX(5px); }
-      75% { transform: translateX(-3px); }
-      100% { transform: translateX(0); }
+      0% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-6px);
+      }
+
+      50% {
+        transform: translateX(5px);
+      }
+
+      75% {
+        transform: translateX(-3px);
+      }
+
+      100% {
+        transform: translateX(0);
+      }
     }
 
     /* Dashboard 根节点：初始隐藏，授权后显示 */
@@ -169,6 +203,7 @@
       background-color: #f7f8fa;
       color: #0f172a;
     }
+
     .topbar {
       background: #ffffff;
       color: #0f172a;
@@ -182,6 +217,7 @@
       border-bottom: 1px solid #e5e7eb;
       box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
     }
+
     .topbar-title {
       font-size: 16px;
       font-weight: 700;
@@ -206,6 +242,7 @@
       white-space: nowrap;
       margin-left: auto;
     }
+
     .topbar-home:hover {
       background: #3b82f6;
       color: white;
@@ -216,7 +253,7 @@
 
     /* 醒目的上传按钮（方案 A） */
     .upload-btn {
-      background: linear-gradient(135deg,#3b82f6,#2563eb);
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
       color: #fff;
       padding: 9px 16px;
       border-radius: 999px;
@@ -224,7 +261,7 @@
       font-weight: 700;
       cursor: pointer;
       border: none;
-      box-shadow: 0 8px 20px rgba(37,99,235,0.22);
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
       transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
       display: inline-flex;
       align-items: center;
@@ -232,15 +269,20 @@
       margin-left: 8px;
       white-space: nowrap;
     }
+
     .upload-btn input {
       display: none;
     }
+
     .upload-btn:hover {
       transform: translateY(-1px);
-      box-shadow: 0 12px 28px rgba(37,99,235,0.3);
+      box-shadow: 0 12px 28px rgba(37, 99, 235, 0.3);
       filter: brightness(1.02);
     }
-    .upload-btn:active { transform: translateY(0); }
+
+    .upload-btn:active {
+      transform: translateY(0);
+    }
 
     .topbar-spacer {
       flex: 1;
@@ -263,27 +305,32 @@
       margin: 0 auto;
       padding: 20px 16px 40px;
     }
+
     h1 {
       font-size: 26px;
       margin-bottom: 6px;
       color: #0f172a;
     }
+
     h2 {
       font-size: 20px;
       margin: 24px 0 12px;
       color: #0f172a;
     }
+
     .sub-title {
       color: #6b7280;
       margin-bottom: 18px;
       font-size: 13px;
     }
+
     .cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
     }
+
     .card {
       background: #fff;
       border-radius: 16px;
@@ -292,20 +339,24 @@
       border: 1px solid #e5e7eb;
       transition: transform 0.16s ease, box-shadow 0.16s ease;
     }
+
     .card:hover {
       transform: translateY(-2px);
       box-shadow: 0 10px 26px rgba(37, 99, 235, 0.08);
     }
+
     .card-label {
       font-size: 13px;
       color: #6b7280;
       margin-bottom: 4px;
     }
+
     .card-value {
       font-size: 24px;
       font-weight: 700;
       color: #0f172a;
     }
+
     .chart-block {
       background: #fff;
       border-radius: 16px;
@@ -315,46 +366,64 @@
       border: 1px solid #e5e7eb;
       transition: transform 0.16s ease, box-shadow 0.16s ease;
     }
+
     .chart-block:hover {
       transform: translateY(-2px);
       box-shadow: 0 12px 30px rgba(37, 99, 235, 0.08);
     }
+
     .chart {
       width: 100%;
       height: 340px;
     }
+
     .data-table {
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
       font-size: 12px;
     }
+
     .data-table th,
     .data-table td {
       border-bottom: 1px solid #e5e7eb;
       padding: 10px 12px;
       text-align: left;
     }
+
     .data-table th {
       background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
       font-weight: 700;
       color: #374151;
       border-bottom: 2px solid #e5e7eb;
     }
+
     .data-table tbody tr:nth-child(odd) {
       background-color: #fbfdff;
     }
+
     .data-table tbody tr:hover {
       background-color: #f3f6ff;
       transition: background-color 0.15s ease;
     }
+
     .rank-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 16px;
     }
-    #loading{font-size:12px;color:#6b7280;margin-top:6px;}
-    #error{font-size:12px;color:#b91c1c;margin-top:6px;}
+
+    #loading {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 6px;
+    }
+
+    #error {
+      font-size: 12px;
+      color: #b91c1c;
+      margin-top: 6px;
+    }
 
     /* ===== 使用说明卡片 UI ===== */
     .usage-card {
@@ -362,9 +431,10 @@
       border-radius: 14px;
       padding: 12px 16px 4px;
       margin-bottom: 20px;
-      box-shadow: 0 6px 18px rgba(15,23,42,0.06);
-      border: 1px solid rgba(148,163,184,0.35);
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+      border: 1px solid rgba(148, 163, 184, 0.35);
     }
+
     .usage-card-header {
       display: flex;
       align-items: center;
@@ -372,6 +442,7 @@
       cursor: pointer;
       user-select: none;
     }
+
     .usage-icon-wrap {
       width: 32px;
       height: 32px;
@@ -382,10 +453,12 @@
       background: radial-gradient(circle at 30% 20%, #e0f2fe, #eff6ff);
       font-size: 18px;
     }
+
     .usage-title-block {
       flex: 1;
       min-width: 0;
     }
+
     .usage-title-main {
       font-size: 15px;
       font-weight: 600;
@@ -394,20 +467,23 @@
       align-items: center;
       gap: 6px;
     }
+
     .usage-tag {
       font-size: 11px;
       padding: 1px 8px;
       border-radius: 999px;
       background: #ecfdf5;
       color: #16a34a;
-      border: 1px solid rgba(34,197,94,0.35);
+      border: 1px solid rgba(34, 197, 94, 0.35);
       white-space: nowrap;
     }
+
     .usage-title-sub {
       font-size: 12px;
       color: #6b7280;
       margin-top: 2px;
     }
+
     .usage-chip {
       font-size: 11px;
       padding: 4px 8px;
@@ -417,14 +493,17 @@
       margin-right: 6px;
       white-space: nowrap;
     }
+
     .usage-chevron {
       font-size: 16px;
       color: #6b7280;
       transition: transform 0.16s ease;
     }
+
     .usage-chevron.expanded {
       transform: rotate(180deg);
     }
+
     .usage-card-body {
       font-size: 13px;
       color: #374151;
@@ -433,10 +512,12 @@
       padding-top: 8px;
       border-top: 1px dashed #e5e7eb;
     }
+
     .usage-card-body ul {
       padding-left: 18px;
       margin: 4px 0 10px;
     }
+
     .usage-card-body h4 {
       margin: 10px 0 4px;
       font-size: 13px;
@@ -448,27 +529,30 @@
     .usage-modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(15,23,42,0.45);
+      background: rgba(15, 23, 42, 0.45);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 9998;
       backdrop-filter: blur(3px);
     }
+
     .usage-modal-card {
       width: min(420px, 92vw);
       background: #f9fafb;
       border-radius: 18px;
       padding: 18px 18px 14px;
-      box-shadow: 0 22px 60px rgba(15,23,42,0.45);
-      border: 1px solid rgba(148,163,184,0.5);
+      box-shadow: 0 22px 60px rgba(15, 23, 42, 0.45);
+      border: 1px solid rgba(148, 163, 184, 0.5);
     }
+
     .usage-modal-title {
       display: flex;
       align-items: center;
       gap: 10px;
       margin-bottom: 8px;
     }
+
     .usage-modal-icon {
       width: 32px;
       height: 32px;
@@ -479,23 +563,27 @@
       background: radial-gradient(circle at 30% 20%, #bfdbfe, #eff6ff);
       font-size: 18px;
     }
+
     .usage-modal-title-text {
       font-size: 16px;
       font-weight: 600;
       color: #111827;
     }
+
     .usage-modal-body {
       font-size: 13px;
       color: #4b5563;
       line-height: 1.6;
       margin-bottom: 14px;
     }
+
     .usage-modal-actions {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
     }
+
     .usage-modal-btn {
       border: none;
       border-radius: 999px;
@@ -503,17 +591,19 @@
       font-size: 13px;
       font-weight: 500;
       cursor: pointer;
-      background: linear-gradient(135deg,#3b82f6,#6366f1);
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
       color: #f9fafb;
-      box-shadow: 0 12px 30px rgba(37,99,235,0.45);
+      box-shadow: 0 12px 30px rgba(37, 99, 235, 0.45);
       display: inline-flex;
       align-items: center;
       gap: 6px;
     }
+
     .usage-modal-btn:hover {
       filter: brightness(1.05);
       transform: translateY(-1px);
     }
+
     .usage-modal-skip {
       font-size: 12px;
       color: #6b7280;
@@ -538,13 +628,7 @@
         </div>
 
         <label class="auth-label" for="auth-code">授权码</label>
-        <input
-          id="auth-code"
-          class="auth-input"
-          type="text"
-          placeholder="例如：ICV-2025-7QAF"
-          autocomplete="off"
-        />
+        <input id="auth-code" class="auth-input" type="text" placeholder="例如：ICV-2025-7QAF" autocomplete="off" />
 
         <div class="auth-actions">
           <div class="auth-hint">每个授权码对应一次发放对象，可按需分发。</div>
@@ -628,11 +712,8 @@
             <li>在右侧点击 <b>「下载数据明细」</b>，即可获得本工具使用的 Excel / CSV 文件。</li>
           </ul>
           <div style="margin:6px 0 14px;">
-            <img
-              src="wechat-export-location.png"
-              alt="公众号后台下载内容分析数据明细的位置示意图"
-              style="max-width:100%;border-radius:10px;border:1px solid #e5e7eb;display:block;"
-            />
+            <img src="wechat-export-location.png" alt="公众号后台下载内容分析数据明细的位置示意图"
+              style="max-width:100%;border-radius:10px;border:1px solid #e5e7eb;display:block;" />
             <div style="font-size:11px;color:#6b7280;margin-top:4px;">
               示例：在「数据分析 &gt; 内容分析 &gt; 已通知内容」右侧，点击「下载数据明细」导出 Excel。
             </div>
@@ -1040,10 +1121,10 @@
 
     function escapeHtml(s) {
       return String(s)
-        .replace(/&/g,"&amp;")
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;")
-        .replace(/"/g,"&quot;");
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
     }
 
     function renderRanks(data) {
@@ -1053,10 +1134,10 @@
         ["阅读表现 TOP3（按阅读次数）", "readCount", ""],
         ["公众号消息阅读次数 TOP3", "msgRead", ""],
         ["完读率 TOP3", "finishRate", "%"],
-        ["分享意愿 TOP3（按首次分享率）", "firstShareRate","%"],
+        ["分享意愿 TOP3（按首次分享率）", "firstShareRate", "%"],
         ["分享动力 TOP3（按首次分享次数）", "firstShare", ""],
         ["二次传播 TOP3（按分享产生阅读）", "shareRead", ""],
-        ["分享效率 TOP3（每次分享带来阅读）", "readPerShare",""],
+        ["分享效率 TOP3（每次分享带来阅读）", "readPerShare", ""],
         ["分享规模 TOP3（总分享次数）", "shareCount", ""],
         ["关注新增贡献 TOP3", "follow", ""],
         ["标题吸引力 TOP3（送达阅读率）", "deliverRate", "%"],
@@ -1344,7 +1425,7 @@
         if (modal) modal.style.display = "none";
         try {
           localStorage.setItem(USAGE_INTRO_KEY, "1");
-        } catch (e) {}
+        } catch (e) { }
       }
 
       if (modalBtn) {
@@ -1365,7 +1446,7 @@
           STORAGE_KEY,
           JSON.stringify({ code, label, ts: Date.now() })
         );
-      } catch (e) {}
+      } catch (e) { }
       try {
         initUsageGuide();
       } catch (e) {
@@ -1423,9 +1504,10 @@
       if (e.key === "Enter") handleAuth();
     });
 
-    window.addEventListener("load", function() {
+    window.addEventListener("load", function () {
       setTimeout(() => input.focus(), 80);
     });
   </script>
 </body>
+
 </html>

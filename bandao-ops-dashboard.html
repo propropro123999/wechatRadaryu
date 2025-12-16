@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -22,6 +23,7 @@
       background-color: #f7f8fa;
       color: #0f172a;
     }
+
     .topbar {
       background: #ffffff;
       color: #0f172a;
@@ -35,10 +37,12 @@
       border-bottom: 1px solid #e5e7eb;
       box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
     }
+
     .topbar-title {
       font-size: 16px;
       font-weight: 700;
     }
+
     .file-input {
       background: #ffffff;
       border: 1px solid #d1d5db;
@@ -49,15 +53,18 @@
       cursor: pointer;
       transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
     }
+
     .file-input:hover {
       border-color: #bfdbfe;
       box-shadow: 0 4px 10px rgba(37, 99, 235, 0.08);
       transform: translateY(-1px);
     }
+
     .hint {
       font-size: 11px;
       color: #6b7280;
     }
+
     .topbar-home {
       display: flex;
       align-items: center;
@@ -73,6 +80,7 @@
       transition: all 0.18s ease;
       border: 1px solid #d1d5db;
     }
+
     .topbar-home:hover {
       background: #3b82f6;
       color: white;
@@ -80,26 +88,31 @@
       transform: translateY(-1px);
       box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
     }
+
     .container {
       max-width: 1220px;
       margin: 0 auto;
       padding: 20px 16px 40px;
     }
+
     h1 {
       font-size: 26px;
       margin-bottom: 6px;
       color: #0f172a;
     }
+
     h2 {
       font-size: 20px;
       margin: 24px 0 12px;
       color: #0f172a;
     }
+
     .sub-title {
       color: #6b7280;
       margin-bottom: 18px;
       font-size: 13px;
     }
+
     .tag {
       display: inline-block;
       padding: 2px 8px;
@@ -109,12 +122,14 @@
       font-size: 11px;
       margin-left: 8px;
     }
+
     .cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
     }
+
     .card {
       background: #fff;
       border-radius: 16px;
@@ -123,25 +138,30 @@
       border: 1px solid #e5e7eb;
       transition: transform 0.16s ease, box-shadow 0.16s ease;
     }
+
     .card:hover {
       transform: translateY(-2px);
       box-shadow: 0 10px 26px rgba(37, 99, 235, 0.08);
     }
+
     .card-label {
       font-size: 13px;
       color: #6b7280;
       margin-bottom: 4px;
     }
+
     .card-value {
       font-size: 24px;
       font-weight: 700;
       color: #0f172a;
     }
+
     .card-desc {
       font-size: 11px;
       color: #9ca3af;
       margin-top: 4px;
     }
+
     .chart-block {
       background: #fff;
       border-radius: 16px;
@@ -151,61 +171,73 @@
       border: 1px solid #e5e7eb;
       transition: transform 0.16s ease, box-shadow 0.16s ease;
     }
+
     .chart-block:hover {
       transform: translateY(-2px);
       box-shadow: 0 12px 30px rgba(37, 99, 235, 0.08);
     }
+
     .chart-title {
       font-size: 16px;
       margin-bottom: 4px;
       color: #0f172a;
       font-weight: 700;
     }
+
     .chart-subtitle {
       font-size: 12px;
       color: #6b7280;
       margin-bottom: 10px;
     }
+
     .chart {
       width: 100%;
       height: 340px;
     }
+
     .data-table {
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
       font-size: 12px;
     }
+
     .data-table th,
     .data-table td {
       border-bottom: 1px solid #e5e7eb;
       padding: 10px 12px;
       text-align: left;
     }
+
     .data-table th {
       background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
       font-weight: 700;
       color: #374151;
       border-bottom: 2px solid #e5e7eb;
     }
+
     .data-table tbody tr:nth-child(odd) {
       background-color: #fbfdff;
     }
+
     .data-table tbody tr:hover {
       background-color: #f3f6ff;
       transition: background-color 0.15s ease;
     }
+
     .footer {
       margin-top: 24px;
       font-size: 11px;
       color: #9ca3af;
       text-align: center;
     }
+
     #loading {
       font-size: 13px;
       color: #6b7280;
       margin-top: 8px;
     }
+
     #error {
       font-size: 13px;
       color: #b91c1c;
@@ -305,10 +337,23 @@
     }
 
     @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-6px); }
-      50% { transform: translateX(6px); }
-      75% { transform: translateX(-3px); }
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-6px);
+      }
+
+      50% {
+        transform: translateX(6px);
+      }
+
+      75% {
+        transform: translateX(-3px);
+      }
     }
 
     #app {
@@ -316,6 +361,7 @@
     }
   </style>
 </head>
+
 <body>
   <!-- 授权层 -->
   <div id="auth-screen">
@@ -324,13 +370,7 @@
       <div class="auth-subtitle">请输入密码访问本工具</div>
 
       <label class="auth-label" for="auth-code">密码</label>
-      <input
-        id="auth-code"
-        class="auth-input"
-        type="text"
-        placeholder="请输入密码"
-        autocomplete="off"
-      />
+      <input id="auth-code" class="auth-input" type="text" placeholder="请输入密码" autocomplete="off" />
 
       <button class="auth-btn" id="auth-btn">确认进入</button>
 
@@ -340,687 +380,688 @@
 
   <!-- 真正的应用 -->
   <div id="app">
-  <div class="topbar">
-    <div style="flex:1;">
-      <div class="topbar-title">专栏 / 帖子工具（本地版）</div>
-      <div class="hint">
-        支持的列名示例：动态ID / 动态标题 / 产业动态标题 / 发布者 / 作者 / 来源 / 点赞数 / 评论数 / 创建时间 / 发布时间 / 更新时间（点赞和评论可选）
+    <div class="topbar">
+      <div style="flex:1;">
+        <div class="topbar-title">专栏 / 帖子工具（本地版）</div>
+        <div class="hint">
+          支持的列名示例：动态ID / 动态标题 / 产业动态标题 / 发布者 / 作者 / 来源 / 点赞数 / 评论数 / 创建时间 / 发布时间 / 更新时间（点赞和评论可选）
+        </div>
       </div>
-    </div>
-    <div style="display:flex; gap:12px; align-items:center;">
-      <label class="file-input">
-        选择 Excel 文件
-        <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" />
-      </label>
-      <a href="index.html" class="topbar-home">← 返回首页</a>
-    </div>
-  </div>
-
-  <div class="container">
-    <h1>专栏 / 帖子工具</h1>
-    <div class="sub-title" id="dateRange">
-      请先在上方选择 Excel 文件
-      <span class="tag">离线本地分析，不会上传数据</span>
-    </div>
-
-    <div id="loading"></div>
-    <div id="error"></div>
-
-    <div class="cards" id="summaryCards" style="display:none;">
-      <div class="card">
-        <div class="card-label">累计发布内容</div>
-        <div class="card-value" id="totalPosts">-</div>
-        <div class="card-desc">统计周期内产生的全部动态数量</div>
-      </div>
-      <div class="card">
-        <div class="card-label">累计点赞数</div>
-        <div class="card-value" id="totalLikes">-</div>
-        <div class="card-desc">可用于计算人均 & 单篇平均互动（没有点赞列时为 0）</div>
-      </div>
-      <div class="card">
-        <div class="card-label">累计评论数</div>
-        <div class="card-value" id="totalComments">-</div>
-        <div class="card-desc">衡量深度互动 & 讨论度（没有评论列时为 0）</div>
-      </div>
-      <div class="card">
-        <div class="card-label">作者总数</div>
-        <div class="card-value" id="authorCount">-</div>
-        <div class="card-desc">优先识别“发布者 / 作者 / 来源 / 操作人”</div>
-      </div>
-      <div class="card">
-        <div class="card-label">人均发文数</div>
-        <div class="card-value" id="avgPostsPerAuthor">-</div>
-        <div class="card-desc">累计发文 ÷ 作者总数</div>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <label class="file-input">
+          选择 Excel 文件
+          <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" />
+        </label>
+        <a href="index.html" class="topbar-home">← 返回首页</a>
       </div>
     </div>
 
-    <!-- 一、整体趋势 -->
-    <h2>一、整体趋势</h2>
-    <div class="chart-block">
-      <div class="chart-title">每日内容发布趋势</div>
-      <div class="chart-subtitle">观察整体节奏、内容“高峰日”和“低谷日”</div>
-      <div id="dailyChart" class="chart"></div>
-    </div>
-    <div class="chart-block">
-      <div class="chart-title">按月发布内容数量</div>
-      <div class="chart-subtitle">可用于年终总结中的“月度对比”</div>
-      <div id="monthlyChart" class="chart"></div>
-    </div>
-
-    <!-- 二、时段分布 -->
-    <h2>二、发布时段与活跃度</h2>
-    <div class="chart-block">
-      <div class="chart-title">按小时分布的发文数量</div>
-      <div class="chart-subtitle">识别高效发布时间段，用于“最佳投放时机”分析</div>
-      <div id="hourChart" class="chart"></div>
-    </div>
-
-    <!-- 三、发布者表现 -->
-    <h2>三、发布者表现</h2>
-    <div class="chart-block">
-      <div class="chart-title">不同发布者的内容产出与互动</div>
-      <div class="chart-subtitle">可支持“头部作者”“腰部作者”分层说明</div>
-      <div id="publisherChart" class="chart"></div>
-    </div>
-    <div class="chart-block">
-      <div class="chart-title">发布者 TOP 20（按发文数）</div>
-      <div class="chart-subtitle">发文数优先，其次按点赞数、评论数排序；支持导出 TOP 50 数据</div>
-      <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
-        <button class="upload-btn" id="authorExportBtn" style="margin-left:0;">导出 TOP 50 CSV</button>
+    <div class="container">
+      <h1>专栏 / 帖子工具</h1>
+      <div class="sub-title" id="dateRange">
+        请先在上方选择 Excel 文件
+        <span class="tag">离线本地分析，不会上传数据</span>
       </div>
-      <div id="authorTopTable"></div>
-    </div>
 
-    <!-- 四、Top 内容 -->
-    <h2>四、爆款内容 Top 10（按点赞）</h2>
-    <div class="chart-block">
-      <div class="chart-title">爆款内容（点赞维度）</div>
-      <div class="chart-subtitle">可直接截图放入年终总结 PPT（没有点赞列时按 0 排序）</div>
-      <div id="topLikeTable"></div>
-    </div>
+      <div id="loading"></div>
+      <div id="error"></div>
 
-    <h2>五、高讨论度内容 Top 10（按评论）</h2>
-    <div class="chart-block">
-      <div class="chart-title">高讨论度内容（评论维度）</div>
-      <div class="chart-subtitle">适合分析“引发讨论的话题类型”（没有评论列时按 0 排序）</div>
-      <div id="topCommentTable"></div>
-    </div>
-
-    <!-- 六、词频与主题 -->
-    <h2>六、内容高频词与主题方向</h2>
-    <div class="chart-block">
-      <div class="chart-title">标题高频词 Top30（词云替代视图）</div>
-      <div class="chart-subtitle">
-        支持“动态标题 / 产业动态标题 / 标题”等字段，依据标题统计高频词，可据此在外部工具生成词云。
+      <div class="cards" id="summaryCards" style="display:none;">
+        <div class="card">
+          <div class="card-label">累计发布内容</div>
+          <div class="card-value" id="totalPosts">-</div>
+          <div class="card-desc">统计周期内产生的全部动态数量</div>
+        </div>
+        <div class="card">
+          <div class="card-label">累计点赞数</div>
+          <div class="card-value" id="totalLikes">-</div>
+          <div class="card-desc">可用于计算人均 & 单篇平均互动（没有点赞列时为 0）</div>
+        </div>
+        <div class="card">
+          <div class="card-label">累计评论数</div>
+          <div class="card-value" id="totalComments">-</div>
+          <div class="card-desc">衡量深度互动 & 讨论度（没有评论列时为 0）</div>
+        </div>
+        <div class="card">
+          <div class="card-label">作者总数</div>
+          <div class="card-value" id="authorCount">-</div>
+          <div class="card-desc">优先识别“发布者 / 作者 / 来源 / 操作人”</div>
+        </div>
+        <div class="card">
+          <div class="card-label">人均发文数</div>
+          <div class="card-value" id="avgPostsPerAuthor">-</div>
+          <div class="card-desc">累计发文 ÷ 作者总数</div>
+        </div>
       </div>
-      <div id="keywordChart" class="chart"></div>
-      <div style="height:320px; margin-top:12px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(15,23,42,0.06);">
-        <canvas id="keywordCloud" style="width:100%; height:100%;"></canvas>
+
+      <!-- 一、整体趋势 -->
+      <h2>一、整体趋势</h2>
+      <div class="chart-block">
+        <div class="chart-title">每日内容发布趋势</div>
+        <div class="chart-subtitle">观察整体节奏、内容“高峰日”和“低谷日”</div>
+        <div id="dailyChart" class="chart"></div>
+      </div>
+      <div class="chart-block">
+        <div class="chart-title">按月发布内容数量</div>
+        <div class="chart-subtitle">可用于年终总结中的“月度对比”</div>
+        <div id="monthlyChart" class="chart"></div>
+      </div>
+
+      <!-- 二、时段分布 -->
+      <h2>二、发布时段与活跃度</h2>
+      <div class="chart-block">
+        <div class="chart-title">按小时分布的发文数量</div>
+        <div class="chart-subtitle">识别高效发布时间段，用于“最佳投放时机”分析</div>
+        <div id="hourChart" class="chart"></div>
+      </div>
+
+      <!-- 三、发布者表现 -->
+      <h2>三、发布者表现</h2>
+      <div class="chart-block">
+        <div class="chart-title">不同发布者的内容产出与互动</div>
+        <div class="chart-subtitle">可支持“头部作者”“腰部作者”分层说明</div>
+        <div id="publisherChart" class="chart"></div>
+      </div>
+      <div class="chart-block">
+        <div class="chart-title">发布者 TOP 20（按发文数）</div>
+        <div class="chart-subtitle">发文数优先，其次按点赞数、评论数排序；支持导出 TOP 50 数据</div>
+        <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+          <button class="upload-btn" id="authorExportBtn" style="margin-left:0;">导出 TOP 50 CSV</button>
+        </div>
+        <div id="authorTopTable"></div>
+      </div>
+
+      <!-- 四、Top 内容 -->
+      <h2>四、爆款内容 Top 10（按点赞）</h2>
+      <div class="chart-block">
+        <div class="chart-title">爆款内容（点赞维度）</div>
+        <div class="chart-subtitle">可直接截图放入年终总结 PPT（没有点赞列时按 0 排序）</div>
+        <div id="topLikeTable"></div>
+      </div>
+
+      <h2>五、高讨论度内容 Top 10（按评论）</h2>
+      <div class="chart-block">
+        <div class="chart-title">高讨论度内容（评论维度）</div>
+        <div class="chart-subtitle">适合分析“引发讨论的话题类型”（没有评论列时按 0 排序）</div>
+        <div id="topCommentTable"></div>
+      </div>
+
+      <!-- 六、词频与主题 -->
+      <h2>六、内容高频词与主题方向</h2>
+      <div class="chart-block">
+        <div class="chart-title">标题高频词 Top30（词云替代视图）</div>
+        <div class="chart-subtitle">
+          支持“动态标题 / 产业动态标题 / 标题”等字段，依据标题统计高频词，可据此在外部工具生成词云。
+        </div>
+        <div id="keywordChart" class="chart"></div>
+        <div
+          style="height:320px; margin-top:12px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(15,23,42,0.06);">
+          <canvas id="keywordCloud" style="width:100%; height:100%;"></canvas>
+        </div>
+      </div>
+
+      <!-- 七、主题聚类 -->
+      <h2>七、内容主题聚类表现（AI / 模型 / 创业 / 硬件 / 政策）</h2>
+      <div class="chart-block">
+        <div class="chart-title">不同主题内容数量</div>
+        <div class="chart-subtitle">粗粒度拆分年度发声重点板块</div>
+        <div id="themeChart" class="chart"></div>
+      </div>
+      <div class="chart-block">
+        <div class="chart-title">各主题的内容与互动表现</div>
+        <div class="chart-subtitle">可用于年终总结中分析“哪个赛道最热”</div>
+        <div id="themeTable"></div>
+      </div>
+
+      <!-- 八、作者分层 -->
+      <h2>八、作者分层结构（头部 / 腰部 / 长尾）</h2>
+      <div class="chart-block">
+        <div class="chart-title">不同作者层级的发文贡献</div>
+        <div class="chart-subtitle">拆解内容生态结构，识别核心创作者</div>
+        <div id="tierChart" class="chart"></div>
+      </div>
+      <div class="chart-block">
+        <div class="chart-title">作者分层统计表</div>
+        <div class="chart-subtitle">包括作者人数、发文总数、互动贡献、人均发文等</div>
+        <div id="tierTable"></div>
+      </div>
+
+      <div class="footer">
+        本页面仅在本地浏览器中处理你的 Excel 数据，不会上传到网络。可结合截图、标注文字直接用于年终复盘报告。
       </div>
     </div>
 
-    <!-- 七、主题聚类 -->
-    <h2>七、内容主题聚类表现（AI / 模型 / 创业 / 硬件 / 政策）</h2>
-    <div class="chart-block">
-      <div class="chart-title">不同主题内容数量</div>
-      <div class="chart-subtitle">粗粒度拆分年度发声重点板块</div>
-      <div id="themeChart" class="chart"></div>
-    </div>
-    <div class="chart-block">
-      <div class="chart-title">各主题的内容与互动表现</div>
-      <div class="chart-subtitle">可用于年终总结中分析“哪个赛道最热”</div>
-      <div id="themeTable"></div>
-    </div>
+    <script>
+      // 延迟脚本执行，确保 DOM 已加载
+      document.addEventListener('DOMContentLoaded', function () {
+        const fileInput = document.getElementById("fileInput");
+        const loadingEl = document.getElementById("loading");
+        const errorEl = document.getElementById("error");
 
-    <!-- 八、作者分层 -->
-    <h2>八、作者分层结构（头部 / 腰部 / 长尾）</h2>
-    <div class="chart-block">
-      <div class="chart-title">不同作者层级的发文贡献</div>
-      <div class="chart-subtitle">拆解内容生态结构，识别核心创作者</div>
-      <div id="tierChart" class="chart"></div>
-    </div>
-    <div class="chart-block">
-      <div class="chart-title">作者分层统计表</div>
-      <div class="chart-subtitle">包括作者人数、发文总数、互动贡献、人均发文等</div>
-      <div id="tierTable"></div>
-    </div>
+        if (!fileInput) return; // 安全检查
 
-    <div class="footer">
-      本页面仅在本地浏览器中处理你的 Excel 数据，不会上传到网络。可结合截图、标注文字直接用于年终复盘报告。
-    </div>
-  </div>
+        fileInput.addEventListener("change", handleFile, false);
+      });
 
-  <script>
-    // 延迟脚本执行，确保 DOM 已加载
-    document.addEventListener('DOMContentLoaded', function() {
-      const fileInput = document.getElementById("fileInput");
-      const loadingEl = document.getElementById("loading");
-      const errorEl = document.getElementById("error");
+      function handleFile(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const loadingEl = document.getElementById("loading");
+        const errorEl = document.getElementById("error");
 
-      if (!fileInput) return; // 安全检查
+        loadingEl.textContent = "正在读取并解析 Excel 数据，请稍候…";
+        errorEl.textContent = "";
 
-      fileInput.addEventListener("change", handleFile, false);
-    });
-
-    function handleFile(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const loadingEl = document.getElementById("loading");
-      const errorEl = document.getElementById("error");
-
-      loadingEl.textContent = "正在读取并解析 Excel 数据，请稍候…";
-      errorEl.textContent = "";
-
-      const reader = new FileReader();
-      reader.onload = function (evt) {
-        try {
-          const data = evt.target.result;
-          const workbook = XLSX.read(data, { type: "array" });
-          const firstSheet = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheet];
-          const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-          processData(json);
-          loadingEl.textContent = "";
-        } catch (err) {
-          console.error(err);
-          errorEl.textContent = "解析 Excel 失败，请确认文件格式是否正确。";
-          loadingEl.textContent = "";
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    function excelSerialToDate(v) {
-      return new Date(Math.round((v - 25569) * 86400 * 1000));
-    }
-
-    function parseDate(value) {
-      if (!value) return null;
-      if (value instanceof Date) return value;
-      if (typeof value === "number") return excelSerialToDate(value);
-      const d = new Date(value);
-      if (isNaN(d.getTime())) return null;
-      return d;
-    }
-
-    function formatDate(d) {
-      if (!d) return "";
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      return `${y}-${m}-${day}`;
-    }
-
-    function formatDateTime(d) {
-      if (!d) return "";
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      const hh = String(d.getHours()).padStart(2, "0");
-      const mm = String(d.getMinutes()).padStart(2, "0");
-      return `${y}-${m}-${day} ${hh}:${mm}`;
-    }
-
-    function getMonthLabel(d) {
-      if (!d) return "";
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      return `${y}-${m}`;
-    }
-
-    function findCol(candidates, cols) {
-      for (const c of candidates) {
-        if (cols.includes(c)) return c;
-      }
-      return null;
-    }
-
-    function processData(rows) {
-      if (!rows || !rows.length) {
-        errorEl.textContent = "Excel 中没有数据。";
-        return;
-      }
-
-      const allCols = Object.keys(rows[0]);
-
-      const colMap = {
-        id: findCol(["动态ID", "ID", "id"], allCols),
-        title: findCol(["动态标题", "产业动态标题", "标题"], allCols),
-        author: findCol(["发布者", "作者", "来源", "操作人"], allCols),
-        likes: findCol(["点赞数", "点赞", "点赞量"], allCols),
-        comments: findCol(["评论数", "评论", "评论量"], allCols),
-        created: findCol(["创建时间", "发布时间", "时间"], allCols),
-        updated: findCol(["更新时间", "更新"], allCols),
-      };
-
-      // 预处理 & 基础统计
-      let totalPosts = 0;
-      let totalLikes = 0;
-      let totalComments = 0;
-      let minDate = null;
-      let maxDate = null;
-
-      const authorCountMap = {};
-      const dailyMap = {};
-      const monthlyMap = {};
-      const hourMap = {};
-      const publisherMap = {};
-      const titles = [];
-
-      const allForLikeSort = [];
-      const allForCommentSort = [];
-
-      rows.forEach((rowRaw) => {
-        const id = colMap.id ? rowRaw[colMap.id] : rowRaw[allCols[0]];
-        const title = colMap.title ? rowRaw[colMap.title] : "";
-        let author = colMap.author ? rowRaw[colMap.author] : "";
-        if (!author && rowRaw["作者"]) author = rowRaw["作者"];
-        if (!author && rowRaw["来源"]) author = rowRaw["来源"];
-        if (!author && rowRaw["操作人"]) author = rowRaw["操作人"];
-
-        const likes = colMap.likes ? Number(rowRaw[colMap.likes] || 0) : 0;
-        const comments = colMap.comments ? Number(rowRaw[colMap.comments] || 0) : 0;
-
-        const created = colMap.created ? parseDate(rowRaw[colMap.created]) : null;
-        const updated = colMap.updated ? parseDate(rowRaw[colMap.updated]) : null;
-
-        if (!id && !title) return;
-
-        totalPosts += 1;
-        totalLikes += likes;
-        totalComments += comments;
-
-        if (created) {
-          if (!minDate || created < minDate) minDate = created;
-          if (!maxDate || created > maxDate) maxDate = created;
-
-          const dayStr = formatDate(created);
-          dailyMap[dayStr] = (dailyMap[dayStr] || 0) + 1;
-
-          const monthStr = getMonthLabel(created);
-          monthlyMap[monthStr] = (monthlyMap[monthStr] || 0) + 1;
-
-          const hour = created.getHours();
-          hourMap[hour] = (hourMap[hour] || 0) + 1;
-        }
-
-        if (author) {
-          authorCountMap[author] = true;
-          if (!publisherMap[author]) {
-            publisherMap[author] = { posts: 0, likes: 0, comments: 0 };
+        const reader = new FileReader();
+        reader.onload = function (evt) {
+          try {
+            const data = evt.target.result;
+            const workbook = XLSX.read(data, { type: "array" });
+            const firstSheet = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheet];
+            const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+            processData(json);
+            loadingEl.textContent = "";
+          } catch (err) {
+            console.error(err);
+            errorEl.textContent = "解析 Excel 失败，请确认文件格式是否正确。";
+            loadingEl.textContent = "";
           }
-          publisherMap[author].posts += 1;
-          publisherMap[author].likes += likes;
-          publisherMap[author].comments += comments;
-        }
-
-        if (title) titles.push(title);
-
-        const parsed = {
-          id,
-          title,
-          author,
-          likes,
-          comments,
-          created,
-          updated,
         };
-        allForLikeSort.push(parsed);
-        allForCommentSort.push(parsed);
-      });
-
-      const authorCount = Object.keys(authorCountMap).length;
-      const avgPostsPerAuthor =
-        authorCount > 0 ? Math.round((totalPosts / authorCount) * 100) / 100 : 0;
-
-      const dateRangeEl = document.getElementById("dateRange");
-      if (minDate && maxDate) {
-        dateRangeEl.innerHTML =
-          `时间范围：${formatDate(minDate)} ~ ${formatDate(maxDate)}` +
-          `<span class="tag">用于年终总结展示</span>`;
-      } else {
-        dateRangeEl.innerHTML =
-          `时间范围：-` + `<span class="tag">用于年终总结展示</span>`;
+        reader.readAsArrayBuffer(file);
       }
 
-      document.getElementById("summaryCards").style.display = "grid";
-      document.getElementById("totalPosts").textContent = totalPosts;
-      document.getElementById("totalLikes").textContent = totalLikes;
-      document.getElementById("totalComments").textContent = totalComments;
-      document.getElementById("authorCount").textContent = authorCount;
-      document.getElementById("avgPostsPerAuthor").textContent = avgPostsPerAuthor;
-
-      // 一、整体趋势：每日
-      const dailyDates = Object.keys(dailyMap).sort();
-      const dailyCounts = dailyDates.map((d) => dailyMap[d]);
-      Plotly.newPlot(
-        "dailyChart",
-        [{ x: dailyDates, y: dailyCounts, type: "bar" }],
-        { margin: { t: 20, r: 10, b: 60, l: 40 } }
-      );
-
-      // 一、整体趋势：按月
-      const monthlyLabels = Object.keys(monthlyMap).sort();
-      const monthlyCounts = monthlyLabels.map((d) => monthlyMap[d]);
-      Plotly.newPlot(
-        "monthlyChart",
-        [{ x: monthlyLabels, y: monthlyCounts, type: "bar" }],
-        { margin: { t: 20, r: 10, b: 60, l: 40 } }
-      );
-
-      // 二、按小时
-      const hourLabels = [];
-      const hourCounts = [];
-      for (let h = 0; h < 24; h++) {
-        hourLabels.push(h);
-        hourCounts.push(hourMap[h] || 0);
+      function excelSerialToDate(v) {
+        return new Date(Math.round((v - 25569) * 86400 * 1000));
       }
-      Plotly.newPlot(
-        "hourChart",
-        [{ x: hourLabels, y: hourCounts, type: "bar" }],
-        { margin: { t: 20, r: 10, b: 40, l: 40 }, xaxis: { dtick: 1 } }
-      );
 
-      // 三、发布者表现
-      const publisherNames = Object.keys(publisherMap);
-      publisherNames.sort(
-        (a, b) => publisherMap[b].likes - publisherMap[a].likes
-      );
-      const publisherPosts = publisherNames.map((name) => publisherMap[name].posts);
-      const publisherLikes = publisherNames.map((name) => publisherMap[name].likes);
-      const publisherComments = publisherNames.map(
-        (name) => publisherMap[name].comments
-      );
+      function parseDate(value) {
+        if (!value) return null;
+        if (value instanceof Date) return value;
+        if (typeof value === "number") return excelSerialToDate(value);
+        const d = new Date(value);
+        if (isNaN(d.getTime())) return null;
+        return d;
+      }
 
-      Plotly.newPlot(
-        "publisherChart",
-        [
-          { x: publisherNames, y: publisherPosts, name: "内容数量", type: "bar" },
-          { x: publisherNames, y: publisherLikes, name: "总点赞数", type: "bar" },
-          { x: publisherNames, y: publisherComments, name: "总评论数", type: "bar" },
-        ],
-        {
-          barmode: "group",
-          margin: { t: 20, r: 10, b: 80, l: 40 },
-          xaxis: { automargin: true },
-          legend: { orientation: "h", y: 1.1 },
+      function formatDate(d) {
+        if (!d) return "";
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+
+      function formatDateTime(d) {
+        if (!d) return "";
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mm = String(d.getMinutes()).padStart(2, "0");
+        return `${y}-${m}-${day} ${hh}:${mm}`;
+      }
+
+      function getMonthLabel(d) {
+        if (!d) return "";
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        return `${y}-${m}`;
+      }
+
+      function findCol(candidates, cols) {
+        for (const c of candidates) {
+          if (cols.includes(c)) return c;
         }
-      );
-
-      // 发布者 TOP20（按发文数）- 表格显示
-      // 发布者 TOP50（按发文数）- 用于导出
-      const authorTopAll = publisherNames
-        .map((name) => ({
-          发布者: name,
-          发文数: publisherMap[name].posts,
-          总点赞数: publisherMap[name].likes,
-          总评论数: publisherMap[name].comments,
-        }))
-        .sort((a, b) => {
-          if (b.发文数 !== a.发文数) return b.发文数 - a.发文数;
-          if (b.总点赞数 !== a.总点赞数) return b.总点赞数 - a.总点赞数;
-          return b.总评论数 - a.总评论数;
-        })
-        .map((item, idx) => ({ 排名: idx + 1, ...item }));
-      
-      // 表格显示 TOP 20
-      const authorTop = authorTopAll.slice(0, 20);
-      renderGenericTable("authorTopTable", authorTop);
-      
-      // 导出支持 TOP 50
-      const authorTop50 = authorTopAll.slice(0, 50);
-      const exportBtn = document.getElementById("authorExportBtn");
-      if (exportBtn) {
-        exportBtn.onclick = () => exportCSV(authorTop50, "author-top50.csv");
+        return null;
       }
 
-      // 四、Top10（点赞）
-      allForLikeSort.sort((a, b) => b.likes - a.likes);
-      const top10Like = allForLikeSort.slice(0, 10);
-      renderTopTable("topLikeTable", top10Like);
+      function processData(rows) {
+        if (!rows || !rows.length) {
+          errorEl.textContent = "Excel 中没有数据。";
+          return;
+        }
 
-      // 五、Top10（评论）
-      allForCommentSort.sort((a, b) => b.comments - a.comments);
-      const top10Comment = allForCommentSort.slice(0, 10);
-      renderTopTable("topCommentTable", top10Comment);
+        const allCols = Object.keys(rows[0]);
 
-      // 六、高频词
-      const wordFreq = {};
-      const reCN = /[\u4e00-\u9fa5]{2,}/g;
-      titles.forEach((t) => {
-        const matches = String(t).match(reCN);
-        if (!matches) return;
-        matches.forEach((w) => {
-          wordFreq[w] = (wordFreq[w] || 0) + 1;
+        const colMap = {
+          id: findCol(["动态ID", "ID", "id"], allCols),
+          title: findCol(["动态标题", "产业动态标题", "标题"], allCols),
+          author: findCol(["发布者", "作者", "来源", "操作人"], allCols),
+          likes: findCol(["点赞数", "点赞", "点赞量"], allCols),
+          comments: findCol(["评论数", "评论", "评论量"], allCols),
+          created: findCol(["创建时间", "发布时间", "时间"], allCols),
+          updated: findCol(["更新时间", "更新"], allCols),
+        };
+
+        // 预处理 & 基础统计
+        let totalPosts = 0;
+        let totalLikes = 0;
+        let totalComments = 0;
+        let minDate = null;
+        let maxDate = null;
+
+        const authorCountMap = {};
+        const dailyMap = {};
+        const monthlyMap = {};
+        const hourMap = {};
+        const publisherMap = {};
+        const titles = [];
+
+        const allForLikeSort = [];
+        const allForCommentSort = [];
+
+        rows.forEach((rowRaw) => {
+          const id = colMap.id ? rowRaw[colMap.id] : rowRaw[allCols[0]];
+          const title = colMap.title ? rowRaw[colMap.title] : "";
+          let author = colMap.author ? rowRaw[colMap.author] : "";
+          if (!author && rowRaw["作者"]) author = rowRaw["作者"];
+          if (!author && rowRaw["来源"]) author = rowRaw["来源"];
+          if (!author && rowRaw["操作人"]) author = rowRaw["操作人"];
+
+          const likes = colMap.likes ? Number(rowRaw[colMap.likes] || 0) : 0;
+          const comments = colMap.comments ? Number(rowRaw[colMap.comments] || 0) : 0;
+
+          const created = colMap.created ? parseDate(rowRaw[colMap.created]) : null;
+          const updated = colMap.updated ? parseDate(rowRaw[colMap.updated]) : null;
+
+          if (!id && !title) return;
+
+          totalPosts += 1;
+          totalLikes += likes;
+          totalComments += comments;
+
+          if (created) {
+            if (!minDate || created < minDate) minDate = created;
+            if (!maxDate || created > maxDate) maxDate = created;
+
+            const dayStr = formatDate(created);
+            dailyMap[dayStr] = (dailyMap[dayStr] || 0) + 1;
+
+            const monthStr = getMonthLabel(created);
+            monthlyMap[monthStr] = (monthlyMap[monthStr] || 0) + 1;
+
+            const hour = created.getHours();
+            hourMap[hour] = (hourMap[hour] || 0) + 1;
+          }
+
+          if (author) {
+            authorCountMap[author] = true;
+            if (!publisherMap[author]) {
+              publisherMap[author] = { posts: 0, likes: 0, comments: 0 };
+            }
+            publisherMap[author].posts += 1;
+            publisherMap[author].likes += likes;
+            publisherMap[author].comments += comments;
+          }
+
+          if (title) titles.push(title);
+
+          const parsed = {
+            id,
+            title,
+            author,
+            likes,
+            comments,
+            created,
+            updated,
+          };
+          allForLikeSort.push(parsed);
+          allForCommentSort.push(parsed);
         });
-      });
-      const wordEntries = Object.entries(wordFreq);
-      wordEntries.sort((a, b) => b[1] - a[1]);
-      const topWords = wordEntries.slice(0, 30);
-      const words = topWords.map((item) => item[0]);
-      const wordCounts = topWords.map((item) => item[1]);
 
-      Plotly.newPlot(
-        "keywordChart",
-        [{ x: words, y: wordCounts, type: "bar" }],
-        { margin: { t: 20, r: 10, b: 120, l: 40 }, xaxis: { tickangle: -60, automargin: true } }
-      );
+        const authorCount = Object.keys(authorCountMap).length;
+        const avgPostsPerAuthor =
+          authorCount > 0 ? Math.round((totalPosts / authorCount) * 100) / 100 : 0;
 
-      // 七、主题聚类
-      const themeMap = {};
-      rows.forEach((rowRaw) => {
-        const title = colMap.title ? rowRaw[colMap.title] : "";
-        const likes = colMap.likes ? Number(rowRaw[colMap.likes] || 0) : 0;
-        const comments = colMap.comments ? Number(rowRaw[colMap.comments] || 0) : 0;
-        const theme = classifyTheme(title);
-        if (!themeMap[theme]) {
-          themeMap[theme] = { count: 0, likes: 0, comments: 0 };
+        const dateRangeEl = document.getElementById("dateRange");
+        if (minDate && maxDate) {
+          dateRangeEl.innerHTML =
+            `时间范围：${formatDate(minDate)} ~ ${formatDate(maxDate)}` +
+            `<span class="tag">用于年终总结展示</span>`;
+        } else {
+          dateRangeEl.innerHTML =
+            `时间范围：-` + `<span class="tag">用于年终总结展示</span>`;
         }
-        themeMap[theme].count += 1;
-        themeMap[theme].likes += likes;
-        themeMap[theme].comments += comments;
-      });
 
-      const themeNames = Object.keys(themeMap);
-      const themeCounts = themeNames.map((t) => themeMap[t].count);
-      Plotly.newPlot(
-        "themeChart",
-        [{ x: themeNames, y: themeCounts, type: "bar" }],
-        { margin: { t: 20, r: 10, b: 40, l: 40 } }
-      );
+        document.getElementById("summaryCards").style.display = "grid";
+        document.getElementById("totalPosts").textContent = totalPosts;
+        document.getElementById("totalLikes").textContent = totalLikes;
+        document.getElementById("totalComments").textContent = totalComments;
+        document.getElementById("authorCount").textContent = authorCount;
+        document.getElementById("avgPostsPerAuthor").textContent = avgPostsPerAuthor;
 
-      const themeTableData = themeNames.map((t) => {
-        const stats = themeMap[t];
-        const avgLikes = stats.count > 0 ? (stats.likes / stats.count).toFixed(2) : "0.00";
-        const avgComments =
-          stats.count > 0 ? (stats.comments / stats.count).toFixed(2) : "0.00";
-        return {
-          主题: t,
-          内容数量: stats.count,
-          总点赞数: stats.likes,
-          总评论数: stats.comments,
-          平均点赞数: avgLikes,
-          平均评论数: avgComments,
-        };
-      });
-      renderGenericTable("themeTable", themeTableData);
+        // 一、整体趋势：每日
+        const dailyDates = Object.keys(dailyMap).sort();
+        const dailyCounts = dailyDates.map((d) => dailyMap[d]);
+        Plotly.newPlot(
+          "dailyChart",
+          [{ x: dailyDates, y: dailyCounts, type: "bar" }],
+          { margin: { t: 20, r: 10, b: 60, l: 40 } }
+        );
 
-      // 八、作者分层
-      const authorStats = {};
-      rows.forEach((rowRaw) => {
-        let author = colMap.author ? rowRaw[colMap.author] : "";
-        if (!author && rowRaw["作者"]) author = rowRaw["作者"];
-        if (!author && rowRaw["来源"]) author = rowRaw["来源"];
-        if (!author && rowRaw["操作人"]) author = rowRaw["操作人"];
-        if (!author) return;
+        // 一、整体趋势：按月
+        const monthlyLabels = Object.keys(monthlyMap).sort();
+        const monthlyCounts = monthlyLabels.map((d) => monthlyMap[d]);
+        Plotly.newPlot(
+          "monthlyChart",
+          [{ x: monthlyLabels, y: monthlyCounts, type: "bar" }],
+          { margin: { t: 20, r: 10, b: 60, l: 40 } }
+        );
 
-        const likes = colMap.likes ? Number(rowRaw[colMap.likes] || 0) : 0;
-        const comments = colMap.comments ? Number(rowRaw[colMap.comments] || 0) : 0;
-
-        if (!authorStats[author]) {
-          authorStats[author] = { posts: 0, likes: 0, comments: 0 };
+        // 二、按小时
+        const hourLabels = [];
+        const hourCounts = [];
+        for (let h = 0; h < 24; h++) {
+          hourLabels.push(h);
+          hourCounts.push(hourMap[h] || 0);
         }
-        authorStats[author].posts += 1;
-        authorStats[author].likes += likes;
-        authorStats[author].comments += comments;
-      });
+        Plotly.newPlot(
+          "hourChart",
+          [{ x: hourLabels, y: hourCounts, type: "bar" }],
+          { margin: { t: 20, r: 10, b: 40, l: 40 }, xaxis: { dtick: 1 } }
+        );
 
-      const tierMap = {
-        "头部作者（≥20篇）": { authors: 0, posts: 0, likes: 0, comments: 0 },
-        "腰部作者（5–19篇）": { authors: 0, posts: 0, likes: 0, comments: 0 },
-        "长尾作者（1–4篇）": { authors: 0, posts: 0, likes: 0, comments: 0 },
-      };
+        // 三、发布者表现
+        const publisherNames = Object.keys(publisherMap);
+        publisherNames.sort(
+          (a, b) => publisherMap[b].likes - publisherMap[a].likes
+        );
+        const publisherPosts = publisherNames.map((name) => publisherMap[name].posts);
+        const publisherLikes = publisherNames.map((name) => publisherMap[name].likes);
+        const publisherComments = publisherNames.map(
+          (name) => publisherMap[name].comments
+        );
 
-      Object.keys(authorStats).forEach((author) => {
-        const s = authorStats[author];
-        const c = s.posts;
-        let tier;
-        if (c >= 20) tier = "头部作者（≥20篇）";
-        else if (c >= 5) tier = "腰部作者（5–19篇）";
-        else tier = "长尾作者（1–4篇）";
-        const t = tierMap[tier];
-        t.authors += 1;
-        t.posts += s.posts;
-        t.likes += s.likes;
-        t.comments += s.comments;
-      });
+        Plotly.newPlot(
+          "publisherChart",
+          [
+            { x: publisherNames, y: publisherPosts, name: "内容数量", type: "bar" },
+            { x: publisherNames, y: publisherLikes, name: "总点赞数", type: "bar" },
+            { x: publisherNames, y: publisherComments, name: "总评论数", type: "bar" },
+          ],
+          {
+            barmode: "group",
+            margin: { t: 20, r: 10, b: 80, l: 40 },
+            xaxis: { automargin: true },
+            legend: { orientation: "h", y: 1.1 },
+          }
+        );
 
-      const tierNames = Object.keys(tierMap);
-      const tierPosts = tierNames.map((t) => tierMap[t].posts);
-      Plotly.newPlot(
-        "tierChart",
-        [{ x: tierNames, y: tierPosts, type: "bar" }],
-        { margin: { t: 20, r: 10, b: 40, l: 40 } }
-      );
+        // 发布者 TOP20（按发文数）- 表格显示
+        // 发布者 TOP50（按发文数）- 用于导出
+        const authorTopAll = publisherNames
+          .map((name) => ({
+            发布者: name,
+            发文数: publisherMap[name].posts,
+            总点赞数: publisherMap[name].likes,
+            总评论数: publisherMap[name].comments,
+          }))
+          .sort((a, b) => {
+            if (b.发文数 !== a.发文数) return b.发文数 - a.发文数;
+            if (b.总点赞数 !== a.总点赞数) return b.总点赞数 - a.总点赞数;
+            return b.总评论数 - a.总评论数;
+          })
+          .map((item, idx) => ({ 排名: idx + 1, ...item }));
 
-      const tierTableData = tierNames.map((t) => {
-        const v = tierMap[t];
-        const avgPost = v.authors > 0 ? (v.posts / v.authors).toFixed(2) : "0.00";
-        return {
-          作者层级: t,
-          作者人数: v.authors,
-          发文总数: v.posts,
-          总点赞数: v.likes,
-          总评论数: v.comments,
-          人均发文数: avgPost,
+        // 表格显示 TOP 20
+        const authorTop = authorTopAll.slice(0, 20);
+        renderGenericTable("authorTopTable", authorTop);
+
+        // 导出支持 TOP 50
+        const authorTop50 = authorTopAll.slice(0, 50);
+        const exportBtn = document.getElementById("authorExportBtn");
+        if (exportBtn) {
+          exportBtn.onclick = () => exportCSV(authorTop50, "author-top50.csv");
+        }
+
+        // 四、Top10（点赞）
+        allForLikeSort.sort((a, b) => b.likes - a.likes);
+        const top10Like = allForLikeSort.slice(0, 10);
+        renderTopTable("topLikeTable", top10Like);
+
+        // 五、Top10（评论）
+        allForCommentSort.sort((a, b) => b.comments - a.comments);
+        const top10Comment = allForCommentSort.slice(0, 10);
+        renderTopTable("topCommentTable", top10Comment);
+
+        // 六、高频词
+        const wordFreq = {};
+        const reCN = /[\u4e00-\u9fa5]{2,}/g;
+        titles.forEach((t) => {
+          const matches = String(t).match(reCN);
+          if (!matches) return;
+          matches.forEach((w) => {
+            wordFreq[w] = (wordFreq[w] || 0) + 1;
+          });
+        });
+        const wordEntries = Object.entries(wordFreq);
+        wordEntries.sort((a, b) => b[1] - a[1]);
+        const topWords = wordEntries.slice(0, 30);
+        const words = topWords.map((item) => item[0]);
+        const wordCounts = topWords.map((item) => item[1]);
+
+        Plotly.newPlot(
+          "keywordChart",
+          [{ x: words, y: wordCounts, type: "bar" }],
+          { margin: { t: 20, r: 10, b: 120, l: 40 }, xaxis: { tickangle: -60, automargin: true } }
+        );
+
+        // 七、主题聚类
+        const themeMap = {};
+        rows.forEach((rowRaw) => {
+          const title = colMap.title ? rowRaw[colMap.title] : "";
+          const likes = colMap.likes ? Number(rowRaw[colMap.likes] || 0) : 0;
+          const comments = colMap.comments ? Number(rowRaw[colMap.comments] || 0) : 0;
+          const theme = classifyTheme(title);
+          if (!themeMap[theme]) {
+            themeMap[theme] = { count: 0, likes: 0, comments: 0 };
+          }
+          themeMap[theme].count += 1;
+          themeMap[theme].likes += likes;
+          themeMap[theme].comments += comments;
+        });
+
+        const themeNames = Object.keys(themeMap);
+        const themeCounts = themeNames.map((t) => themeMap[t].count);
+        Plotly.newPlot(
+          "themeChart",
+          [{ x: themeNames, y: themeCounts, type: "bar" }],
+          { margin: { t: 20, r: 10, b: 40, l: 40 } }
+        );
+
+        const themeTableData = themeNames.map((t) => {
+          const stats = themeMap[t];
+          const avgLikes = stats.count > 0 ? (stats.likes / stats.count).toFixed(2) : "0.00";
+          const avgComments =
+            stats.count > 0 ? (stats.comments / stats.count).toFixed(2) : "0.00";
+          return {
+            主题: t,
+            内容数量: stats.count,
+            总点赞数: stats.likes,
+            总评论数: stats.comments,
+            平均点赞数: avgLikes,
+            平均评论数: avgComments,
+          };
+        });
+        renderGenericTable("themeTable", themeTableData);
+
+        // 八、作者分层
+        const authorStats = {};
+        rows.forEach((rowRaw) => {
+          let author = colMap.author ? rowRaw[colMap.author] : "";
+          if (!author && rowRaw["作者"]) author = rowRaw["作者"];
+          if (!author && rowRaw["来源"]) author = rowRaw["来源"];
+          if (!author && rowRaw["操作人"]) author = rowRaw["操作人"];
+          if (!author) return;
+
+          const likes = colMap.likes ? Number(rowRaw[colMap.likes] || 0) : 0;
+          const comments = colMap.comments ? Number(rowRaw[colMap.comments] || 0) : 0;
+
+          if (!authorStats[author]) {
+            authorStats[author] = { posts: 0, likes: 0, comments: 0 };
+          }
+          authorStats[author].posts += 1;
+          authorStats[author].likes += likes;
+          authorStats[author].comments += comments;
+        });
+
+        const tierMap = {
+          "头部作者（≥20篇）": { authors: 0, posts: 0, likes: 0, comments: 0 },
+          "腰部作者（5–19篇）": { authors: 0, posts: 0, likes: 0, comments: 0 },
+          "长尾作者（1–4篇）": { authors: 0, posts: 0, likes: 0, comments: 0 },
         };
-      });
-      renderGenericTable("tierTable", tierTableData);
-    }
 
-    function renderTopTable(containerId, list) {
-      const container = document.getElementById(containerId);
-      if (!list || !list.length) {
-        container.innerHTML = "<div style='font-size:12px;color:#6b7280;'>无数据</div>";
-        return;
-      }
-      let html = "<table class='data-table'><thead><tr>";
-      const headers = [
-        "动态ID",
-        "动态标题",
-        "发布者",
-        "点赞数",
-        "评论数",
-        "创建时间",
-      ];
-      html += headers.map((h) => `<th>${h}</th>`).join("");
-      html += "</tr></thead><tbody>";
-      list.forEach((row) => {
-        const created = row.created ? formatDateTime(row.created) : "";
-        html += "<tr>";
-        html += `<td>${row.id ?? ""}</td>`;
-        html += `<td>${escapeHtml(row.title ?? "")}</td>`;
-        html += `<td>${escapeHtml(row.author ?? "")}</td>`;
-        html += `<td>${row.likes ?? 0}</td>`;
-        html += `<td>${row.comments ?? 0}</td>`;
-        html += `<td>${created}</td>`;
-        html += "</tr>";
-      });
-      html += "</tbody></table>";
-      container.innerHTML = html;
-    }
+        Object.keys(authorStats).forEach((author) => {
+          const s = authorStats[author];
+          const c = s.posts;
+          let tier;
+          if (c >= 20) tier = "头部作者（≥20篇）";
+          else if (c >= 5) tier = "腰部作者（5–19篇）";
+          else tier = "长尾作者（1–4篇）";
+          const t = tierMap[tier];
+          t.authors += 1;
+          t.posts += s.posts;
+          t.likes += s.likes;
+          t.comments += s.comments;
+        });
 
-    function renderGenericTable(containerId, list) {
-      const container = document.getElementById(containerId);
-      if (!list || !list.length) {
-        container.innerHTML =
-          "<div style='font-size:12px;color:#6b7280;'>无数据</div>";
-        return;
+        const tierNames = Object.keys(tierMap);
+        const tierPosts = tierNames.map((t) => tierMap[t].posts);
+        Plotly.newPlot(
+          "tierChart",
+          [{ x: tierNames, y: tierPosts, type: "bar" }],
+          { margin: { t: 20, r: 10, b: 40, l: 40 } }
+        );
+
+        const tierTableData = tierNames.map((t) => {
+          const v = tierMap[t];
+          const avgPost = v.authors > 0 ? (v.posts / v.authors).toFixed(2) : "0.00";
+          return {
+            作者层级: t,
+            作者人数: v.authors,
+            发文总数: v.posts,
+            总点赞数: v.likes,
+            总评论数: v.comments,
+            人均发文数: avgPost,
+          };
+        });
+        renderGenericTable("tierTable", tierTableData);
       }
-      const keys = Object.keys(list[0]);
-      let html = "<table class='data-table'><thead><tr>";
-      keys.forEach((k) => {
-        html += `<th>${k}</th>`;
-      });
-      html += "</tr></thead><tbody>";
-      list.forEach((row) => {
-        html += "<tr>";
+
+      function renderTopTable(containerId, list) {
+        const container = document.getElementById(containerId);
+        if (!list || !list.length) {
+          container.innerHTML = "<div style='font-size:12px;color:#6b7280;'>无数据</div>";
+          return;
+        }
+        let html = "<table class='data-table'><thead><tr>";
+        const headers = [
+          "动态ID",
+          "动态标题",
+          "发布者",
+          "点赞数",
+          "评论数",
+          "创建时间",
+        ];
+        html += headers.map((h) => `<th>${h}</th>`).join("");
+        html += "</tr></thead><tbody>";
+        list.forEach((row) => {
+          const created = row.created ? formatDateTime(row.created) : "";
+          html += "<tr>";
+          html += `<td>${row.id ?? ""}</td>`;
+          html += `<td>${escapeHtml(row.title ?? "")}</td>`;
+          html += `<td>${escapeHtml(row.author ?? "")}</td>`;
+          html += `<td>${row.likes ?? 0}</td>`;
+          html += `<td>${row.comments ?? 0}</td>`;
+          html += `<td>${created}</td>`;
+          html += "</tr>";
+        });
+        html += "</tbody></table>";
+        container.innerHTML = html;
+      }
+
+      function renderGenericTable(containerId, list) {
+        const container = document.getElementById(containerId);
+        if (!list || !list.length) {
+          container.innerHTML =
+            "<div style='font-size:12px;color:#6b7280;'>无数据</div>";
+          return;
+        }
+        const keys = Object.keys(list[0]);
+        let html = "<table class='data-table'><thead><tr>";
         keys.forEach((k) => {
-          html += `<td>${escapeHtml(row[k])}</td>`;
+          html += `<th>${k}</th>`;
         });
-        html += "</tr>";
-      });
-      html += "</tbody></table>";
-      container.innerHTML = html;
-    }
-
-    function escapeHtml(val) {
-      if (val === null || val === undefined) return "";
-      return String(val)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
-
-    function exportCSV(data, filename) {
-      if (!data || !data.length) {
-        alert("没有数据可导出");
-        return;
+        html += "</tr></thead><tbody>";
+        list.forEach((row) => {
+          html += "<tr>";
+          keys.forEach((k) => {
+            html += `<td>${escapeHtml(row[k])}</td>`;
+          });
+          html += "</tr>";
+        });
+        html += "</tbody></table>";
+        container.innerHTML = html;
       }
-      
-      const keys = Object.keys(data[0]);
-      const headers = keys.join(",");
-      const rows = data.map((item) => {
-        return keys.map((key) => {
-          const value = item[key] ?? "";
-          // 处理包含逗号、引号或换行符的值
-          if (String(value).includes(",") || String(value).includes('"') || String(value).includes("\n")) {
-            return `"${String(value).replace(/"/g, '""')}"`;
-          }
-          return value;
-        }).join(",");
-      });
-      
-      const csvContent = [headers, ...rows].join("\n");
-      const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-      link.setAttribute("href", url);
-      link.setAttribute("download", filename);
-      link.style.visibility = "hidden";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
 
-    function classifyTheme(title) {
-      const t = String(title || "");
-      const rules = [
-        ["AI", ["AI", "人工智能", "大模型", "算力", "智能体", "Agent", "多模态", "推理", "LLM"]],
-        ["模型", ["模型", "训练", "微调", "参数", "预训练"]],
-        ["硬件", ["芯片", "GPU", "CPU", "机器人", "终端", "设备", "存储", "传感器", "模组"]],
-        ["创业", ["创业", "公司", "融资", "投资", "独角兽", "上市", "IPO", "创始人"]],
-        ["政策", ["政策", "监管", "条例", "规划", "标准", "指导意见", "方案", "行动计划"]],
-      ];
-      for (const [theme, kws] of rules) {
-        for (const kw of kws) {
-          if (t.includes(kw)) return theme;
+      function escapeHtml(val) {
+        if (val === null || val === undefined) return "";
+        return String(val)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function exportCSV(data, filename) {
+        if (!data || !data.length) {
+          alert("没有数据可导出");
+          return;
         }
+
+        const keys = Object.keys(data[0]);
+        const headers = keys.join(",");
+        const rows = data.map((item) => {
+          return keys.map((key) => {
+            const value = item[key] ?? "";
+            // 处理包含逗号、引号或换行符的值
+            if (String(value).includes(",") || String(value).includes('"') || String(value).includes("\n")) {
+              return `"${String(value).replace(/"/g, '""')}"`;
+            }
+            return value;
+          }).join(",");
+        });
+
+        const csvContent = [headers, ...rows].join("\n");
+        const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
-      return "其他";
-    }
-  </script>
+
+      function classifyTheme(title) {
+        const t = String(title || "");
+        const rules = [
+          ["AI", ["AI", "人工智能", "大模型", "算力", "智能体", "Agent", "多模态", "推理", "LLM"]],
+          ["模型", ["模型", "训练", "微调", "参数", "预训练"]],
+          ["硬件", ["芯片", "GPU", "CPU", "机器人", "终端", "设备", "存储", "传感器", "模组"]],
+          ["创业", ["创业", "公司", "融资", "投资", "独角兽", "上市", "IPO", "创始人"]],
+          ["政策", ["政策", "监管", "条例", "规划", "标准", "指导意见", "方案", "行动计划"]],
+        ];
+        for (const [theme, kws] of rules) {
+          for (const kw of kws) {
+            if (t.includes(kw)) return theme;
+          }
+        }
+        return "其他";
+      }
+    </script>
   </div>
 
   <!-- 授权层脚本 -->
@@ -1124,10 +1165,10 @@
 
     function showApp(code) {
       if (authScreen) authScreen.style.display = "none";
-      if (appRoot) appRoot.style.display = "block !important";
+      if (appRoot) appRoot.style.display = "block";
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ code, ts: Date.now() }));
-      } catch (e) {}
+      } catch (e) { }
     }
 
     (async function bootstrapAuth() {
@@ -1169,9 +1210,10 @@
       if (e.key === "Enter") handleAuth();
     });
 
-    window.addEventListener("load", function() {
+    window.addEventListener("load", function () {
       if (input) setTimeout(() => input.focus(), 80);
     });
   </script>
 </body>
+
 </html>

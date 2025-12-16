@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,6 +10,7 @@
   <link rel="stylesheet" href="design-system-modern.css" />
   <link rel="stylesheet" href="tool-pages-interactions.css" />
 
+  <!-- JSZip 用于下载 -->
   <!-- JSZip 用于下载 -->
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
@@ -479,6 +481,7 @@
         opacity: 0;
         transform: translateY(10px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -496,6 +499,7 @@
       z-index: 9999;
       backdrop-filter: blur(8px);
     }
+
     .auth-card {
       width: 360px;
       max-width: 90vw;
@@ -505,17 +509,20 @@
       border: 1px solid #e5e7eb;
       box-shadow: 0 16px 48px rgba(15, 23, 42, 0.12);
     }
+
     .auth-title {
       font-size: 18px;
       font-weight: 700;
       margin-bottom: 4px;
       color: #0f172a;
     }
+
     .auth-subtitle {
       font-size: 12px;
       color: #475569;
       margin-bottom: 16px;
     }
+
     .auth-label {
       font-size: 12px;
       color: #475569;
@@ -523,6 +530,7 @@
       display: block;
       font-weight: 600;
     }
+
     .auth-input {
       width: 100%;
       padding: 10px 12px;
@@ -536,11 +544,13 @@
       box-sizing: border-box;
       transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s ease;
     }
+
     .auth-input:focus {
       border-color: #bfdbfe;
       box-shadow: 0 0 0 3px rgba(191, 219, 254, 0.55);
       transform: translateY(-1px);
     }
+
     .auth-btn {
       width: 100%;
       border: none;
@@ -554,29 +564,50 @@
       box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
       transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
     }
+
     .auth-btn:hover {
       transform: translateY(-1px);
       box-shadow: 0 14px 36px rgba(37, 99, 235, 0.32);
       filter: brightness(1.02);
     }
+
     .auth-error {
       margin-top: 10px;
       font-size: 11px;
       color: #dc2626;
       min-height: 16px;
     }
+
     .auth-card.shake {
       animation: shake 0.3s ease-in-out;
     }
+
     @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-6px); }
-      50% { transform: translateX(6px); }
-      75% { transform: translateX(-3px); }
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-6px);
+      }
+
+      50% {
+        transform: translateX(6px);
+      }
+
+      75% {
+        transform: translateX(-3px);
+      }
     }
-    #app { display: none; }
+
+    #app {
+      display: none;
+    }
   </style>
 </head>
+
 <body>
   <!-- 授权层 -->
   <div id="auth-screen">
@@ -585,13 +616,7 @@
       <div class="auth-subtitle">请输入密码访问本工具</div>
 
       <label class="auth-label" for="auth-code">密码</label>
-      <input
-        id="auth-code"
-        class="auth-input"
-        type="password"
-        placeholder="请输入密码"
-        autocomplete="off"
-      />
+      <input id="auth-code" class="auth-input" type="password" placeholder="请输入密码" autocomplete="off" />
 
       <button class="auth-btn" id="auth-btn">确认进入</button>
 
@@ -601,181 +626,181 @@
 
   <!-- 真正的应用 -->
   <div id="app">
-  <!-- 导航栏 -->
-  <nav class="navbar">
-    <div class="navbar-container">
-      <div class="navbar-title">
-        <span class="navbar-icon">🖼️</span>
-        <span>图片压缩工具</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: var(--space-lg);">
-        <div class="navbar-badges">
-          <div class="badge">✓ 本地处理</div>
-          <div class="badge">✓ 无需上传</div>
-          <div class="badge">JPG / PNG / WebP</div>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+      <div class="navbar-container">
+        <div class="navbar-title">
+          <span class="navbar-icon">🖼️</span>
+          <span>图片压缩工具</span>
         </div>
-        <a href="index.html" class="navbar-home">← 返回首页</a>
+        <div style="display: flex; align-items: center; gap: var(--space-lg);">
+          <div class="navbar-badges">
+            <div class="badge">✓ 本地处理</div>
+            <div class="badge">✓ 无需上传</div>
+            <div class="badge">JPG / PNG / WebP</div>
+          </div>
+          <a href="index.html" class="navbar-home">← 返回首页</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="main-container">
+      <!-- 介绍卡片 -->
+      <div class="intro-card">
+        <div class="intro-title">🚀 快速压缩您的图片</div>
+        <div class="intro-desc">
+          在浏览器中完全处理，无需上传到服务器。支持 JPG、PNG 和 WebP 格式，可批量压缩和下载。
+        </div>
+      </div>
+
+      <!-- 内容网格 -->
+      <div class="content-grid">
+        <!-- 参数设置卡片 -->
+        <div class="card">
+          <div class="card-title">
+            <span class="card-icon">⚙️</span>
+            <span>选择图片 & 参数设置</span>
+          </div>
+
+          <!-- 文件输入 -->
+          <input type="file" id="fileInput" class="file-input" accept="image/*" multiple />
+
+          <!-- 拖拽区 -->
+          <div class="dropzone" id="dropzone">
+            <div class="dropzone-icon">📁</div>
+            <div class="dropzone-text">拖拽图片到此处</div>
+            <div class="dropzone-hint">或点击选择多个文件</div>
+          </div>
+
+          <!-- 控制参数 -->
+          <div class="controls">
+            <div class="form-group">
+              <label class="form-label">
+                <span>输出格式</span>
+              </label>
+              <select id="format" class="form-select">
+                <option value="auto">保持原格式</option>
+                <option value="image/jpeg">JPEG</option>
+                <option value="image/webp">WebP</option>
+                <option value="image/png">PNG</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <span>质量</span>
+                <span class="form-label-value"><span id="qVal">0.8</span></span>
+              </label>
+              <input type="range" id="quality" class="form-input" min="0.1" max="1" step="0.05" value="0.8" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">最大宽度 (px)</label>
+              <input type="number" id="maxW" class="form-input" value="1920" min="100" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">最大高度 (px)</label>
+              <input type="number" id="maxH" class="form-input" value="1080" min="100" />
+            </div>
+          </div>
+
+          <!-- 按钮组 -->
+          <div class="button-group">
+            <button class="btn btn-primary" id="btnCompress">
+              <span>⚡</span>
+              <span>压缩所有</span>
+            </button>
+            <button class="btn btn-secondary" id="btnDownloadAll">
+              <span>📦</span>
+              <span>下载 ZIP</span>
+            </button>
+            <button class="btn btn-secondary" id="btnClear">
+              <span>🗑️</span>
+              <span>清空</span>
+            </button>
+          </div>
+
+          <!-- 状态消息 -->
+          <div id="status"></div>
+        </div>
+
+        <!-- 文件列表卡片 -->
+        <div class="card">
+          <div class="card-title">
+            <span class="card-icon">📋</span>
+            <span>文件列表</span>
+          </div>
+
+          <div class="table-container">
+            <table class="table" id="table">
+              <thead>
+                <tr>
+                  <th>文件名</th>
+                  <th>原尺寸</th>
+                  <th>原大小</th>
+                  <th>压后尺寸</th>
+                  <th>压后大小</th>
+                  <th>压缩率</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="tbody">
+                <tr>
+                  <td colspan="7">
+                    <div class="empty-state">
+                      <div class="empty-icon">📸</div>
+                      <div class="empty-text">未选择文件</div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
-  </nav>
 
-  <!-- 主容器 -->
-  <div class="main-container">
-    <!-- 介绍卡片 -->
-    <div class="intro-card">
-      <div class="intro-title">🚀 快速压缩您的图片</div>
-      <div class="intro-desc">
-        在浏览器中完全处理，无需上传到服务器。支持 JPG、PNG 和 WebP 格式，可批量压缩和下载。
-      </div>
-    </div>
+    <script>
+      const fileInput = document.getElementById("fileInput");
+      const tbody = document.getElementById("tbody");
+      const statusEl = document.getElementById("status");
+      const qualityEl = document.getElementById("quality");
+      const qVal = document.getElementById("qVal");
+      const formatEl = document.getElementById("format");
+      const maxWEl = document.getElementById("maxW");
+      const maxHEl = document.getElementById("maxH");
+      const dropzone = document.getElementById("dropzone");
+      const btnCompress = document.getElementById("btnCompress");
+      const btnDownloadAll = document.getElementById("btnDownloadAll");
+      const btnClear = document.getElementById("btnClear");
 
-    <!-- 内容网格 -->
-    <div class="content-grid">
-      <!-- 参数设置卡片 -->
-      <div class="card">
-        <div class="card-title">
-          <span class="card-icon">⚙️</span>
-          <span>选择图片 & 参数设置</span>
-        </div>
+      let files = [];
+      let results = {};
 
-        <!-- 文件输入 -->
-        <input type="file" id="fileInput" class="file-input" accept="image/*" multiple />
+      // 质量显示更新
+      qVal.textContent = qualityEl.value;
+      qualityEl.addEventListener("input", () => qVal.textContent = qualityEl.value);
 
-        <!-- 拖拽区 -->
-        <div class="dropzone" id="dropzone">
-          <div class="dropzone-icon">📁</div>
-          <div class="dropzone-text">拖拽图片到此处</div>
-          <div class="dropzone-hint">或点击选择多个文件</div>
-        </div>
+      // 格式化字节
+      function fmtBytes(bytes) {
+        if (bytes === 0) return "0 B";
+        const k = 1024;
+        const sizes = ["B", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return (bytes / Math.pow(k, i)).toFixed(2) + " " + sizes[i];
+      }
 
-        <!-- 控制参数 -->
-        <div class="controls">
-          <div class="form-group">
-            <label class="form-label">
-              <span>输出格式</span>
-            </label>
-            <select id="format" class="form-select">
-              <option value="auto">保持原格式</option>
-              <option value="image/jpeg">JPEG</option>
-              <option value="image/webp">WebP</option>
-              <option value="image/png">PNG</option>
-            </select>
-          </div>
+      // 显示状态消息
+      function showStatus(message, type = "info") {
+        statusEl.innerHTML = `<div class="status status-${type}">${message}</div>`;
+      }
 
-          <div class="form-group">
-            <label class="form-label">
-              <span>质量</span>
-              <span class="form-label-value"><span id="qVal">0.8</span></span>
-            </label>
-            <input type="range" id="quality" class="form-input" min="0.1" max="1" step="0.05" value="0.8" />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">最大宽度 (px)</label>
-            <input type="number" id="maxW" class="form-input" value="1920" min="100" />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">最大高度 (px)</label>
-            <input type="number" id="maxH" class="form-input" value="1080" min="100" />
-          </div>
-        </div>
-
-        <!-- 按钮组 -->
-        <div class="button-group">
-          <button class="btn btn-primary" id="btnCompress">
-            <span>⚡</span>
-            <span>压缩所有</span>
-          </button>
-          <button class="btn btn-secondary" id="btnDownloadAll">
-            <span>📦</span>
-            <span>下载 ZIP</span>
-          </button>
-          <button class="btn btn-secondary" id="btnClear">
-            <span>🗑️</span>
-            <span>清空</span>
-          </button>
-        </div>
-
-        <!-- 状态消息 -->
-        <div id="status"></div>
-      </div>
-
-      <!-- 文件列表卡片 -->
-      <div class="card">
-        <div class="card-title">
-          <span class="card-icon">📋</span>
-          <span>文件列表</span>
-        </div>
-
-        <div class="table-container">
-          <table class="table" id="table">
-            <thead>
-              <tr>
-                <th>文件名</th>
-                <th>原尺寸</th>
-                <th>原大小</th>
-                <th>压后尺寸</th>
-                <th>压后大小</th>
-                <th>压缩率</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody id="tbody">
-              <tr>
-                <td colspan="7">
-                  <div class="empty-state">
-                    <div class="empty-icon">📸</div>
-                    <div class="empty-text">未选择文件</div>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const fileInput = document.getElementById("fileInput");
-    const tbody = document.getElementById("tbody");
-    const statusEl = document.getElementById("status");
-    const qualityEl = document.getElementById("quality");
-    const qVal = document.getElementById("qVal");
-    const formatEl = document.getElementById("format");
-    const maxWEl = document.getElementById("maxW");
-    const maxHEl = document.getElementById("maxH");
-    const dropzone = document.getElementById("dropzone");
-    const btnCompress = document.getElementById("btnCompress");
-    const btnDownloadAll = document.getElementById("btnDownloadAll");
-    const btnClear = document.getElementById("btnClear");
-
-    let files = [];
-    let results = {};
-
-    // 质量显示更新
-    qVal.textContent = qualityEl.value;
-    qualityEl.addEventListener("input", () => qVal.textContent = qualityEl.value);
-
-    // 格式化字节
-    function fmtBytes(bytes) {
-      if (bytes === 0) return "0 B";
-      const k = 1024;
-      const sizes = ["B", "KB", "MB", "GB"];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return (bytes / Math.pow(k, i)).toFixed(2) + " " + sizes[i];
-    }
-
-    // 显示状态消息
-    function showStatus(message, type = "info") {
-      statusEl.innerHTML = `<div class="status status-${type}">${message}</div>`;
-    }
-
-    // 渲染表格
-    function renderTable() {
-      if (!files.length) {
-        tbody.innerHTML = `
+      // 渲染表格
+      function renderTable() {
+        if (!files.length) {
+          tbody.innerHTML = `
           <tr>
             <td colspan="7">
               <div class="empty-state">
@@ -785,25 +810,25 @@
             </td>
           </tr>
         `;
-        return;
-      }
-
-      tbody.innerHTML = "";
-      files.forEach((f) => {
-        const r = results[f.name];
-        const ratioPercent = r ? (r.size / f.size * 100).toFixed(1) : "-";
-        let ratioClass = "";
-
-        if (r) {
-          if (r.size <= f.size * 0.5) ratioClass = "ratio-good";
-          else if (r.size <= f.size * 0.8) ratioClass = "ratio-warning";
-          else ratioClass = "ratio-bad";
+          return;
         }
 
-        const origDim = r?.origW ? `${r.origW} × ${r.origH}` : "-";
-        const compDim = r?.w ? `${r.w} × ${r.h}` : "-";
+        tbody.innerHTML = "";
+        files.forEach((f) => {
+          const r = results[f.name];
+          const ratioPercent = r ? (r.size / f.size * 100).toFixed(1) : "-";
+          let ratioClass = "";
 
-        tbody.innerHTML += `
+          if (r) {
+            if (r.size <= f.size * 0.5) ratioClass = "ratio-good";
+            else if (r.size <= f.size * 0.8) ratioClass = "ratio-warning";
+            else ratioClass = "ratio-bad";
+          }
+
+          const origDim = r?.origW ? `${r.origW} × ${r.origH}` : "-";
+          const compDim = r?.w ? `${r.w} × ${r.h}` : "-";
+
+          tbody.innerHTML += `
           <tr>
             <td><strong>${f.name}</strong></td>
             <td>${origDim}</td>
@@ -816,222 +841,223 @@
             </td>
           </tr>
         `;
-      });
-
-      tbody.querySelectorAll("button[data-dl]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const name = btn.getAttribute("data-name");
-          const r = results[name];
-          if (r?.blob) {
-            const url = URL.createObjectURL(r.blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = r.outputName;
-            a.click();
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-          }
         });
-      });
-    }
 
-    // 压缩单个文件
-    async function compressOne(file) {
-      const format = formatEl.value;
-      const quality = parseFloat(qualityEl.value);
-      const maxW = parseInt(maxWEl.value, 10) || 1920;
-      const maxH = parseInt(maxHEl.value, 10) || 1080;
-
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      const img = await new Promise((resolve, reject) => {
-        const i = new Image();
-        i.onload = () => resolve(i);
-        i.onerror = reject;
-        i.src = dataUrl;
-      });
-
-      let { width, height } = img;
-      const origW = width, origH = height;
-      const ratio = Math.min(1, maxW / width, maxH / height);
-
-      if (ratio < 1) {
-        width = Math.round(width * ratio);
-        height = Math.round(height * ratio);
+        tbody.querySelectorAll("button[data-dl]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const name = btn.getAttribute("data-name");
+            const r = results[name];
+            if (r?.blob) {
+              const url = URL.createObjectURL(r.blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = r.outputName;
+              a.click();
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }
+          });
+        });
       }
 
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, width, height);
+      // 压缩单个文件
+      async function compressOne(file) {
+        const format = formatEl.value;
+        const quality = parseFloat(qualityEl.value);
+        const maxW = parseInt(maxWEl.value, 10) || 1920;
+        const maxH = parseInt(maxHEl.value, 10) || 1080;
 
-      const outType = format === "auto" ? (file.type || "image/jpeg") : format;
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, outType, quality));
-      if (!blob) throw new Error("压缩失败");
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
 
-      const ext = outType === "image/png" ? ".png" : outType === "image/webp" ? ".webp" : ".jpg";
-      const outputName = file.name.replace(/\.[^.]+$/, "") + ext;
+        const img = await new Promise((resolve, reject) => {
+          const i = new Image();
+          i.onload = () => resolve(i);
+          i.onerror = reject;
+          i.src = dataUrl;
+        });
 
-      results[file.name] = {
-        blob,
-        size: blob.size,
-        w: width,
-        h: height,
-        origW,
-        origH,
-        outputName
-      };
-    }
+        let { width, height } = img;
+        const origW = width, origH = height;
+        const ratio = Math.min(1, maxW / width, maxH / height);
 
-    // 压缩所有
-    async function compressAll() {
-      if (!files.length) {
-        showStatus("请先选择图片", "error");
-        return;
-      }
-
-      btnCompress.disabled = true;
-      showStatus('<span class="loading"></span> 压缩中...', "info");
-      results = {};
-
-      try {
-        for (const f of files) {
-          await compressOne(f);
+        if (ratio < 1) {
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
         }
-        showStatus(`✓ 压缩完成，共 ${files.length} 个文件`, "success");
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const outType = format === "auto" ? (file.type || "image/jpeg") : format;
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, outType, quality));
+        if (!blob) throw new Error("压缩失败");
+
+        const ext = outType === "image/png" ? ".png" : outType === "image/webp" ? ".webp" : ".jpg";
+        const outputName = file.name.replace(/\.[^.]+$/, "") + ext;
+
+        results[file.name] = {
+          blob,
+          size: blob.size,
+          w: width,
+          h: height,
+          origW,
+          origH,
+          outputName
+        };
+      }
+
+      // 压缩所有
+      async function compressAll() {
+        if (!files.length) {
+          showStatus("请先选择图片", "error");
+          return;
+        }
+
+        btnCompress.disabled = true;
+        showStatus('<span class="loading"></span> 压缩中...', "info");
+        results = {};
+
+        try {
+          for (const f of files) {
+            await compressOne(f);
+          }
+          showStatus(`✓ 压缩完成，共 ${files.length} 个文件`, "success");
+          renderTable();
+        } catch (e) {
+          console.error(e);
+          showStatus(`✗ 压缩失败: ${e.message}`, "error");
+        } finally {
+          btnCompress.disabled = false;
+        }
+      }
+
+      // 下载全部
+      async function downloadAll() {
+        if (!Object.keys(results).length) {
+          showStatus("先压缩后再下载", "error");
+          return;
+        }
+
+        btnDownloadAll.disabled = true;
+        showStatus('<span class="loading"></span> 打包中...', "info");
+
+        try {
+          const zip = new JSZip();
+          Object.entries(results).forEach(([name, r]) => {
+            zip.file(r.outputName, r.blob);
+          });
+          const blob = await zip.generateAsync({ type: "blob" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "compressed-images.zip";
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          showStatus("✓ 已下载 ZIP 文件", "success");
+        } catch (e) {
+          showStatus("✗ 下载失败", "error");
+        } finally {
+          btnDownloadAll.disabled = false;
+        }
+      }
+
+      // 清空
+      function clearAll() {
+        files = [];
+        results = {};
+        fileInput.value = "";
+        statusEl.innerHTML = "";
         renderTable();
-      } catch (e) {
-        console.error(e);
-        showStatus(`✗ 压缩失败: ${e.message}`, "error");
-      } finally {
-        btnCompress.disabled = false;
-      }
-    }
-
-    // 下载全部
-    async function downloadAll() {
-      if (!Object.keys(results).length) {
-        showStatus("先压缩后再下载", "error");
-        return;
       }
 
-      btnDownloadAll.disabled = true;
-      showStatus('<span class="loading"></span> 打包中...', "info");
-
-      try {
-        const zip = new JSZip();
-        Object.entries(results).forEach(([name, r]) => {
-          zip.file(r.outputName, r.blob);
-        });
-        const blob = await zip.generateAsync({ type: "blob" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "compressed-images.zip";
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-        showStatus("✓ 已下载 ZIP 文件", "success");
-      } catch (e) {
-        showStatus("✗ 下载失败", "error");
-      } finally {
-        btnDownloadAll.disabled = false;
-      }
-    }
-
-    // 清空
-    function clearAll() {
-      files = [];
-      results = {};
-      fileInput.value = "";
-      statusEl.innerHTML = "";
-      renderTable();
-    }
-
-    // 事件监听：文件选择
-    fileInput.addEventListener("change", (e) => {
-      files = Array.from(e.target.files || []);
-      renderTable();
-      if (files.length) {
-        showStatus(`已选择 ${files.length} 个文件`, "info");
-      }
-    });
-
-    // 拖拽区事件
-    dropzone.addEventListener("click", () => fileInput.click());
-
-    dropzone.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      dropzone.classList.add("active");
-    });
-
-    dropzone.addEventListener("dragleave", () => {
-      dropzone.classList.remove("active");
-    });
-
-    dropzone.addEventListener("drop", (e) => {
-      e.preventDefault();
-      dropzone.classList.remove("active");
-      const dropped = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
-      if (dropped.length) {
-        files = files.concat(dropped);
+      // 事件监听：文件选择
+      fileInput.addEventListener("change", (e) => {
+        files = Array.from(e.target.files || []);
         renderTable();
-        showStatus(`已选择 ${files.length} 个文件`, "info");
+        if (files.length) {
+          showStatus(`已选择 ${files.length} 个文件`, "info");
+        }
+      });
+
+      // 拖拽区事件
+      dropzone.addEventListener("click", () => fileInput.click());
+
+      dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropzone.classList.add("active");
+      });
+
+      dropzone.addEventListener("dragleave", () => {
+        dropzone.classList.remove("active");
+      });
+
+      dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("active");
+        const dropped = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("image/"));
+        if (dropped.length) {
+          files = files.concat(dropped);
+          renderTable();
+          showStatus(`已选择 ${files.length} 个文件`, "info");
+        }
+      });
+
+      // 按钮事件
+      btnCompress.addEventListener("click", compressAll);
+      btnDownloadAll.addEventListener("click", downloadAll);
+      btnClear.addEventListener("click", clearAll);
+    </script>
+
+    <script>
+      const DEFAULT_PASSWORD = 'dcone2025';
+      const authScreen = document.getElementById('auth-screen');
+      const appRoot = document.getElementById('app');
+      const input = document.getElementById('auth-code');
+      const btn = document.getElementById('auth-btn');
+      const errElAuth = document.getElementById('auth-error');
+      const cardEl = document.getElementById('auth-card');
+
+      function shakeCard() {
+        if (!cardEl) return;
+        cardEl.classList.remove('shake');
+        void cardEl.offsetWidth;
+        cardEl.classList.add('shake');
       }
-    });
 
-    // 按钮事件
-    btnCompress.addEventListener("click", compressAll);
-    btnDownloadAll.addEventListener("click", downloadAll);
-    btnClear.addEventListener("click", clearAll);
-  </script>
-
-  <script>
-    const DEFAULT_PASSWORD = 'dcone2025';
-    const authScreen = document.getElementById('auth-screen');
-    const appRoot = document.getElementById('app');
-    const input = document.getElementById('auth-code');
-    const btn = document.getElementById('auth-btn');
-    const errElAuth = document.getElementById('auth-error');
-    const cardEl = document.getElementById('auth-card');
-
-    function shakeCard() {
-      if (!cardEl) return;
-      cardEl.classList.remove('shake');
-      void cardEl.offsetWidth;
-      cardEl.classList.add('shake');
-    }
-
-    function handleAuth() {
-      if (!input || !errElAuth || !authScreen || !appRoot) return;
-      const code = (input.value || '').trim();
-      if (!code) {
-        errElAuth.textContent = '请输入密码。';
-        shakeCard();
-        return;
+      function handleAuth() {
+        if (!input || !errElAuth || !authScreen || !appRoot) return;
+        const code = (input.value || '').trim();
+        if (!code) {
+          errElAuth.textContent = '请输入密码。';
+          shakeCard();
+          return;
+        }
+        if (code !== DEFAULT_PASSWORD) {
+          errElAuth.textContent = '密码错误，请重试。';
+          shakeCard();
+          return;
+        }
+        authScreen.style.display = 'none';
+        if (appRoot) appRoot.style.display = "block";
       }
-      if (code !== DEFAULT_PASSWORD) {
-        errElAuth.textContent = '密码错误，请重试。';
-        shakeCard();
-        return;
-      }
-      authScreen.style.display = 'none';
-      appRoot.style.display = 'block !important';
-    }
 
-    if (btn) btn.addEventListener('click', handleAuth);
-    if (input) input.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') handleAuth();
-    });
+      if (btn) btn.addEventListener('click', handleAuth);
+      if (input) input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') handleAuth();
+      });
 
-    window.addEventListener('load', function() {
-      if (input) setTimeout(() => input.focus(), 80);
-    });
-  </script>
+      window.addEventListener('load', function () {
+        if (input) setTimeout(() => input.focus(), 80);
+      });
+    </script>
   </div>
 </body>
+
 </html>
