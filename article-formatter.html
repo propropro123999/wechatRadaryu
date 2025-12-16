@@ -219,77 +219,96 @@
     <script type="text/javascript">
         function formatText() {
             var $editor = $('#editor');
-            var content = $editor.html();
+            // Create a temporary container to manipulate DOM
+            var $temp = $('<div>').html($editor.html());
 
-            // Basic cleanup (mimicking removeFormat)
-            // This is a simplified approach: we operate on the HTML string directly.
+            // 1. DOM-based Cleaning (More robust than Regex)
+            if ($('#clearAttr').is(':checked')) {
+                // Find ALL elements
+                $temp.find('*').each(function () {
+                    var $el = $(this);
 
-            // 1. Text Content Formatting (Regex)
+                    // Remove all attributes. We need to do this carefully.
+                    // We can't use .removeAttrs() as it's not standard jQuery
+                    // Native simplified approach:
+                    var attributes = $.map(this.attributes, function (item) {
+                        return item.name;
+                    });
+
+                    // List of attributes to KEEP (if any)
+                    // Adjust logic based on checkboxes
+                    var keepImg = !$('#clearImg').is(':checked') && $el.is('img');
+                    var keepLink = !$('#clearA').is(':checked') && $el.is('a');
+
+                    $.each(attributes, function (i, item) {
+                        // Logic: Remove everything by default
+                        // If it's an image and we keep images, keep src
+                        if (keepImg && (item === 'src' || item === 'alt')) return;
+                        // If it's a link and we keep links, keep href
+                        if (keepLink && (item === 'href' || item === 'target')) return;
+
+                        // Otherwise remove
+                        $el.removeAttr(item);
+                    });
+
+                    // Specific tag conversions
+                    // Convert section, div, article to p
+                    if ($el.is('section, div, article, aside, header, footer, nav')) {
+                        // Replace with P, keeping content
+                        var $p = $('<p>').html($el.html());
+                        $el.replaceWith($p);
+                    }
+
+                    // Remove span/font tags but keep text
+                    if ($el.is('span, font')) {
+                        $el.replaceWith($el.html());
+                    }
+                });
+            }
+
+            // 2. Remove Links if requested
+            if ($('#clearA').is(':checked')) {
+                $temp.find('a').each(function () {
+                    $(this).replaceWith($(this).html());
+                });
+            }
+
+            // 3. Remove Images if requested
+            if ($('#clearImg').is(':checked')) {
+                $temp.find('img').remove();
+            }
+
+            // 4. Content Formatting (Regex is still good for text manipulation)
+            var content = $temp.html();
+
             if ($('#clearSign').is(':checked')) {
-                // Add spaces between Chinese and English/Numbers
+                // Regex for text content (same as before)
                 content = content.replace(/([\u4E00-\u9FA3])([A-Za-z0-9\(\[\{@#])/g, '$1 $2');
                 content = content.replace(/([A-Za-z0-9\.,!@#%?\)\]\}])([\u4E00-\u9FA3])/g, '$1 $2');
-
-                // Remove spaces around punctuation
                 content = content.replace(/([〔〕（）。，！？《》—“”「」]) +/g, '$1');
                 content = content.replace(/ +([〔〕（）。，！？《》—“”「」])/g, '$1');
-
-                // Merge multiple spaces
                 content = content.replace(/ +/g, ' ');
-
-                // Standardize quotes
                 content = content.replace(/“/g, "「");
                 content = content.replace(/”/g, "」");
                 content = content.replace(/‘/g, "『");
                 content = content.replace(/’/g, "』");
-
-                // Normalize containers (section, div -> p)
-                content = content.replace(/<section[^>]*>/gi, "<p>");
-                content = content.replace(/<\/section>/gi, "</p>");
-                content = content.replace(/<div[^>]*>/gi, "<p>");
-                content = content.replace(/<\/div>/gi, "</p>");
-
-                // Normalize headings to be bold paragraphs or just keep them? 
-                // User logic replaced section/div, let's stick to that.
             }
 
-            // 2. Attribute Cleaning
-            if ($('#clearAttr').is(':checked')) {
-                // Remove common attributes from ALL tags
-                content = content.replace(/\s(id|class|style|onclick|align|width|height|valign|data-[a-z0-9-]+)=['"][^'"]*['"]/gi, '');
-                // Loose match for unquoted or simple attributes if necessary, but quoted is standard in simple HTML
+            // Update Temp with regex processed content
+            $temp.html(content);
 
-                // Remove <span> tags but keep content (often carry style garbage)
-                content = content.replace(/<\/?span[^>]*>/gi, "");
-                // Remove <font> tags
-                content = content.replace(/<\/?font[^>]*>/gi, "");
-            }
+            // 5. Aggressive Empty Line Cleanup (Using DOM)
+            // Traverse again to find empty P tags
+            // We loop backwards or repeatedly to handle nested empties
+            $temp.find('p').each(function () {
+                var html = $(this).html().replace(/&nbsp;/g, ' ').replace(/<br\s*\/?>/g, ' ').trim();
+                if (html === '') {
+                    $(this).remove();
+                }
+            });
+            // Also clean up any lingering br tags that are direct children of root if needed (though we wrapped in p)
 
-            // 3. Link Cleaning
-            if ($('#clearA').is(':checked')) {
-                // Remove <a> tags but keep content: <a href="...">text</a> -> text
-                content = content.replace(/<a\s[^>]*>(.*?)<\/a>/gi, "$1");
-            }
-
-            // 4. Image Cleaning
-            if ($('#clearImg').is(':checked')) {
-                content = content.replace(/<img[^>]*>/gi, '');
-            }
-
-            // 5. Final Cleanup
-
-            // Aggressively remove empty p tags including those with just br or whitespace
-            // <p><br></p>, <p> </p>, <p></p>
-            content = content.replace(/<p[^>]*>\s*(<br\s*\/?>)?\s*<\/p>/gi, "");
-
-            // Remove multiple consecutive <br>
-            content = content.replace(/(<br\s*\/?>){2,}/gi, "<br/>");
-
-            // Ensure specific cleanup for double P wrapping if any
-            content = content.replace(/<p>\s*<p>/gi, "<p>");
-            content = content.replace(/<\/p>\s*<\/p>/gi, "</p>");
-
-            $editor.html(content);
+            $editor.html($temp.html());
             showToast('排版已完成');
         }
 
