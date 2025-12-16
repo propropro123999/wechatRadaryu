@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>文章一键排版 - ICviews Tools</title>
+    <link rel="stylesheet" href="gemini-ui.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <style>
+        body {
+            background-color: var(--gem-color-background);
+            color: var(--gem-color-text-primary);
+            font-family: 'Google Sans', 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+            width: 100%;
+            flex-grow: 1;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .back-link {
+            color: var(--gem-color-text-secondary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--gem-color-accent);
+        }
+
+        .editor-card {
+            background: #FFFFFF;
+            border-radius: 24px;
+            padding: 0;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 800px;
+        }
+
+        .toolbar-container {
+            padding: 16px 24px;
+            background: #fafbfc;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            font-size: 14px;
+            color: var(--gem-color-text-secondary);
+        }
+
+        .checkbox-item input {
+            margin-right: 8px;
+            accent-color: var(--gem-color-accent);
+            width: 16px;
+            height: 16px;
+        }
+
+        .action-btn {
+            background-color: var(--gem-color-accent);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 99px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.2);
+        }
+
+        .action-btn:hover {
+            background-color: #1557b0;
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        #editor-container {
+            flex-grow: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Fix UEditor z-index issues if any */
+        .edui-default {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .edui-editor {
+            width: 100% !important;
+            height: 100% !important;
+            border: none !important;
+        }
+
+        .edui-editor-iframeholder {
+            width: 100% !important;
+            height: calc(100% - 80px) !important;
+            /* Adjust for toolbar height */
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main-container animate-fade-in">
+        <!-- Header -->
+        <div class="header-section">
+            <div>
+                <a href="./index.html" class="back-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="margin-right: 6px;">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                    返回工具箱
+                </a>
+                <h1 style="font-size: 24px; margin-top: 12px;">文章一键排版</h1>
+                <p style="color: var(--gem-color-text-secondary); font-size: 14px;">自动清理格式、规范标点、中英文加空格。</p>
+            </div>
+        </div>
+
+        <!-- Interface -->
+        <div class="editor-card">
+            <div class="toolbar-container">
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input id="clearSign" name="clearSign" type="checkbox" checked="checked">
+                        <span>格式化 (加空格/直角引号)</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input id="clearAttr" name="clearAttr" type="checkbox" checked="checked">
+                        <span>清除属性 (Style/Class)</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input id="clearA" name="clearA" type="checkbox" checked="checked">
+                        <span>清除链接</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input id="clearImg" name="clearImg" type="checkbox">
+                        <span>清除图片</span>
+                    </label>
+                </div>
+                <div style="flex-grow: 1;"></div>
+                <button class="action-btn" onclick="formatText()">✨ 一键排版</button>
+            </div>
+
+            <div id="editor-container">
+                <!-- UEditor Container -->
+                <textarea id="content" name="content" style="width:100%; height:100%;"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- UEditor Configuration & Loading -->
+    <script type="text/javascript">
+        // Set UEditor Home URL BEFORE loading scripts
+        window.UEDITOR_HOME_URL = "https://cdn.jsdelivr.net/npm/@kazura/ueditor@1.5.0/";
+    </script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@kazura/ueditor@1.5.0/ueditor.config.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@kazura/ueditor@1.5.0/ueditor.all.min.js"></script>
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/@kazura/ueditor@1.5.0/lang/zh-cn/zh-cn.js"></script>
+
+    <script type="text/javascript">
+        var editor;
+
+        $(function () {
+            // Initialize UEditor
+            editor = UE.getEditor('content', {
+                initialFrameWidth: '100%',
+                initialFrameHeight: '100%',
+                autoHeightEnabled: false,
+                elementPathEnabled: false, // Hide element path footer
+                wordCount: true
+            });
+        });
+
+        function formatText() {
+            if (!editor) return;
+
+            // 1. Select all and remove basic formatting
+            editor.execCommand('selectall');
+            editor.execCommand("removeformat", 'big,code,del,dfn,em,font,i,ins,kbd,q,samp,small,span,strike,script,sub,sup,tt,u,var,color,class,style,lang,width,height,align,hspace,valign,alt');
+
+            if ($('#clearA').is(':checked')) {
+                editor.execCommand("removeformat", 'a');
+            }
+
+            var content = editor.getContent();
+
+            // 2. Text Content Formatting (Regex)
+            if ($('#clearSign').is(':checked')) {
+                // Add spaces between Chinese and English/Numbers
+                content = content.replace(/([\u4E00-\u9FA3])([A-Za-z0-9\(\[\{@#])/g, '$1 $2');
+                content = content.replace(/([A-Za-z0-9\.,!@#%?\)\]\}])([\u4E00-\u9FA3])/g, '$1 $2');
+
+                // Remove spaces around punctuation
+                content = content.replace(/([〔〕（）。，！？《》—“”「」]) +/g, '$1');
+                content = content.replace(/ +([〔〕（）。，！？《》—“”「」])/g, '$1');
+
+                // Merge multiple spaces
+                content = content.replace(/ +/g, ' ');
+
+                // Standardize quotes
+                content = content.replace(/“/g, "「");
+                content = content.replace(/”/g, "」");
+                content = content.replace(/‘/g, "『");
+                content = content.replace(/’/g, "』");
+
+                // Normalize containers to p tags
+                content = content.replace(/<section>/g, "<p>");
+                content = content.replace(/<\/section>/g, "</p>");
+                content = content.replace(/<div>/g, "<p>");
+                content = content.replace(/<\/div>/g, "</p>");
+            }
+
+            // 3. Attribute Cleaning
+            if ($('#clearAttr').is(':checked')) {
+                content = content.replace(/(id|class|style|onclick|alt|title|width|height|_href|_src)\s*\=\'[^\>\']*?\'/gi, '');
+                content = content.replace(/(id|class|style|onclick|alt|title|width|height|_href|_src)\s*\=\"[^\>\"]*?\"/gi, '');
+            }
+
+            // 4. Image Cleaning
+            if ($('#clearImg').is(':checked')) {
+                content = content.replace(/<([\/\s]*)(img)([^>]*)>/gi, '');
+            }
+
+            // Apply changes
+            editor.setContent(content);
+
+            // Final cleanup (remove empty paragraphs created by replacements)
+            var formatContent = editor.getContent();
+            formatContent = formatContent.replace(/(<p><br\/><\/p>)+/g, "<p><br/></p>");
+            editor.setContent(formatContent);
+        }
+    </script>
+</body>
+
+</html>
