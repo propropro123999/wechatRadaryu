@@ -1,349 +1,197 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ICviews tools</title>
+  <title>ICviews Tools Collection</title>
+  <link rel="stylesheet" href="gemini-ui.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* Page specific adjustments */
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Microsoft YaHei",
-        sans-serif;
-      background: #f7f8fa;
+      background: radial-gradient(circle at 50% 0%, #E8F0FE 0%, #F0F4F9 60%);
       min-height: 100vh;
-      color: #111827;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 32px 18px 48px;
     }
 
-    .portal-shell {
-      width: 100%;
-      max-width: 1180px;
+    .hero-section {
+      text-align: center;
+      margin-bottom: 48px;
     }
-
-    .hero {
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 18px;
-      padding: 24px 26px;
-      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 18px;
-      margin-bottom: 22px;
-    }
-
-    .hero-title { display: flex; flex-direction: column; gap: 10px; }
-    .hero-title h1 { font-size: 28px; font-weight: 700; letter-spacing: 0.2px; color: #0f172a; }
-    .hero-title p { font-size: 14px; color: #475569; line-height: 1.6; }
-    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
-    .pill {
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      color: #0f172a;
-      border: 1px solid #e2e8f0;
-      background: #f8fafc;
-    }
-
-    .hero-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px;
-      align-content: center;
-    }
-    .stat {
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 14px;
-      padding: 14px;
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
-    }
-    .stat-label { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
-    .stat-value { font-size: 20px; font-weight: 700; color: #0f172a; }
 
     .tools-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
     }
 
-    .tool-card {
-      position: relative;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
+    .tool-icon-wrapper {
+      width: 56px;
+      height: 56px;
       border-radius: 16px;
-      padding: 20px;
-      color: #0f172a;
-      text-decoration: none;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-      overflow: hidden;
-      transition: all 0.2s ease;
+      background: linear-gradient(135deg, #E8F0FE, #FFFFFF);
       display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .tool-card:hover {
-      transform: translateY(-4px);
-      border-color: #dbeafe;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15), 0 2px 4px rgba(0, 0, 0, 0.06);
-    }
-    .tool-card::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at 20% 20%, rgba(59,130,246,0.06), transparent 45%);
-      pointer-events: none;
-    }
-    .tool-icon {
-      width: 48px; height: 48px;
-      border-radius: 14px;
-      display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
-      background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
-      border: 1px solid #bfdbfe;
-      color: #1d4ed8;
-      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      font-size: 28px;
+      box-shadow: 0 4px 12px rgba(66, 133, 244, 0.1);
+      margin-bottom: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.8);
     }
-    .tool-card:hover .tool-icon {
-      transform: scale(1.08);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
-    }
-    .tool-head { display: flex; align-items: center; gap: 10px; }
-    .tool-name { font-size: 18px; font-weight: 700; color: #0f172a; }
-    .tag {
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid #e5e7eb;
-      color: #475569;
-      background: #f8fafc;
-    }
-    .tool-desc { font-size: 13px; color: #475569; line-height: 1.55; }
-    .tool-meta { display: flex; flex-wrap: wrap; gap: 8px; }
-    .chip {
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 8px;
-      background: #eef2ff;
-      color: #1d4ed8;
-      border: 1px solid #dbeafe;
-    }
+
     .tool-link {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      font-weight: 600;
-      color: #2563eb;
-      font-size: 13px;
-      margin-top: 4px;
-      transition: transform 0.15s ease;
-    }
-    .tool-card:hover .tool-link { transform: translateX(2px); }
-    .tool-link svg { width: 14px; height: 14px; fill: currentColor; }
-
-    .footer {
-      text-align: center;
-      color: #64748b;
-      font-size: 12px;
-      margin-top: 22px;
-    }
-    .footer a {
-      color: #2563eb;
-      text-decoration: none;
-      border-bottom: 1px dashed rgba(37,99,235,0.35);
+      margin-top: auto;
+      font-weight: 500;
+      color: var(--gem-color-accent);
+      font-size: 14px;
     }
 
+    .tool-link svg {
+      width: 18px;
+      height: 18px;
+      margin-left: 4px;
+      transition: transform 0.2s;
+    }
 
-    @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } }
-    @media (max-width: 640px) {
-      .hero { padding: 20px; }
-      .hero-title h1 { font-size: 24px; }
-      .tools-grid { grid-template-columns: 1fr; }
-      .tool-card { padding: 18px; }
-      .auth-card { width: 94vw; padding: 22px; }
+    .gem-card:hover .tool-link svg {
+      transform: translateX(4px);
     }
   </style>
 </head>
 
 <body>
-  <!-- 真正的入口页面 -->
-  <div id="portal-root">
-    <div class="portal-shell">
-      <div class="hero">
-        <div class="hero-title">
-          <h1>ICviews tools</h1>
-          <p>一站式内容、流量与运营数据工具，全部本地运行，随取随用。</p>
-          <div class="pill-row">
-            <span class="pill">本地解析 · 不上传数据</span>
-            <span class="pill">CSV / XLSX 即拖即用</span>
-            <span class="pill">6 套工具已就绪</span>
-          </div>
-        </div>
-        <div class="hero-stats">
-          <div class="stat">
-            <div class="stat-label">工具数量</div>
-            <div class="stat-value">6</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">支持文件</div>
-            <div class="stat-value">CSV · XLSX</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">运行方式</div>
-            <div class="stat-value">浏览器本地</div>
-          </div>
-        </div>
-      </div>
 
-      <div class="tools-grid">
-        <a href="./content-dashboard.html" class="tool-card">
-          <div class="tool-head">
-            <div class="tool-icon">📈</div>
-            <div class="tool-name">内容数据分析</div>
-            <span class="tag">公众号内容</span>
-          </div>
-          <div class="tool-desc">
-            读取公众号导出表，自动匹配阅读/分享/完读字段，生成 Top 榜、四象限与洞察。
-          </div>
-          <div class="tool-meta">
-            <span class="chip">CSV / XLSX</span>
-            <span class="chip">阅读 × 分享</span>
-            <span class="chip">完成率 & 送达</span>
-            <span class="chip">四象限</span>
-          </div>
-          <div class="tool-link">进入工具
-            <svg viewBox="0 0 24 24"><path d="M5 12h14m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-        </a>
+  <div class="container animate-fade-in">
 
-        <a href="./bandao-ops-dashboard.html" class="tool-card">
-          <div class="tool-head">
-            <div class="tool-icon">🧭</div>
-            <div class="tool-name">专栏 / 帖子工具</div>
-            <span class="tag">内容运营</span>
-          </div>
-          <div class="tool-desc">
-            拆解频次、发布分层、与内容高频词。
-          </div>
-          <div class="tool-meta">
-            <span class="chip">发布节奏</span>
-            <span class="chip">作者分层</span>
-            <span class="chip">点赞/评论</span>
-            <span class="chip">高频词</span>
-          </div>
-          <div class="tool-link">进入工具
-            <svg viewBox="0 0 24 24"><path d="M5 12h14m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-        </a>
+    <!-- Hero Header -->
+    <div class="hero-section">
+      <h1 class="animate-fade-in delay-1">ICviews Tools</h1>
+      <p style="font-size: 18px; max-width: 600px; margin: 16px auto;" class="animate-fade-in delay-2">
+        一站式内容、流量与运营数据工具箱。
+        <br>
+        <span style="font-size: 14px; opacity: 0.8;">本地解析 · 数据隐私安全 · 即拖即用</span>
+      </p>
 
-        <a href="./page-traffic-dashboard.html" class="tool-card">
-          <div class="tool-head">
-            <div class="tool-icon">🌐</div>
-            <div class="tool-name">页面流量分析</div>
-            <span class="tag">流量监测</span>
-          </div>
-          <div class="tool-desc">
-            解析页面标题与流量指标，快速查看多维 UV / PV / 来源分布。
-          </div>
-          <div class="tool-meta">
-            <span class="chip">流量漏斗</span>
-            <span class="chip">来源拆解</span>
-            <span class="chip">可视化</span>
-          </div>
-          <div class="tool-link">进入工具
-            <svg viewBox="0 0 24 24"><path d="M5 12h14m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-        </a>
-
-        <a href="./youmeng.html" class="tool-card">
-          <div class="tool-head">
-            <div class="tool-icon">📄</div>
-            <div class="tool-name">友盟多表流量</div>
-            <span class="tag">多 Sheet</span>
-          </div>
-          <div class="tool-desc">
-            解析含多个 Sheet（季度等）的受访页面报表，汇总 PV/UV、类型分布、TOP 榜及按 Sheet 对比。
-          </div>
-          <div class="tool-meta">
-            <span class="chip">多 Sheet</span>
-            <span class="chip">PV/UV</span>
-            <span class="chip">停留时间</span>
-            <span class="chip">Top 榜</span>
-          </div>
-          <div class="tool-link">进入工具
-            <svg viewBox="0 0 24 24"><path d="M5 12h14m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-        </a>
-
-        <a href="./image-compress.html" class="tool-card">
-          <div class="tool-head">
-            <div class="tool-icon">🗜️</div>
-            <div class="tool-name">图片压缩</div>
-            <span class="tag">本地处理</span>
-          </div>
-          <div class="tool-desc">
-            浏览器端批量压缩 JPG/PNG/WebP，支持质量、尺寸、格式控制，ZIP 一键下载。
-          </div>
-          <div class="tool-meta">
-            <span class="chip">批量</span>
-            <span class="chip">质量可调</span>
-            <span class="chip">尺寸限制</span>
-            <span class="chip">ZIP 下载</span>
-          </div>
-          <div class="tool-link">进入工具
-            <svg viewBox="0 0 24 24"><path d="M5 12h14m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-        </a>
-
-        <a href="./yiban-dashboard.html" class="tool-card">
-          <div class="tool-head">
-            <div class="tool-icon">📊</div>
-            <div class="tool-name">壹伴数据分析</div>
-            <span class="tag">壹伴插件</span>
-          </div>
-          <div class="tool-desc">
-            解析壹伴插件导出的 Excel 表格，分析阅读来源、互动表现、转化率等核心指标。
-          </div>
-          <div class="tool-meta">
-            <span class="chip">阅读来源</span>
-            <span class="chip">互动分析</span>
-            <span class="chip">转化率</span>
-            <span class="chip">趋势分析</span>
-          </div>
-          <div class="tool-link">进入工具
-            <svg viewBox="0 0 24 24"><path d="M5 12h14m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-        </a>
-      </div>
-
-      <div class="footer">
-        <p>💡 所有分析均在本地浏览器运行，不会上云。</p>
+      <div class="flex items-center justify-center gap-2 animate-fade-in delay-3" style="margin-top: 24px;">
+        <span class="gem-chip gem-chip-accent">6 套工具</span>
+        <span class="gem-chip">CSV / XLSX</span>
+        <span class="gem-chip">Browser Only</span>
       </div>
     </div>
+
+    <!-- Tools Grid -->
+    <div class="tools-grid animate-fade-in delay-3">
+
+      <!-- Card 1 -->
+      <a href="./content-dashboard.html" class="gem-card flex flex-col">
+        <div class="tool-icon-wrapper">📈</div>
+        <h3>内容数据分析</h3>
+        <p style="font-size: 14px; flex-grow: 1;">读取公众号导出表，自动匹配阅读/分享/完读字段，生成 Top 榜单与四象限洞察。</p>
+        <div class="flex gap-2" style="flex-wrap: wrap; margin-bottom: 16px;">
+          <span class="gem-chip">四象限</span>
+          <span class="gem-chip">榜单生成</span>
+        </div>
+        <div class="tool-link">
+          进入工具 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14m-7-7 7 7-7 7" />
+          </svg>
+        </div>
+      </a>
+
+      <!-- Card 2 -->
+      <a href="./bandao-ops-dashboard.html" class="gem-card flex flex-col">
+        <div class="tool-icon-wrapper">🧭</div>
+        <h3>专栏 / 帖子工具</h3>
+        <p style="font-size: 14px; flex-grow: 1;">拆解发布频次、作者分层与内容高频词，优化运营节奏。</p>
+        <div class="flex gap-2" style="flex-wrap: wrap; margin-bottom: 16px;">
+          <span class="gem-chip">发布节奏</span>
+          <span class="gem-chip">高频词</span>
+        </div>
+        <div class="tool-link">
+          进入工具 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14m-7-7 7 7-7 7" />
+          </svg>
+        </div>
+      </a>
+
+      <!-- Card 3 -->
+      <a href="./page-traffic-dashboard.html" class="gem-card flex flex-col">
+        <div class="tool-icon-wrapper">🌐</div>
+        <h3>页面流量分析</h3>
+        <p style="font-size: 14px; flex-grow: 1;">解析页面标题与流量指标，快速查看多维 UV / PV / 来源分布。</p>
+        <div class="flex gap-2" style="flex-wrap: wrap; margin-bottom: 16px;">
+          <span class="gem-chip">流量漏斗</span>
+          <span class="gem-chip">可视化</span>
+        </div>
+        <div class="tool-link">
+          进入工具 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14m-7-7 7 7-7 7" />
+          </svg>
+        </div>
+      </a>
+
+      <!-- Card 4 -->
+      <a href="./youmeng.html" class="gem-card flex flex-col">
+        <div class="tool-icon-wrapper">📄</div>
+        <h3>友盟多表流量</h3>
+        <p style="font-size: 14px; flex-grow: 1;">解析含多 Sheet 的受访页面报表，汇总 PV/UV 及类型分布。</p>
+        <div class="flex gap-2" style="flex-wrap: wrap; margin-bottom: 16px;">
+          <span class="gem-chip">多Sheet合并</span>
+          <span class="gem-chip">趋势对比</span>
+        </div>
+        <div class="tool-link">
+          进入工具 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14m-7-7 7 7-7 7" />
+          </svg>
+        </div>
+      </a>
+
+      <!-- Card 5 -->
+      <a href="./image-compress.html" class="gem-card flex flex-col">
+        <div class="tool-icon-wrapper">🗜️</div>
+        <h3>图片压缩</h3>
+        <p style="font-size: 14px; flex-grow: 1;">浏览器端批量压缩 JPG/PNG/WebP，支持质量控制与 ZIP 打包。</p>
+        <div class="flex gap-2" style="flex-wrap: wrap; margin-bottom: 16px;">
+          <span class="gem-chip">批量处理</span>
+          <span class="gem-chip">纯本地</span>
+        </div>
+        <div class="tool-link">
+          进入工具 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14m-7-7 7 7-7 7" />
+          </svg>
+        </div>
+      </a>
+
+      <!-- Card 6 -->
+      <a href="./yiban-dashboard.html" class="gem-card flex flex-col">
+        <div class="tool-icon-wrapper">📊</div>
+        <h3>壹伴数据分析</h3>
+        <p style="font-size: 14px; flex-grow: 1;">解析壹伴插件导出的 Excel 表格，分析互动表现与转化率。</p>
+        <div class="flex gap-2" style="flex-wrap: wrap; margin-bottom: 16px;">
+          <span class="gem-chip">阅读来源</span>
+          <span class="gem-chip">转化率</span>
+        </div>
+        <div class="tool-link">
+          进入工具 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14m-7-7 7 7-7 7" />
+          </svg>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 48px; color: var(--gem-color-text-tertiary); font-size: 12px;">
+      <p>💡 Designed with Gemini Aesthetics. Processing locally in your browser.</p>
+    </div>
+
   </div>
 
-  <script>
-    function initPortalEvents() {
-      const cards = document.querySelectorAll(".tool-card");
-      cards.forEach((card, index) => {
-        card.addEventListener("click", function(e) {
-          const toolName = this.querySelector(".tool-name").textContent;
-          console.log(`用户点击进入：${toolName}`);
-        });
-      });
-    }
-
-    // 初始化
-    document.addEventListener("DOMContentLoaded", function() {
-      initPortalEvents();
-    });
-  </script>
 </body>
+
 </html>

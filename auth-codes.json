@@ -3,7 +3,6 @@
     "description": "工具集授权码配置 - 每个工具拥有独立的授权码",
     "updated_at": "2025-12-15"
   },
-
   "tools": {
     "content-analysis": {
       "name": "内容数据函数分析工具",
@@ -53,6 +52,7 @@
     "youmeng-traffic": {
       "name": "友盟多表流量分析",
       "codes": {
+        "dcone2025": "自定义授权",
         "YMT-2025-A1B2": "标准授权",
         "YMT-2025-C3D4": "标准授权",
         "YMT-2025-E5F6": "标准授权",
@@ -81,7 +81,6 @@
       }
     }
   },
-
   "_legacy_codes": {
     "ICV-2025-B2LA": "标准授权",
     "ICV-2025-Z4RN": "标准授权",

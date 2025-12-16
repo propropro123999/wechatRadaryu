@@ -5,611 +5,100 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>内容数据函数分析工具（函数运行在浏览器）</title>
-  <link rel="stylesheet" href="design-system-modern.css" />
-  <link rel="stylesheet" href="tool-pages-interactions.css" />
+  <link rel="stylesheet" href="gemini-ui.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
-    /* ===== 授权登录层样式 ===== */
-    * {
-      box-sizing: border-box;
-    }
-
+    /* Specific Layout Overrides */
     #auth-screen {
       position: fixed;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(20px);
       z-index: 9999;
-      backdrop-filter: blur(10px);
     }
 
-    .auth-card {
-      width: 360px;
+    .auth-card-custom {
+      width: 400px;
       max-width: 90vw;
-      padding: 24px 24px 20px;
-      border-radius: 18px;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 16px 48px rgba(15, 23, 42, 0.16);
-      position: relative;
-      overflow: hidden;
     }
 
-    .auth-inner {
-      position: relative;
-      z-index: 1;
-    }
-
-    .auth-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: #0f172a;
-    }
-
-    .auth-badge {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(52, 211, 153, 0.7);
-      color: #bbf7d0;
-      background: linear-gradient(to right, rgba(22, 163, 74, 0.25), rgba(15, 118, 110, 0.35));
-    }
-
-    .auth-subtitle {
-      font-size: 12px;
-      color: #475569;
-      margin-bottom: 16px;
-    }
-
-    .auth-label {
-      font-size: 12px;
-      color: #475569;
-      margin-bottom: 6px;
-      display: block;
-      font-weight: 600;
-    }
-
-    .auth-input {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #d1d5db;
-      background: #f8fafc;
-      color: #0f172a;
-      outline: none;
-      font-size: 13px;
-      letter-spacing: 0.02em;
-      transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s ease;
-    }
-
-    .auth-input::placeholder {
-      color: #94a3b8;
-      letter-spacing: 0;
-    }
-
-    .auth-input:focus {
-      border-color: #bfdbfe;
-      box-shadow: 0 0 0 3px rgba(191, 219, 254, 0.55);
-      background: #fff;
-      transform: translateY(-1px);
-    }
-
-    .auth-actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 14px;
-      gap: 10px;
-    }
-
-    .auth-btn {
-      flex: 0 0 auto;
-      border: none;
-      border-radius: 10px;
-      padding: 11px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: #ffffff;
-      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
-      white-space: nowrap;
-    }
-
-    .auth-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 14px 36px rgba(37, 99, 235, 0.32);
-      filter: brightness(1.02);
-    }
-
-    .auth-btn:active {
-      transform: translateY(0);
-    }
-
-    .auth-hint {
-      font-size: 11px;
-      color: #64748b;
-      text-align: left;
-      flex: 1;
-    }
-
-    .auth-meta {
-      margin-top: 12px;
-      font-size: 11px;
-      color: #64748b;
-      display: flex;
-      justify-content: space-between;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .auth-error {
-      margin-top: 8px;
-      font-size: 11px;
-      color: #dc2626;
-      min-height: 14px;
-    }
-
-    .auth-card.shake {
-      animation: shake 0.26s ease-in-out;
-    }
-
-    @keyframes shake {
-      0% {
-        transform: translateX(0);
-      }
-
-      25% {
-        transform: translateX(-6px);
-      }
-
-      50% {
-        transform: translateX(5px);
-      }
-
-      75% {
-        transform: translateX(-3px);
-      }
-
-      100% {
-        transform: translateX(0);
-      }
-    }
-
-    /* Dashboard 根节点：初始隐藏，授权后显示 */
     #app {
       display: none;
     }
 
-    /* ======== Dashboard 样式 ======== */
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Microsoft YaHei",
-        sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f7f8fa;
-      color: #0f172a;
+    .chart {
+      width: 100%;
+      height: 400px;
     }
 
-    .topbar {
-      background: #ffffff;
-      color: #0f172a;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      border-bottom: 1px solid #e5e7eb;
-      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
-    }
-
-    .topbar-title {
-      font-size: 16px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    /* 返回首页按钮 */
-    .topbar-home {
+    .upload-hint-bar {
+      background: #FFF8E1;
+      color: #B06000;
+      font-size: 13px;
+      padding: 12px 24px;
+      border-bottom: 1px solid #FFE082;
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 12px;
-      background: #f3f4f6;
-      color: #0f172a;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.18s ease;
-      border: 1px solid #d1d5db;
-      white-space: nowrap;
-      margin-left: auto;
     }
 
-    .topbar-home:hover {
-      background: #3b82f6;
-      color: white;
-      border-color: #3b82f6;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
-    }
-
-    /* 醒目的上传按钮（方案 A） */
-    .upload-btn {
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: #fff;
-      padding: 9px 16px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      border: none;
-      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
-      transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-left: 8px;
-      white-space: nowrap;
-    }
-
-    .upload-btn input {
-      display: none;
-    }
-
-    .upload-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 12px 28px rgba(37, 99, 235, 0.3);
-      filter: brightness(1.02);
-    }
-
-    .upload-btn:active {
-      transform: translateY(0);
-    }
-
-    .topbar-spacer {
-      flex: 1;
-    }
-
-    /* 顶部提示条（方案 C） */
-    .upload-hint-bar {
-      background: #fef3c7;
-      color: #92400e;
-      font-size: 12px;
-      padding: 6px 16px;
-      border-bottom: 1px solid #fcd34d;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .container {
-      max-width: 1220px;
-      margin: 0 auto;
-      padding: 20px 16px 40px;
-    }
-
-    h1 {
-      font-size: 26px;
-      margin-bottom: 6px;
-      color: #0f172a;
-    }
-
-    h2 {
-      font-size: 20px;
-      margin: 24px 0 12px;
-      color: #0f172a;
-    }
-
-    .sub-title {
-      color: #6b7280;
-      margin-bottom: 18px;
-      font-size: 13px;
-    }
-
-    .cards {
+    .cards-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
     }
 
-    .card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 18px 20px;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
-      border: 1px solid #e5e7eb;
-      transition: transform 0.16s ease, box-shadow 0.16s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 26px rgba(37, 99, 235, 0.08);
-    }
-
-    .card-label {
-      font-size: 13px;
-      color: #6b7280;
-      margin-bottom: 4px;
-    }
-
-    .card-value {
-      font-size: 24px;
-      font-weight: 700;
-      color: #0f172a;
-    }
-
-    .chart-block {
-      background: #fff;
-      border-radius: 16px;
-      padding: 18px 20px;
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
-      margin-bottom: 20px;
-      border: 1px solid #e5e7eb;
-      transition: transform 0.16s ease, box-shadow 0.16s ease;
-    }
-
-    .chart-block:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 30px rgba(37, 99, 235, 0.08);
-    }
-
-    .chart {
-      width: 100%;
-      height: 340px;
-    }
-
-    .data-table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      font-size: 12px;
-    }
-
-    .data-table th,
-    .data-table td {
-      border-bottom: 1px solid #e5e7eb;
-      padding: 10px 12px;
-      text-align: left;
-    }
-
-    .data-table th {
-      background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
-      font-weight: 700;
-      color: #374151;
-      border-bottom: 2px solid #e5e7eb;
-    }
-
-    .data-table tbody tr:nth-child(odd) {
-      background-color: #fbfdff;
-    }
-
-    .data-table tbody tr:hover {
-      background-color: #f3f6ff;
-      transition: background-color 0.15s ease;
-    }
-
     .rank-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
     }
 
-    #loading {
-      font-size: 12px;
-      color: #6b7280;
-      margin-top: 6px;
-    }
-
-    #error {
-      font-size: 12px;
-      color: #b91c1c;
-      margin-top: 6px;
-    }
-
-    /* ===== 使用说明卡片 UI ===== */
-    .usage-card {
-      background: #ffffff;
-      border-radius: 14px;
-      padding: 12px 16px 4px;
-      margin-bottom: 20px;
-      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
-      border: 1px solid rgba(148, 163, 184, 0.35);
-    }
-
-    .usage-card-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .usage-icon-wrap {
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at 30% 20%, #e0f2fe, #eff6ff);
-      font-size: 18px;
-    }
-
-    .usage-title-block {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .usage-title-main {
-      font-size: 15px;
-      font-weight: 600;
-      color: #111827;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .usage-tag {
-      font-size: 11px;
-      padding: 1px 8px;
-      border-radius: 999px;
-      background: #ecfdf5;
-      color: #16a34a;
-      border: 1px solid rgba(34, 197, 94, 0.35);
-      white-space: nowrap;
-    }
-
-    .usage-title-sub {
-      font-size: 12px;
-      color: #6b7280;
-      margin-top: 2px;
-    }
-
-    .usage-chip {
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: #f3f4f6;
-      color: #4b5563;
-      margin-right: 6px;
-      white-space: nowrap;
-    }
-
-    .usage-chevron {
-      font-size: 16px;
-      color: #6b7280;
-      transition: transform 0.16s ease;
-    }
-
-    .usage-chevron.expanded {
-      transform: rotate(180deg);
-    }
-
-    .usage-card-body {
-      font-size: 13px;
-      color: #374151;
-      line-height: 1.7;
-      margin-top: 10px;
-      padding-top: 8px;
-      border-top: 1px dashed #e5e7eb;
-    }
-
-    .usage-card-body ul {
-      padding-left: 18px;
-      margin: 4px 0 10px;
-    }
-
-    .usage-card-body h4 {
-      margin: 10px 0 4px;
-      font-size: 13px;
-      font-weight: 600;
-      color: #111827;
-    }
-
-    /* ===== 首次使用弹窗样式 ===== */
+    /* Usage Modal specific */
     .usage-modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.45);
+      background: rgba(0, 0, 0, 0.4);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 9998;
-      backdrop-filter: blur(3px);
+      backdrop-filter: blur(4px);
     }
 
-    .usage-modal-card {
-      width: min(420px, 92vw);
-      background: #f9fafb;
-      border-radius: 18px;
-      padding: 18px 18px 14px;
-      box-shadow: 0 22px 60px rgba(15, 23, 42, 0.45);
-      border: 1px solid rgba(148, 163, 184, 0.5);
+    /* Shake animation */
+    .shake {
+      animation: shake 0.3s cubic-bezier(.36, .07, .19, .97) both;
     }
 
-    .usage-modal-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
+    @keyframes shake {
 
-    .usage-modal-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at 30% 20%, #bfdbfe, #eff6ff);
-      font-size: 18px;
-    }
+      10%,
+      90% {
+        transform: translate3d(-1px, 0, 0);
+      }
 
-    .usage-modal-title-text {
-      font-size: 16px;
-      font-weight: 600;
-      color: #111827;
-    }
+      20%,
+      80% {
+        transform: translate3d(2px, 0, 0);
+      }
 
-    .usage-modal-body {
-      font-size: 13px;
-      color: #4b5563;
-      line-height: 1.6;
-      margin-bottom: 14px;
-    }
+      30%,
+      50%,
+      70% {
+        transform: translate3d(-4px, 0, 0);
+      }
 
-    .usage-modal-actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .usage-modal-btn {
-      border: none;
-      border-radius: 999px;
-      padding: 8px 16px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      background: linear-gradient(135deg, #3b82f6, #6366f1);
-      color: #f9fafb;
-      box-shadow: 0 12px 30px rgba(37, 99, 235, 0.45);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .usage-modal-btn:hover {
-      filter: brightness(1.05);
-      transform: translateY(-1px);
-    }
-
-    .usage-modal-skip {
-      font-size: 12px;
-      color: #6b7280;
-      cursor: pointer;
-      text-decoration: underline;
-      text-underline-offset: 2px;
+      40%,
+      60% {
+        transform: translate3d(4px, 0, 0);
+      }
     }
   </style>
 </head>
@@ -617,223 +106,188 @@
 <body>
   <!-- 授权层 -->
   <div id="auth-screen">
-    <div class="auth-card" id="auth-card">
-      <div class="auth-inner">
-        <div class="auth-title">
-          🔐 内部数据访问
-          <span class="auth-badge">Authorization Required</span>
+    <div class="gem-card auth-card-custom animate-fade-in" id="auth-card">
+      <div style="margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <h2 style="font-size: 20px; margin: 0;">🔐 内部数据访问</h2>
+          <span class="gem-chip gem-chip-accent" style="font-size: 11px;">Auth Required</span>
         </div>
-        <div class="auth-subtitle">
-          请输入授权码访问「内容表现 Dashboard」。本页仅供经授权的内部成员 / 合作方使用。
-        </div>
+        <p style="font-size: 13px;">请输入授权码访问「内容表现 Dashboard」。<br>本页仅供经授权的内部成员 / 合作方使用。</p>
+      </div>
 
-        <label class="auth-label" for="auth-code">授权码</label>
-        <input id="auth-code" class="auth-input" type="text" placeholder="例如：ICV-2025-7QAF" autocomplete="off" />
+      <div style="margin-bottom: 20px;">
+        <label
+          style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px; color: var(--gem-color-text-secondary);">授权码</label>
+        <input id="auth-code" class="gem-input" type="text" placeholder="例如：ICV-2025-7QAF" autocomplete="off" />
+      </div>
 
-        <div class="auth-actions">
-          <div class="auth-hint">每个授权码对应一次发放对象，可按需分发。</div>
-          <button class="auth-btn" id="auth-btn">确认进入</button>
-        </div>
+      <div class="flex items-center justify-between gap-4">
+        <span style="font-size: 12px; color: var(--gem-color-text-tertiary);">按需分发，一次一码</span>
+        <button class="gem-btn gem-btn-primary" id="auth-btn">确认进入</button>
+      </div>
 
-        <div class="auth-error" id="auth-error"></div>
+      <div id="auth-error" style="color: #D93025; font-size: 12px; margin-top: 12px; min-height: 16px;"></div>
 
-        <div class="auth-meta">
-          <span id="auth-info-version">当前版本：WeChat 内容 Dashboard</span>
-          <span id="auth-info-tag">未授权</span>
-        </div>
+      <div
+        style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #F0F4F9; font-size: 11px; color: var(--gem-color-text-tertiary); display: flex; justify-content: space-between;">
+        <span>WeChat 内容 Dashboard</span>
+        <span id="auth-info-tag">未授权</span>
       </div>
     </div>
   </div>
 
   <!-- 真正的 Dashboard 根节点：授权后显示 -->
-  <div id="app">
-    <div class="topbar">
-      <div class="topbar-title">内容数据函数分析工具（运行在浏览器）</div>
-      <label class="upload-btn">
-        📤 选择表格文件（CSV / XLSX）
-        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" />
-      </label>
-      <a href="index.html" class="topbar-home">← 返回首页</a>
+  <div id="app" class="animate-fade-in">
+    <div class="gem-nav">
+      <div class="gem-nav-title">
+        <span>内容数据函数分析</span>
+      </div>
+      <div class="gem-nav-actions">
+        <label class="gem-btn gem-btn-primary">
+          📤 选择 CSV / XLSX
+          <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;" />
+        </label>
+        <a href="index.html" class="gem-btn gem-btn-secondary">← 返回首页</a>
+      </div>
     </div>
 
     <!-- 顶部提示条 -->
     <div class="upload-hint-bar">
-      ⚠️ 使用前请先点击上方「📤 选择表格文件（CSV / XLSX）」导入公众号内容数据。
+      ⚠️ 使用前请先点击右上角按钮导入公众号内容数据。
     </div>
 
     <div class="container">
-      <h1>内容数据函数分析工具</h1>
-      <div class="sub-title" id="dateRange">按内容维度的阅读、分享、转化分析</div>
+      <div style="margin-bottom: 32px;">
+        <h1>内容数据表现</h1>
+        <p id="dateRange">多维度的阅读、分享、转化分析洞察</p>
+      </div>
 
       <!-- 首次使用弹窗 -->
       <div id="usageModal" class="usage-modal-backdrop">
-        <div class="usage-modal-card">
-          <div class="usage-modal-title">
-            <div class="usage-modal-icon">👋</div>
-            <div class="usage-modal-title-text">欢迎使用公众号内容表现 Dashboard</div>
+        <div class="gem-card" style="width: 420px; max-width: 90vw;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 40px; margin-bottom: 12px;">👋</div>
+            <h3 style="font-size: 18px; margin-bottom: 8px;">欢迎使用内容表现 Dashboard</h3>
+            <p style="font-size: 14px;">本地浏览器运行，数据均在本地解析不上传。</p>
           </div>
-          <div class="usage-modal-body">
-            这是一个在 <b>本地浏览器运行</b> 的数据分析工具，不会把 Excel / CSV
-            上传到云端。<br />
-            建议先快速浏览一下下方的「使用说明」，再开始选取公众号导出的数据表。
-          </div>
-          <div class="usage-modal-actions">
-            <div class="usage-modal-skip" id="usageModalSkip">
-              直接进入，不再提示
-            </div>
-            <button class="usage-modal-btn" id="usageModalBtn">
-              👍 我知道了，开始使用
-            </button>
+          <div class="flex justify-between items-center" style="margin-top: 24px;">
+            <span class="gem-chip" id="usageModalSkip" style="cursor: pointer; background: transparent;">不再提示</span>
+            <button class="gem-btn gem-btn-primary" id="usageModalBtn">开始使用</button>
           </div>
         </div>
       </div>
 
-      <!-- 使用说明卡片（可折叠） -->
-      <div class="usage-card" id="usageCard">
-        <div class="usage-card-header" id="usageToggle">
-          <div class="usage-icon-wrap">📘</div>
-          <div class="usage-title-block">
-            <div class="usage-title-main">
-              使用说明 · Dashboard 使用指南
-              <span class="usage-tag">首次使用建议阅读</span>
-            </div>
-            <div class="usage-title-sub">
-              支持 CSV / XLSX，本地解析公众号内容维度数据，生成阅读 / 分享 / 完读 / 四象限等分析。如不会使用联系我 -luyu
+      <!-- 使用说明卡片 -->
+      <div class="gem-card" id="usageCard" style="margin-bottom: 24px;">
+        <div class="flex items-center justify-between cursor-pointer" id="usageToggle" style="cursor: pointer;">
+          <div class="flex items-center gap-4">
+            <div
+              style="width: 36px; height: 36px; background: #E8F0FE; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+              📘</div>
+            <div>
+              <div style="font-weight: 600; font-size: 16px; margin-bottom: 2px;">Dashboard 使用指南</div>
+              <div style="font-size: 12px; color: var(--gem-color-text-tertiary);">支持 CSV / XLSX，本地解析公众号内容维度数据</div>
             </div>
           </div>
-          <div class="usage-chip">点击折叠 / 展开</div>
-          <div class="usage-chevron expanded" id="usageChevron">⌄</div>
+          <div id="usageChevron" style="transition: transform 0.2s;">▼</div>
         </div>
-        <div class="usage-card-body" id="usageBody">
-          <h4>0）Excel 从哪里下载？（公众号后台）</h4>
-          <ul>
-            <li>登录公众号后台，左侧导航进入 <b>「数据分析 &gt; 内容分析」</b>；</li>
-            <li>上方切换到 <b>「已发表内容 &gt; 已通知内容」</b>；</li>
-            <li>在右侧点击 <b>「下载数据明细」</b>，即可获得本工具使用的 Excel / CSV 文件。</li>
-          </ul>
-          <div style="margin:6px 0 14px;">
-            <img src="wechat-export-location.png" alt="公众号后台下载内容分析数据明细的位置示意图"
-              style="max-width:100%;border-radius:10px;border:1px solid #e5e7eb;display:block;" />
-            <div style="font-size:11px;color:#6b7280;margin-top:4px;">
-              示例：在「数据分析 &gt; 内容分析 &gt; 已通知内容」右侧，点击「下载数据明细」导出 Excel。
+
+        <div id="usageBody" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #E0E3E7;">
+          <!-- Existing content preserved but simplified styles where needed -->
+          <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div>
+              <h4 style="font-size: 14px; margin-bottom: 8px;">1. 数据获取</h4>
+              <p style="font-size: 13px;">公众号后台 > 数据分析 > 内容分析 > 已通知内容 > 下载数据明细。</p>
+              <img src="wechat-export-location.png"
+                style="max-width: 100%; border-radius: 8px; border: 1px solid #E0E3E7;" />
+            </div>
+            <div>
+              <h4 style="font-size: 14px; margin-bottom: 8px;">2. 功能概览</h4>
+              <ul style="font-size: 13px; color: var(--gem-color-text-secondary); padding-left: 20px;">
+                <li>Summary: 核心指标概览</li>
+                <li>Top Chart: 阅读与分享分布</li>
+                <li>Quad Chart: 四象限内容诊断</li>
+                <li>Rankings: 11个维度的自动榜单</li>
+              </ul>
             </div>
           </div>
-
-          <h4>1）工具简介</h4>
-          <ul>
-            <li>导入公众号后台导出的 CSV / XLSX 内容维度数据；</li>
-            <li>自动识别标题、阅读次数、分享次数、完读率等字段；</li>
-            <li>一键生成多种图表与 Top 榜单；</li>
-            <li>所有计算在本地浏览器完成，不上传任何数据。</li>
-          </ul>
-
-          <h4>2）基础使用流程</h4>
-          <ul>
-            <li><b>Step 1：</b> 输入授权码，进入 Dashboard 主界面；</li>
-            <li><b>Step 2：</b> 先顶部点击「📤 上传表格文件（CSV / XLSX）」并选择导出的数据表；</li>
-            <li><b>Step 3：</b> 等待解析完成，页面会自动刷新图表和榜单，无需手动运行。</li>
-          </ul>
-
-          <h4>3）页面模块概览</h4>
-          <ul>
-            <li>Summary 总览卡片：文章数、阅读、分享、完读率等核心指标；</li>
-            <li>Top10 阅读柱状图 &amp; 阅读 × 分享散点图；</li>
-            <li>完读率 / 送达阅读率排行榜（Top50）；</li>
-            <li>内容明细表（按阅读次数 Top100）；</li>
-            <li>11 组关键指标 TOP 榜单；</li>
-            <li>阅读 × 总分享次数四象限分析（附自动生成洞察说明）。</li>
-          </ul>
-
-          <h4>4）四象限图说明</h4>
-          <ul>
-            <li>以样本中位数为界，自动划分「高 / 低阅读」与「高 / 低分享」；</li>
-            <li>「高阅读 · 高分享」通常是头部爆款内容；</li>
-            <li>「低阅读 · 高分享」可以作为小众但高口碑内容参考；</li>
-            <li>文案优化或推送策略调整可以重点观察各象限占比变化。</li>
-          </ul>
-
-          <h4>5）小提示</h4>
-          <ul>
-            <li>建议使用 Chrome / Edge 浏览器访问；</li>
-            <li>尽量保留公众号默认导出的字段名，避免字段无法识别；</li>
-            <li>授权码仅保存在当前浏览器 localStorage 中，下次访问会自动登录。</li>
-          </ul>
         </div>
       </div>
 
-      <div id="loading"></div>
-      <div id="error"></div>
+      <div id="loading" style="text-align: center; color: var(--gem-color-accent); font-weight: 500; margin: 20px 0;">
+      </div>
+      <div id="error" style="text-align: center; color: #D93025; margin: 20px 0;"></div>
 
       <!-- Summary 卡片 -->
-      <div class="cards" id="summaryCards" style="display:none;">
-        <div class="card">
-          <div class="card-label">文章总数</div>
-          <div class="card-value" id="totalArticles">-</div>
+      <div class="cards-grid" id="summaryCards" style="display:none;">
+        <div class="gem-card flex flex-col items-center text-center">
+          <div style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-bottom: 4px;">文章总数</div>
+          <div style="font-size: 24px; font-weight: 700;" id="totalArticles">-</div>
         </div>
-        <div class="card">
-          <div class="card-label">总阅读次数</div>
-          <div class="card-value" id="totalReadCount">-</div>
+        <div class="gem-card flex flex-col items-center text-center">
+          <div style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-bottom: 4px;">总阅读次数</div>
+          <div style="font-size: 24px; font-weight: 700;" id="totalReadCount">-</div>
         </div>
-        <div class="card">
-          <div class="card-label">总阅读人数</div>
-          <div class="card-value" id="totalReaders">-</div>
+        <div class="gem-card flex flex-col items-center text-center">
+          <div style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-bottom: 4px;">总阅读人数</div>
+          <div style="font-size: 24px; font-weight: 700;" id="totalReaders">-</div>
         </div>
-        <div class="card">
-          <div class="card-label">总分享次数</div>
-          <div class="card-value" id="totalShareCount">-</div>
+        <div class="gem-card flex flex-col items-center text-center">
+          <div style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-bottom: 4px;">总分享次数</div>
+          <div style="font-size: 24px; font-weight: 700;" id="totalShareCount">-</div>
         </div>
-        <div class="card">
-          <div class="card-label">总送达人数</div>
-          <div class="card-value" id="totalDelivered">-</div>
+        <div class="gem-card flex flex-col items-center text-center">
+          <div style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-bottom: 4px;">总送达人数</div>
+          <div style="font-size: 24px; font-weight: 700;" id="totalDelivered">-</div>
         </div>
-        <div class="card">
-          <div class="card-label">平均送达阅读率</div>
-          <div class="card-value" id="avgDeliverReadRate">-</div>
+        <div class="gem-card flex flex-col items-center text-center">
+          <div style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-bottom: 4px;">平均送达阅读率</div>
+          <div style="font-size: 24px; font-weight: 700;" id="avgDeliverReadRate">-</div>
         </div>
-        <div class="card">
-          <div class="card-label">平均阅读完成率</div>
-          <div class="card-value" id="avgFinishRate">-</div>
+        <div class="gem-card flex flex-col items-center text-center">
+          <div style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-bottom: 4px;">平均阅读完成率</div>
+          <div style="font-size: 24px; font-weight: 700;" id="avgFinishRate">-</div>
         </div>
       </div>
 
-      <h2>二、Top 内容表现</h2>
-      <div class="chart-block">
-        <div class="chart-title">Top10 内容（按总阅读次数）</div>
+      <h2 style="margin: 32px 0 16px;">二、Top 内容表现</h2>
+      <div class="gem-card" style="margin-bottom: 24px;">
+        <h3>Top10 内容（按总阅读次数）</h3>
         <div id="topReadChart" class="chart"></div>
       </div>
 
-      <div class="chart-block">
-        <div class="chart-title">阅读次数 vs 分享次数</div>
+      <div class="gem-card" style="margin-bottom: 24px;">
+        <h3>阅读次数 vs 分享次数</h3>
         <div id="readShareScatter" class="chart"></div>
       </div>
 
       <h2>三、转化与完成度</h2>
-      <div class="chart-block">
-        <div class="chart-title">阅读完成率（Top50）</div>
+      <div class="gem-card" style="margin-bottom: 24px;">
+        <h3>阅读完成率（Top50）</h3>
         <div id="finishRateChart" class="chart"></div>
       </div>
 
-      <div class="chart-block">
-        <div class="chart-title">送达阅读率（Top50）</div>
+      <div class="gem-card" style="margin-bottom: 24px;">
+        <h3>送达阅读率（Top50）</h3>
         <div id="deliverRateChart" class="chart"></div>
       </div>
 
       <h2>四、内容明细（Top100 按阅读次数）</h2>
-      <div class="chart-block">
-        <div class="chart-title">内容明细表</div>
+      <div class="gem-card" style="margin-bottom: 24px;">
+        <h3>内容明细表</h3>
         <div id="detailTable"></div>
       </div>
 
       <h2>五、关键指标 TOP 榜单</h2>
-      <div class="chart-block">
-        <div class="chart-title">核心指标 Top3 榜单</div>
+      <div class="gem-card" style="margin-bottom: 24px;">
+        <h3>核心指标 Top3 榜单</h3>
         <div id="keyRanks" class="rank-grid"></div>
       </div>
 
       <!-- 六、阅读 × 总分享次数四象限分析 -->
       <h2>六、阅读 × 总分享次数四象限分析</h2>
-      <div class="chart-block">
-        <div class="chart-title">阅读量 vs 总分享次数（四象限）</div>
+      <div class="gem-card" style="margin-bottom: 24px;">
+        <h3>阅读量 vs 总分享次数（四象限）</h3>
         <div id="quadrantChart" class="chart"></div>
         <div id="quadrantInsight" style="font-size:12px;color:#6b7280;margin-top:8px;"></div>
       </div>
@@ -1088,7 +542,7 @@
         .sort((a, b) => b.readCount - a.readCount)
         .slice(0, 100);
 
-      let html = "<table class='data-table'><thead><tr>";
+      let html = "<table class='gem-table'><thead><tr>";
       const headers = [
         "内容标题", "发表时间", "总阅读人数", "总阅读次数",
         "总分享次数", "首次分享次数", "分享产生阅读次数",

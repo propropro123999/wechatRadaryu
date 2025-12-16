@@ -4,383 +4,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>页面访问数据分析 Dashboard（多 Sheet）</title>
-  <link rel="stylesheet" href="design-system-modern.css" />
-  <link rel="stylesheet" href="tool-pages-interactions.css" />
+  <title>页面访问数据分析 Dashboard</title>
+  <link rel="stylesheet" href="gemini-ui.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 
   <style>
-    /* ===== 授权层样式 ===== */
+    /* Specific Layout Overrides */
     #auth-screen {
       position: fixed;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(20px);
       z-index: 9999;
-      backdrop-filter: blur(8px);
     }
 
-    .auth-card {
+    .auth-card-custom {
       width: 360px;
       max-width: 90vw;
-      padding: 24px;
-      border-radius: 16px;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 16px 48px rgba(15, 23, 42, 0.12);
-    }
-
-    .auth-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 4px;
-      color: #0f172a;
-    }
-
-    .auth-subtitle {
-      font-size: 12px;
-      color: #475569;
-      margin-bottom: 16px;
-    }
-
-    .auth-label {
-      font-size: 12px;
-      color: #475569;
-      margin-bottom: 6px;
-      display: block;
-      font-weight: 600;
-    }
-
-    .auth-input {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #d1d5db;
-      background: #f8fafc;
-      color: #0f172a;
-      outline: none;
-      font-size: 13px;
-      margin-bottom: 14px;
-      box-sizing: border-box;
-      transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s ease;
-    }
-
-    .auth-input:focus {
-      border-color: #bfdbfe;
-      box-shadow: 0 0 0 3px rgba(191, 219, 254, 0.55);
-      transform: translateY(-1px);
-    }
-
-    .auth-btn {
-      width: 100%;
-      border: none;
-      border-radius: 10px;
-      padding: 11px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: white;
-      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
-      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
-    }
-
-    .auth-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 14px 36px rgba(37, 99, 235, 0.32);
-      filter: brightness(1.02);
-    }
-
-    .auth-error {
-      margin-top: 10px;
-      font-size: 11px;
-      color: #dc2626;
-      min-height: 16px;
-    }
-
-    .auth-card.shake {
-      animation: shake 0.3s ease-in-out;
-    }
-
-    @keyframes shake {
-
-      0%,
-      100% {
-        transform: translateX(0);
-      }
-
-      25% {
-        transform: translateX(-6px);
-      }
-
-      50% {
-        transform: translateX(6px);
-      }
-
-      75% {
-        transform: translateX(-3px);
-      }
     }
 
     #app {
       display: none;
-    }
-
-    :root {
-      --bg: #f6f7fb;
-      --card: #ffffff;
-      --text: #0f172a;
-      --muted: #64748b;
-      --line: #e5e7eb;
-      --shadow: 0 10px 30px rgba(15, 23, 42, .06);
-      --shadow2: 0 2px 12px rgba(15, 23, 42, .06);
-      --r: 16px;
-      --r2: 12px;
-      --primary: #2563eb;
-      --primary2: #1d4ed8;
-      --ok: #16a34a;
-      --bad: #b91c1c;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 22px;
-      font-family: ui-sans-serif, system-ui, -apple-system, "Microsoft YaHei", Segoe UI, Arial, sans-serif;
-      background:
-        radial-gradient(1200px 700px at 20% 10%, #eef2ff 0%, transparent 60%),
-        radial-gradient(1200px 700px at 90% 20%, #ecfeff 0%, transparent 55%),
-        var(--bg);
-      color: var(--text);
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .header {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 14px;
-    }
-
-    h1 {
-      font-size: 22px;
-      margin: 0;
-      letter-spacing: .2px;
-    }
-
-    .subtitle {
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 6px;
-      line-height: 1.5;
-    }
-
-    .top-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 10px;
-      border-radius: 999px;
-      background: rgba(37, 99, 235, .08);
-      color: var(--primary2);
-      font-size: 12px;
-      border: 1px solid rgba(37, 99, 235, .15);
-    }
-
-    /* 返回首页按钮 */
-    .home-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 12px;
-      background: #f3f4f6;
-      color: #0f172a;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.18s ease;
-      border: 1px solid #d1d5db;
-    }
-
-    .home-link:hover {
-      background: #2563eb;
-      color: white;
-      border-color: #2563eb;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(37, 99, 235, .25);
-    }
-
-    .card {
-      background: var(--card);
-      border: 1px solid rgba(229, 231, 235, .9);
-      border-radius: var(--r);
-      box-shadow: var(--shadow2);
-    }
-
-    .upload-box {
-      padding: 14px;
-      margin: 14px 0 18px;
-    }
-
-    .row {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .row .hint {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    input[type=file] {
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: #fff;
-      cursor: pointer;
-      min-width: 260px;
-    }
-
-    #status {
-      font-size: 12px;
-      margin-top: 8px;
-    }
-
-    #status.ok {
-      color: var(--ok);
-    }
-
-    #status.error {
-      color: var(--bad);
-    }
-
-    #summary {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
-    .section {
-      margin: 18px 0;
-    }
-
-    .section h2 {
-      font-size: 16px;
-      margin: 0 0 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .section h2 .small {
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 400;
-    }
-
-    .block {
-      padding: 14px;
-      border-radius: var(--r);
-      background: var(--card);
-      border: 1px solid rgba(229, 231, 235, .9);
-      box-shadow: var(--shadow2);
-    }
-
-    .block-title {
-      font-size: 13px;
-      font-weight: 800;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      color: #111827;
-    }
-
-    .btn {
-      border: none;
-      border-radius: 12px;
-      padding: 9px 12px;
-      background: var(--primary);
-      color: #fff;
-      font-size: 12px;
-      cursor: pointer;
-      box-shadow: 0 8px 18px rgba(37, 99, 235, .18);
-      transition: .15s ease;
-      white-space: nowrap;
-    }
-
-    .btn:hover {
-      background: var(--primary2);
-      transform: translateY(-1px);
-    }
-
-    .btn:active {
-      transform: translateY(0);
-    }
-
-    .btn.secondary {
-      background: #fff;
-      color: var(--text);
-      border: 1px solid var(--line);
-      box-shadow: none;
-    }
-
-    .btn.secondary:hover {
-      background: #f8fafc;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-      gap: 12px;
-    }
-
-    .metric {
-      padding: 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(229, 231, 235, .9);
-      background: linear-gradient(180deg, #fff 0%, #fbfdff 100%);
-    }
-
-    .metric .label {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .metric .value {
-      font-size: 20px;
-      font-weight: 900;
-      margin-top: 4px;
-    }
-
-    .metric .desc {
-      font-size: 11px;
-      color: #94a3b8;
-      margin-top: 4px;
-      line-height: 1.4;
     }
 
     .chart {
@@ -388,86 +37,58 @@
       height: 320px;
     }
 
-    /* 表格不溢出：横向滚动 + URL 换行 */
-    .table-wrap {
-      width: 100%;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: #fff;
+    /* Custom Metric Card Style */
+    .metric-card {
+      padding: 16px;
+      border-radius: 16px;
+      background: #FFFFFF;
+      border: 1px solid #E0E3E7;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s;
     }
 
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .metric-label {
+      font-size: 13px;
+      color: var(--gem-color-text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--gem-color-text-primary);
+    }
+
+    .metric-desc {
       font-size: 12px;
-      min-width: 980px;
+      color: var(--gem-color-text-tertiary);
+      margin-top: 4px;
     }
 
-    th,
-    td {
-      border-bottom: 1px solid var(--line);
-      padding: 8px 10px;
-      vertical-align: top;
-    }
-
-    thead th {
-      position: sticky;
-      top: 0;
-      background: #f8fafc;
-      z-index: 1;
-      font-weight: 800;
-      color: #111827;
-    }
-
-    tbody tr:hover td {
-      background: #fbfdff;
-    }
-
-    td.url,
-    th.url {
-      max-width: 560px;
-      word-break: break-all;
-      white-space: normal;
-    }
-
-    a {
-      color: var(--primary2);
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-
-    .small {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    /* 预览区限高：不撑爆页面 */
     .preview-box {
-      max-height: 420px;
+      max-height: 400px;
       overflow: auto;
+      border: 1px solid #E0E3E7;
       border-radius: 12px;
-    }
-
-    /* 自检区 */
-    .debug-box {
-      padding: 12px 14px;
-      border-radius: var(--r);
-      border: 1px solid rgba(165, 243, 252, .9);
-      background: linear-gradient(180deg, #ecfeff 0%, #f0f9ff 100%);
-      color: #0369a1;
-      box-shadow: var(--shadow2);
-      margin: 10px 0 14px;
+      padding: 12px;
+      background: #F8FAFC;
       font-size: 12px;
+      font-family: monospace;
     }
 
-    .debug-box strong {
-      color: #075985;
+    .debug-box {
+      padding: 12px;
+      background: #ECF9FF;
+      border: 1px solid #CFFAFE;
+      color: #006064;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-bottom: 24px;
     }
   </style>
 </head>
@@ -475,143 +96,162 @@
 <body>
   <!-- 授权层 -->
   <div id="auth-screen">
-    <div class="auth-card" id="auth-card">
-      <div class="auth-title">🔐 友盟多表流量工具</div>
-      <div class="auth-subtitle">请输入密码访问本工具</div>
+    <div class="gem-card auth-card-custom animate-fade-in" id="auth-card">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h2 style="font-size: 20px; margin-bottom: 8px;">🔐 友盟多表流量工具</h2>
+        <p style="font-size: 13px; color: var(--gem-color-text-secondary);">请输入密码访问本工具</p>
+      </div>
 
-      <label class="auth-label" for="auth-code">密码</label>
-      <input id="auth-code" class="auth-input" type="text" placeholder="请输入密码" autocomplete="off" />
+      <div style="margin-bottom: 20px;">
+        <label
+          style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px; color: var(--gem-color-text-secondary);">密码</label>
+        <input id="auth-code" class="gem-input" type="password" placeholder="请输入密码" autocomplete="off" />
+      </div>
 
-      <button class="auth-btn" id="auth-btn">确认进入</button>
+      <button class="gem-btn gem-btn-primary w-full" id="auth-btn">确认进入</button>
 
-      <div class="auth-error" id="auth-error"></div>
+      <div class="auth-error" id="auth-error"
+        style="color: #D93025; font-size: 12px; margin-top: 12px; min-height: 16px; text-align: center;"></div>
     </div>
   </div>
 
   <!-- 真正的应用 -->
-  <div id="app" style="display: none;">
+  <div id="app" class="animate-fade-in">
+
+    <div class="gem-nav">
+      <div class="gem-nav-title">
+        <span>页面访问数据分析</span>
+        <span class="gem-chip gem-chip-accent" style="font-size: 11px; margin-left: 12px;">多 Sheet 版</span>
+      </div>
+      <div class="gem-nav-actions">
+        <a href="index.html" class="gem-btn gem-btn-secondary">← 返回首页</a>
+      </div>
+    </div>
+
     <div class="container">
 
-      <div class="header">
-        <div>
-          <h1>页面访问数据分析 Dashboard（多 Sheet）</h1>
-          <div class="subtitle">
-            上传包含多个 Sheet（如 Q1/Q2/Q3/Q4）的「受访页面」报表，系统在本地浏览器解析并展示多维度分析。
+      <div style="margin-bottom: 24px;">
+        <div class="debug-box">
+          <div><strong>🔎 匹配规则自检：</strong> <span id="selfTest"></span></div>
+        </div>
+
+        <div class="gem-card">
+          <div class="flex items-center gap-4 flex-wrap">
+            <div style="flex: 1;">
+              <h3 style="font-size: 16px; margin-bottom: 4px;">上传数据表</h3>
+              <p style="font-size: 13px; margin: 0;">支持包含多个 Sheet（如 Q1/Q2/Q3/Q4）的 Excel 文件</p>
+            </div>
+            <label class="gem-btn gem-btn-primary">
+              选择文件
+              <input id="fileInput" type="file" accept=".csv,.xls,.xlsx" style="display: none;" />
+            </label>
           </div>
+          <div id="status" style="margin-top: 12px; font-size: 13px;"></div>
+          <div id="summary" style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-top: 4px;"></div>
         </div>
-        <div class="top-actions">
-          <span class="badge">本地解析 · 不上传服务器</span>
-          <a href="index.html" class="home-link">← 返回首页</a>
-        </div>
-      </div>
-
-      <div class="debug-box">
-        <div><strong>🔎 匹配规则自检：</strong> <span id="selfTest"></span></div>
-      </div>
-
-      <div class="card upload-box">
-        <div class="row">
-          <div class="hint">请选择 Excel 文件（.xlsx / .xls / .csv）</div>
-          <input id="fileInput" type="file" accept=".csv,.xls,.xlsx" />
-        </div>
-        <div id="status"></div>
-        <div id="summary"></div>
       </div>
 
       <!-- 一、整体概况 -->
-      <div class="section" id="section-overview" style="display:none;">
-        <h2>一、整体访问概况 <span class="small">（合并所有 Sheet）</span></h2>
-        <div class="cards">
-          <div class="metric">
-            <div class="label">总浏览次数（PV）</div>
-            <div class="value" id="pvTotal">-</div>
-            <div class="desc">所有页面浏览次数之和。</div>
+      <div class="section" id="section-overview" style="display:none; margin-bottom: 32px;">
+        <h2 style="margin-bottom: 16px;">一、整体访问概况</h2>
+        <div class="grid grid-2" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div class="metric-card">
+            <div class="metric-label">总浏览次数（PV）</div>
+            <div class="metric-value" id="pvTotal">-</div>
+            <div class="metric-desc">所有页面浏览次数之和</div>
           </div>
-          <div class="metric">
-            <div class="label">总独立访客（UV）</div>
-            <div class="value" id="uvTotal">-</div>
-            <div class="desc">独立访客总量。</div>
+          <div class="metric-card">
+            <div class="metric-label">总独立访客（UV）</div>
+            <div class="metric-value" id="uvTotal">-</div>
+            <div class="metric-desc">独立访客总量</div>
           </div>
-          <div class="metric">
-            <div class="label">平均停留时间</div>
-            <div class="value" id="avgDuration">-</div>
-            <div class="desc">仅对停留 >0 的记录求平均。</div>
+          <div class="metric-card">
+            <div class="metric-label">平均停留时间</div>
+            <div class="metric-value" id="avgDuration">-</div>
+            <div class="metric-desc">平均单次访问停留</div>
           </div>
-          <div class="metric">
-            <div class="label">平均人均浏览页数</div>
-            <div class="value" id="avgPagesPerVisit">-</div>
-            <div class="desc">对人均浏览页数（>0）求均值。</div>
+          <div class="metric-card">
+            <div class="metric-label">平均浏览页数</div>
+            <div class="metric-value" id="avgPagesPerVisit">-</div>
+            <div class="metric-desc">人均浏览页数</div>
           </div>
-          <div class="metric">
-            <div class="label">记录条数</div>
-            <div class="value" id="rowCount">-</div>
-            <div class="desc">合并后的原始行数。</div>
+          <div class="metric-card">
+            <div class="metric-label">记录条数</div>
+            <div class="metric-value" id="rowCount">-</div>
+            <div class="metric-desc">合并后的原始行数</div>
           </div>
         </div>
       </div>
 
       <!-- 二、类型分布 -->
-      <div class="section" id="section-type" style="display:none;">
-        <h2>二、按页面类型分布</h2>
-        <div class="block">
-          <div class="block-title">页面类型 PV / UV 分布</div>
+      <div class="section" id="section-type" style="display:none; margin-bottom: 32px;">
+        <h2 style="margin-bottom: 16px;">二、按页面类型分布</h2>
+        <div class="gem-card">
+          <h3 style="margin-bottom: 16px;">页面类型 PV / UV 分布</h3>
           <div id="typeChart" class="chart"></div>
-          <div id="typeTable"></div>
+          <div style="margin-top: 24px; overflow-x: auto;">
+            <div id="typeTable"></div>
+          </div>
         </div>
       </div>
 
       <!-- 三、TOP 榜 -->
-      <div class="section" id="section-top" style="display:none;">
-        <h2>三、热门页面 Top 榜</h2>
+      <div class="section" id="section-top" style="display:none; margin-bottom: 32px;">
+        <h2 style="margin-bottom: 16px;">三、热门页面 Top 榜</h2>
 
-        <div class="block">
-          <div class="block-title">
-            <span>热门页面 TOP 20（按 PV，跨 Sheet 汇总）</span>
-            <div class="row" style="gap:8px;">
-              <button class="btn secondary" id="btnExportTopPV">导出 TOP500（PV）CSV</button>
-              <button class="btn secondary" id="btnExportAllAgg">导出 全部聚合排行 CSV</button>
+        <div class="gem-card" style="margin-bottom: 24px;">
+          <div class="flex justify-between items-center mb-4" style="margin-bottom: 16px;">
+            <h3>热门页面 TOP 20（按 PV）</h3>
+            <div class="flex gap-2">
+              <button class="gem-btn gem-btn-secondary" id="btnExportTopPV"
+                style="font-size: 12px; padding: 6px 12px;">导出 TOP500</button>
+              <button class="gem-btn gem-btn-secondary" id="btnExportAllAgg"
+                style="font-size: 12px; padding: 6px 12px;">导出全部数据</button>
             </div>
           </div>
-          <div id="topPvTable"></div>
+          <div id="topPvTable" style="overflow-x: auto;"></div>
         </div>
 
-        <div class="block" style="margin-top:12px;">
-          <div class="block-title">
-            <span>高粘性页面 TOP 20（按 平均停留秒，过滤 0 秒，跨 Sheet 汇总）</span>
-            <button class="btn secondary" id="btnExportTopDur">导出 TOP500（停留）CSV</button>
+        <div class="gem-card">
+          <div class="flex justify-between items-center mb-4" style="margin-bottom: 16px;">
+            <h3>高粘性页面 TOP 20（按停留时间）</h3>
+            <button class="gem-btn gem-btn-secondary" id="btnExportTopDur"
+              style="font-size: 12px; padding: 6px 12px;">导出 TOP500</button>
           </div>
-          <div id="topDurationTable"></div>
+          <div id="topDurationTable" style="overflow-x: auto;"></div>
         </div>
       </div>
 
       <!-- 四、按 Sheet 对比 -->
-      <div class="section" id="section-sheet" style="display:none;">
-        <h2>四、按 Sheet（季度）对比</h2>
-        <div class="block">
-          <div class="block-title">各 Sheet 访问表现</div>
-          <div id="sheetTable"></div>
+      <div class="section" id="section-sheet" style="display:none; margin-bottom: 32px;">
+        <h2 style="margin-bottom: 16px;">四、按 Sheet（季度）对比</h2>
+        <div class="gem-card">
+          <h3 style="margin-bottom: 16px;">各 Sheet 访问表现</h3>
+          <div id="sheetTable" style="margin-bottom: 24px; overflow-x: auto;"></div>
           <div id="sheetChart" class="chart"></div>
         </div>
       </div>
 
       <!-- 五、预览 & 调试 -->
-      <div class="section" id="section-preview" style="display:none;">
-        <h2>五、解析数据预览 & URL 类型检查 <span class="small">（排错用）</span></h2>
+      <div class="section" id="section-preview" style="display:none; margin-bottom: 64px;">
+        <h2 style="margin-bottom: 16px;">五、解析数据预览 <span
+            style="font-size: 14px; opacity: 0.6; font-weight: normal;">（调试用）</span></h2>
 
-        <div class="block">
-          <div class="block-title">前 50 行预览（支持滚动 / 横向滚动）</div>
+        <div class="gem-card" style="margin-bottom: 24px;">
+          <h3 style="margin-bottom: 12px;">前 50 行预览</h3>
           <div class="preview-box">
             <div id="preview"></div>
           </div>
         </div>
 
-        <div class="block" style="margin-top:12px;">
-          <div class="block-title">URL 与页面类型调试（前 20 条）</div>
-          <div id="urlTypeDebug"></div>
+        <div class="gem-card">
+          <h3 style="margin-bottom: 12px;">URL 类型调试</h3>
+          <div id="urlTypeDebug" style="font-size: 12px;"></div>
         </div>
       </div>
 
     </div>
+
 
     <script>
       /** 展示/导出数量 */
@@ -1286,131 +926,131 @@
           legend: { orientation: "h", y: -0.2 }
         });
       }
-</div >
+    </script>
 
-        <!-- 授权码验证脚本 -->
-        <script>
-          const TOOL_ID = 'youmeng-traffic';
-          const AUTH_STORAGE_KEY = `auth_${TOOL_ID}`;
+    <!-- 授权码验证脚本 -->
+    <script>
+      const TOOL_ID = 'youmeng-traffic';
+      const AUTH_STORAGE_KEY = `auth_${TOOL_ID}`;
 
-// 声明变量，但延迟赋值
-let authScreen, authCard, authInput, authBtn, authError, app;
+      // 声明变量，但延迟赋值
+      let authScreen, authCard, authInput, authBtn, authError, app;
 
-// 从 auth-codes.json 加载授权码
-let validCodes = [];
-async function loadAuthCodes() {
-  try {
-    const response = await fetch('auth-codes.json');
-    if (response.ok) {
-      const data = await response.json();
-      if (data.tools && data.tools[TOOL_ID] && data.tools[TOOL_ID].codes) {
-        validCodes = Object.keys(data.tools[TOOL_ID].codes);
-      }
-    }
-  } catch (e) {
-    // 如果无法加载，使用内置授权码
-    console.warn('无法加载 auth-codes.json，使用内置授权码');
-    validCodes = [
-      'YMT-2025-A1B2', 'YMT-2025-C3D4', 'YMT-2025-E5F6', 'YMT-2025-G7H8',
-      'YMT-2025-I9J0', 'YMT-2025-K1L2', 'YMT-2025-M3N4', 'YMT-2025-O5P6',
-      'YMT-2025-Q7R8', 'YMT-2025-S9T0'
-    ];
-  }
-}
-
-function shakeCard() {
-  if (!authCard) return;
-  authCard.classList.remove('shake');
-  void authCard.offsetWidth;
-  authCard.classList.add('shake');
-}
-
-function handleAuth() {
-  if (!authInput) return;
-  const code = (authInput.value || '').trim();
-
-  if (!code) {
-    if (authError) authError.textContent = '请输入授权码。';
-    shakeCard();
-    return;
-  }
-
-  if (!validCodes.includes(code) && code !== 'dcone2025') {
-    if (authError) authError.textContent = '授权码无效，请检查后重试。';
-    shakeCard();
-    authInput.value = '';
-    return;
-  }
-
-  if (authError) authError.textContent = '';
-  showApp(code);
-}
-
-function showApp(code) {
-  if (authScreen) authScreen.style.display = 'none';
-  if (app) app.style.display = 'block';
-
-  try {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
-      code: code,
-      ts: Date.now()
-    }));
-  } catch (e) {}
-}
-
-function checkAuthStatus() {
-  try {
-    const saved = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // 检查授权码是否仍然有效
-      if (parsed && parsed.code) {
-        if (validCodes.includes(parsed.code) || parsed.code === 'dcone2025') {
-          console.log("自动登录，授权码有效");
-          showApp(parsed.code);
-          return;
-        } else {
-          // 授权码无效，清除 localStorage
-          console.log("授权码无效，清除 localStorage");
-          localStorage.removeItem(AUTH_STORAGE_KEY);
+      // 从 auth-codes.json 加载授权码
+      let validCodes = [];
+      async function loadAuthCodes() {
+        try {
+          const response = await fetch('auth-codes.json');
+          if (response.ok) {
+            const data = await response.json();
+            if (data.tools && data.tools[TOOL_ID] && data.tools[TOOL_ID].codes) {
+              validCodes = Object.keys(data.tools[TOOL_ID].codes);
+            }
+          }
+        } catch (e) {
+          // 如果无法加载，使用内置授权码
+          console.warn('无法加载 auth-codes.json，使用内置授权码');
+          validCodes = [
+            'YMT-2025-A1B2', 'YMT-2025-C3D4', 'YMT-2025-E5F6', 'YMT-2025-G7H8',
+            'YMT-2025-I9J0', 'YMT-2025-K1L2', 'YMT-2025-M3N4', 'YMT-2025-O5P6',
+            'YMT-2025-Q7R8', 'YMT-2025-S9T0', 'dcone2025'
+          ];
         }
       }
-    }
-  } catch (e) {
-    console.error("localStorage 读取错误:", e);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-  }
 
-  // 如果没有有效授权，显示授权层（双重保障）
-  if (authScreen) authScreen.style.display = 'flex';
-  if (app) app.style.display = 'none';
-}
+      function shakeCard() {
+        if (!authCard) return;
+        authCard.classList.remove('shake');
+        void authCard.offsetWidth;
+        authCard.classList.add('shake');
+      }
 
-// 初始化
-document.addEventListener('DOMContentLoaded', async function() {
-  // 初始化 DOM 元素引用
-  authScreen = document.getElementById('auth-screen');
-  authCard = document.getElementById('auth-card');
-  authInput = document.getElementById('auth-code');
-  authBtn = document.getElementById('auth-btn');
-  authError = document.getElementById('auth-error');
-  app = document.getElementById('app');
+      function handleAuth() {
+        if (!authInput) return;
+        const code = (authInput.value || '').trim();
 
-  // 确保初始状态：显示授权层，隐藏应用
-  if (authScreen) authScreen.style.display = 'flex';
-  if (app) app.style.display = 'none';
+        if (!code) {
+          if (authError) authError.textContent = '请输入授权码。';
+          shakeCard();
+          return;
+        }
 
-  await loadAuthCodes();
-  checkAuthStatus();
+        if (!validCodes.includes(code)) {
+          if (authError) authError.textContent = '授权码无效，请检查后重试。';
+          shakeCard();
+          authInput.value = '';
+          return;
+        }
 
-  // 事件绑定
-  if (authBtn) authBtn.addEventListener('click', handleAuth);
-  if (authInput) authInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') handleAuth();
-  });
+        if (authError) authError.textContent = '';
+        showApp(code);
+      }
 
-  if (authInput) setTimeout(() => authInput.focus(), 100);
-});
+      function showApp(code) {
+        if (authScreen) authScreen.style.display = 'none';
+        if (app) app.style.display = 'block';
+
+        try {
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
+            code: code,
+            ts: Date.now()
+          }));
+        } catch (e) { }
+      }
+
+      function checkAuthStatus() {
+        try {
+          const saved = localStorage.getItem(AUTH_STORAGE_KEY);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            // 检查授权码是否仍然有效
+            if (parsed && parsed.code) {
+              if (validCodes.includes(parsed.code)) {
+                console.log("自动登录，授权码有效");
+                showApp(parsed.code);
+                return;
+              } else {
+                // 授权码无效，清除 localStorage
+                console.log("授权码无效，清除 localStorage");
+                localStorage.removeItem(AUTH_STORAGE_KEY);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("localStorage 读取错误:", e);
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+        }
+
+        // 如果没有有效授权，显示授权层（双重保障）
+        if (authScreen) authScreen.style.display = 'flex';
+        if (app) app.style.display = 'none';
+      }
+
+      // 初始化
+      document.addEventListener('DOMContentLoaded', async function () {
+        // 初始化 DOM 元素引用
+        authScreen = document.getElementById('auth-screen');
+        authCard = document.getElementById('auth-card');
+        authInput = document.getElementById('auth-code');
+        authBtn = document.getElementById('auth-btn');
+        authError = document.getElementById('auth-error');
+        app = document.getElementById('app');
+
+        // 确保初始状态：显示授权层，隐藏应用
+        if (authScreen) authScreen.style.display = 'flex';
+        if (app) app.style.display = 'none';
+
+        await loadAuthCodes();
+        checkAuthStatus();
+
+        // 事件绑定
+        if (authBtn) authBtn.addEventListener('click', handleAuth);
+        if (authInput) authInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') handleAuth();
+        });
+
+        if (authInput) setTimeout(() => authInput.focus(), 100);
+      });
     </script>
 </body>
 
