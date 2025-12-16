@@ -24,6 +24,8 @@
             padding: 24px;
             width: 100%;
             flex-grow: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .header-section {
@@ -55,7 +57,8 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            height: 800px;
+            flex-grow: 1;
+            min-height: 600px;
         }
 
         .toolbar-container {
@@ -66,12 +69,16 @@
             flex-wrap: wrap;
             gap: 16px;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .checkbox-group {
             display: flex;
             gap: 16px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .checkbox-item {
@@ -113,28 +120,44 @@
             transform: translateY(0);
         }
 
-        #editor-container {
+        .editor-content {
             flex-grow: 1;
             width: 100%;
-            height: 100%;
+            padding: 40px;
+            outline: none;
+            overflow-y: auto;
+            font-size: 16px;
+            line-height: 1.8;
+            color: #333;
         }
 
-        /* Fix UEditor z-index issues if any */
-        .edui-default {
-            width: 100% !important;
-            height: 100% !important;
+        .editor-content:empty:before {
+            content: '请在此处粘贴文章内容...';
+            color: #aaa;
         }
 
-        .edui-editor {
-            width: 100% !important;
-            height: 100% !important;
-            border: none !important;
+        .editor-content p {
+            margin-bottom: 1em;
         }
 
-        .edui-editor-iframeholder {
-            width: 100% !important;
-            height: calc(100% - 80px) !important;
-            /* Adjust for toolbar height */
+        .status-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .status-toast.show {
+            opacity: 1;
         }
     </style>
 </head>
@@ -179,58 +202,28 @@
                     </label>
                 </div>
                 <div style="flex-grow: 1;"></div>
+                <!-- Add a Copy button for convenience -->
+                <button class="action-btn"
+                    style="background-color: white; color: var(--gem-color-text-secondary); border: 1px solid #eee; box-shadow: none; margin-right: 8px;"
+                    onclick="copyToClipboard()">📋 复制</button>
                 <button class="action-btn" onclick="formatText()">✨ 一键排版</button>
             </div>
 
-            <div id="editor-container">
-                <!-- UEditor Container -->
-                <textarea id="content" name="content" style="width:100%; height:100%;"></textarea>
-            </div>
+            <div id="editor" class="editor-content" contenteditable="true"></div>
         </div>
     </div>
 
-    <!-- UEditor Configuration & Loading -->
-    <script type="text/javascript">
-        // Set UEditor Home URL BEFORE loading scripts
-        window.UEDITOR_HOME_URL = "https://cdn.jsdelivr.net/npm/@kazura/ueditor@1.5.0/";
-    </script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@kazura/ueditor@1.5.0/ueditor.config.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@kazura/ueditor@1.5.0/ueditor.all.min.js"></script>
-    <script type="text/javascript"
-        src="https://cdn.jsdelivr.net/npm/@kazura/ueditor@1.5.0/lang/zh-cn/zh-cn.js"></script>
+    <div id="toast" class="status-toast">排版完成</div>
 
     <script type="text/javascript">
-        var editor;
-
-        $(function () {
-            // Initialize UEditor
-            editor = UE.getEditor('content', {
-                initialFrameWidth: '100%',
-                initialFrameHeight: '100%',
-                autoHeightEnabled: false,
-                elementPathEnabled: false,
-                wordCount: true,
-                serverUrl: '', // Disable server requests
-                enableAutoSave: false, // Disable local/server autosave
-                catchRemoteImageEnable: false, // Disable grabbing remote images on paste
-                enableContextMenu: false // Use native context menu
-            });
-        });
-
         function formatText() {
-            if (!editor) return;
+            var $editor = $('#editor');
+            var content = $editor.html();
 
-            // 1. Select all and remove basic formatting
-            editor.execCommand('selectall');
-            editor.execCommand("removeformat", 'big,code,del,dfn,em,font,i,ins,kbd,q,samp,small,span,strike,script,sub,sup,tt,u,var,color,class,style,lang,width,height,align,hspace,valign,alt');
+            // Basic cleanup (mimicking removeFormat)
+            // This is a simplified approach: we operate on the HTML string directly.
 
-            if ($('#clearA').is(':checked')) {
-                editor.execCommand("removeformat", 'a');
-            }
-
-            var content = editor.getContent();
-
-            // 2. Text Content Formatting (Regex)
+            // 1. Text Content Formatting (Regex)
             if ($('#clearSign').is(':checked')) {
                 // Add spaces between Chinese and English/Numbers
                 content = content.replace(/([\u4E00-\u9FA3])([A-Za-z0-9\(\[\{@#])/g, '$1 $2');
@@ -249,31 +242,75 @@
                 content = content.replace(/‘/g, "『");
                 content = content.replace(/’/g, "』");
 
-                // Normalize containers to p tags
-                content = content.replace(/<section>/g, "<p>");
-                content = content.replace(/<\/section>/g, "</p>");
-                content = content.replace(/<div>/g, "<p>");
-                content = content.replace(/<\/div>/g, "</p>");
+                // Normalize containers (section, div -> p)
+                content = content.replace(/<section[^>]*>/gi, "<p>");
+                content = content.replace(/<\/section>/gi, "</p>");
+                content = content.replace(/<div[^>]*>/gi, "<p>");
+                content = content.replace(/<\/div>/gi, "</p>");
+
+                // Normalize headings to be bold paragraphs or just keep them? 
+                // User logic replaced section/div, let's stick to that.
             }
 
-            // 3. Attribute Cleaning
+            // 2. Attribute Cleaning
             if ($('#clearAttr').is(':checked')) {
-                content = content.replace(/(id|class|style|onclick|alt|title|width|height|_href|_src)\s*\=\'[^\>\']*?\'/gi, '');
-                content = content.replace(/(id|class|style|onclick|alt|title|width|height|_href|_src)\s*\=\"[^\>\"]*?\"/gi, '');
+                // Remove common attributes from ALL tags
+                content = content.replace(/\s(id|class|style|onclick|align|width|height|valign|data-[a-z0-9-]+)=['"][^'"]*['"]/gi, '');
+                // Loose match for unquoted or simple attributes if necessary, but quoted is standard in simple HTML
+
+                // Remove <span> tags but keep content (often carry style garbage)
+                content = content.replace(/<\/?span[^>]*>/gi, "");
+                // Remove <font> tags
+                content = content.replace(/<\/?font[^>]*>/gi, "");
+            }
+
+            // 3. Link Cleaning
+            if ($('#clearA').is(':checked')) {
+                // Remove <a> tags but keep content: <a href="...">text</a> -> text
+                content = content.replace(/<a\s[^>]*>(.*?)<\/a>/gi, "$1");
             }
 
             // 4. Image Cleaning
             if ($('#clearImg').is(':checked')) {
-                content = content.replace(/<([\/\s]*)(img)([^>]*)>/gi, '');
+                content = content.replace(/<img[^>]*>/gi, '');
             }
 
-            // Apply changes
-            editor.setContent(content);
+            // 5. Final Cleanup
+            // Clean up empty P tags that might result from stripping
+            content = content.replace(/<p>\s*<\/p>/gi, "");
+            content = content.replace(/(<p><br\/?><\/p>)+/gi, "<p><br/></p>");
 
-            // Final cleanup (remove empty paragraphs created by replacements)
-            var formatContent = editor.getContent();
-            formatContent = formatContent.replace(/(<p><br\/><\/p>)+/g, "<p><br/></p>");
-            editor.setContent(formatContent);
+            $editor.html(content);
+            showToast('排版已完成');
+        }
+
+        function copyToClipboard() {
+            var $editor = $('#editor');
+
+            // Create a temporary range to select the content
+            var range = document.createRange();
+            range.selectNodeContents($editor[0]);
+            var selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            try {
+                document.execCommand('copy');
+                showToast('已复制到剪贴板');
+            } catch (err) {
+                showToast('复制失败');
+            }
+
+            // Clear selection
+            selection.removeAllRanges();
+        }
+
+        function showToast(msg) {
+            var $toast = $('#toast');
+            $toast.text(msg).addClass('show');
+            setTimeout(function () {
+                $toast.removeClass('show');
+            }, 2000);
         }
     </script>
 </body>
