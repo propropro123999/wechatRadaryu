@@ -444,8 +444,31 @@
             previewContainer.innerHTML = ''; // Clear previous
 
             if (fileData) {
-                header.textContent = `当前预览: ${fileData.name.replace('.xlsx', '.orc')}`;
+                // Header with Search
+                header.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>当前预览: ${fileData.name.replace('.xlsx', '.orc')}</span>
+                        <input type="text" id="preview-search-${fileId}" 
+                            class="gem-input" 
+                            placeholder="🔍 搜索关键词..." 
+                            style="width:200px; height:32px; font-size:12px; padding:4px 12px;"
+                        >
+                    </div>
+                `;
+
                 downloadBtn.style.display = 'block';
+
+                // Bind Search Event
+                const searchInput = document.getElementById(`preview-search-${fileId}`);
+                if (searchInput) {
+                    let timeout = null;
+                    searchInput.oninput = (e) => {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => {
+                            window.filterPreview(fileId, e.target.value);
+                        }, 300);
+                    };
+                }
 
                 if (fileData.data) {
                     window.renderPreviewTable(fileData.data, previewContainer);
@@ -457,6 +480,27 @@
                 downloadBtn.style.display = 'none';
                 previewContainer.innerHTML = '<div style="padding:24px;text-align:center;color:#64748B;">正在处理...</div>';
             }
+        }
+
+        window.filterPreview = function (fileId, keyword) {
+            const f = window.processedFiles[fileId];
+            const container = document.getElementById('active-preview-container');
+
+            if (!f || !f.data) return;
+
+            const term = keyword.toLowerCase().trim();
+            if (!term) {
+                window.renderPreviewTable(f.data, container);
+                return;
+            }
+
+            const filtered = f.data.filter(row => {
+                return Object.values(row).some(val =>
+                    String(val).toLowerCase().includes(term)
+                );
+            });
+
+            window.renderPreviewTable(filtered, container);
         }
 
         window._downloadActiveFile = function () {
