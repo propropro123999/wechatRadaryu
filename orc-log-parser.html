@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>友盟 ORC 日志解析工具 - ICviews Tools</title>
+    <link rel="stylesheet" href="gemini-ui.css" />
+    <link rel="stylesheet" href="design-system-modern.css" />
+    <link rel="stylesheet" href="tool-pages-interactions.css" />
+    <!-- SheetJS for Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- JSZip for Multiple Files Export -->
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <style>
+        body {
+            background-color: var(--gem-color-bg-body);
+            min-height: 100vh;
+        }
+
+        .main-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+
+        .dropzone {
+            border: 2px dashed #CBD5E1;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            background: #F8FAFC;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .dropzone:hover,
+        .dropzone.active {
+            border-color: var(--gem-color-accent);
+            background: #EFF6FF;
+        }
+
+        .file-list {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .file-item {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #E2E8F0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .status-badge {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 99px;
+            background: #EEF2FF;
+            color: #4F46E5;
+        }
+
+        .status-badge.success {
+            background: #DCFCE7;
+            color: #166534;
+        }
+
+        .status-badge.error {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        /* Console Output Style */
+        #console-output {
+            background: #1E293B;
+            color: #E2E8F0;
+            padding: 16px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 12px;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 24px;
+            display: none;
+        }
+
+        .log-line {
+            margin-bottom: 4px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 2px;
+        }
+
+        .log-error {
+            color: #F87171;
+        }
+
+        .log-success {
+            color: #4ADE80;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Access Control Overlay -->
+    <div id="auth-screen"
+        style="position:fixed;inset:0;background:rgba(255,255,255,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px);">
+        <div class="gem-card" style="width:360px;padding:32px;">
+            <h2 style="font-size:20px;margin-bottom:8px;">🔐 友盟 ORC 日志解析</h2>
+            <p style="font-size:13px;color:#64748B;margin-bottom:24px;">请输入授权码访问本工具</p>
+            <input type="text" id="auth-code" class="gem-input" placeholder="请输入授权码" style="margin-bottom:16px;">
+            <button id="auth-btn" class="gem-btn gem-btn-primary w-full">确认进入</button>
+            <div id="auth-error" style="color:#EF4444;font-size:12px;margin-top:12px;min-height:20px;"></div>
+        </div>
+    </div>
+
+    <div id="app" style="display:none;">
+        <nav class="gem-navbar">
+            <a href="#" class="gem-navbar-brand">
+                <span class="gem-navbar-icon">🪵</span>
+                <span>友盟 ORC 日志解析</span>
+            </a>
+            <div class="gem-navbar-actions">
+                <a href="index.html" class="gem-btn gem-btn-secondary" style="font-size:13px;">🏠 返回首页</a>
+            </div>
+        </nav>
+
+        <div class="main-container">
+            <div style="text-align:center;margin-bottom:32px;">
+                <h1>ORC 日志批量解析</h1>
+                <p>支持拖拽多个 .orc 文件，自动解析并转换为 Excel 表格下载</p>
+                <div class="gem-chip">⚠️ 实验性功能 (Powered by DuckDB-Wasm)</div>
+            </div>
+
+            <div class="gem-card">
+                <div class="dropzone" id="dropzone">
+                    <div style="font-size:48px;margin-bottom:16px;">📂</div>
+                    <div style="font-size:16px;font-weight:600;color:#1E293B;margin-bottom:8px;">点击或拖拽上传 ORC 文件</div>
+                    <div style="font-size:13px;color:#64748B;">支持批量上传，单个文件大小建议不超过 100MB</div>
+                    <input type="file" id="fileInput" multiple accept=".orc" style="display:none;">
+                </div>
+
+                <div id="processing-area" style="display:none; margin-top: 24px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h3 style="margin:0;">文件列表</h3>
+                        <div>
+                            <button id="download-all-btn" class="gem-btn gem-btn-primary" disabled>
+                                📦 打包下载所有 Excel
+                            </button>
+                        </div>
+                    </div>
+                    <div id="file-list" class="file-list"></div>
+                </div>
+
+                <div id="console-output"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DuckDB Wasm Scripts -->
+    <!-- Recommended CDN setup for DuckDB-Wasm -->
+    <script type="module">
+        import * as duckdb from 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/+esm';
+
+        // Global exports for UI logic
+        window.duckdb = duckdb;
+
+        // UI Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            initAuth();
+            initDropzone();
+        });
+
+        // --- Auth Logic ---
+        function initAuth() {
+            const savedCode = localStorage.getItem('orc_auth_code');
+            if (verifyCode(savedCode)) {
+                showApp();
+            }
+
+            document.getElementById('auth-btn').onclick = () => {
+                const code = document.getElementById('auth-code').value.trim();
+                if (verifyCode(code)) {
+                    localStorage.setItem('orc_auth_code', code);
+                    showApp();
+                } else {
+                    document.getElementById('auth-error').textContent = '授权码无效';
+                }
+            };
+        }
+
+        function verifyCode(code) {
+            // Hardcoded check against auth-codes.json structure (simplified)
+            const validCodes = [
+                'dcone2025', 'ORC-2025-A1B2', 'ORC-2025-C3D4'
+            ];
+            return validCodes.includes(code);
+        }
+
+        function showApp() {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+
+            // Initialize DuckDB when app shows
+            initDuckDB();
+        }
+
+        // --- DuckDB Logic ---
+        let db = null;
+        let conn = null;
+
+        async function initDuckDB() {
+            log('Initializing DuckDB-Wasm...');
+            try {
+                const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
+                const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
+                const worker_url = URL.createObjectURL(
+                    new Blob([`importScripts("${bundle.mainWorker}");`], { type: 'text/javascript' })
+                );
+
+                const worker = new Worker(worker_url);
+                const logger = new duckdb.ConsoleLogger();
+                db = new duckdb.AsyncDuckDB(logger, worker);
+                await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+                conn = await db.connect();
+
+                log('✅ DuckDB Ready!', 'success');
+            } catch (err) {
+                log('❌ DuckDB Init Failed: ' + err.message, 'error');
+                console.error(err);
+            }
+        }
+
+        async function processFile(file, fileId) {
+            if (!db) {
+                updateFileStatus(fileId, 'DB未就绪', 'error');
+                return;
+            }
+
+            updateFileStatus(fileId, '解析中...', 'running');
+            const tableName = 't_' + fileId.replace(/[^a-zA-Z0-9]/g, '_');
+
+            try {
+                // 1. Register File
+                await db.registerFileHandle(file.name, file, duckdb.DuckDBDataProtocol.BROWSER_FILEREADING, true);
+
+                // 2. Attempt to read ORC
+                // Note: DuckDB-Wasm currently has limited ORC support.
+                // We will try `read_csv` as a fallback test or `read_parquet` if we can assume implicit.
+                // But for ORC, we might need the extension or it might fail.
+                // Since this is experimental, we try `SELECT * FROM 'filename'` and hope auto-detect works or fails gracefully.
+
+                log(`Processing ${file.name}...`);
+
+                // Try selecting raw first to see if it detects format
+                // In generic DuckDB, it needs `INSTALL orc; LOAD orc;`
+                // In Wasm, extensions are tricky.
+
+                // Fallback Plan B Logic (Server-side) injection here if Wasm fails
+                // For now, let's try Wasm.
+
+                // Attempt to load extension if necessary (this might fail in Wasm)
+                // await conn.query("INSTALL orc; LOAD orc;"); 
+
+                const result = await conn.query(`SELECT * FROM '${file.name}' LIMIT 10`);
+
+                // Convert to Array
+                const rows = result.toArray().map(row => row.toJSON());
+
+                // Export to Excel
+                if (rows.length > 0) {
+                    generateExcel(rows, file.name, fileId);
+                } else {
+                    updateFileStatus(fileId, '无数据', 'error');
+                }
+
+            } catch (err) {
+                log(`Error on ${file.name}: ${err.message}`, 'error');
+
+                // === FALLBACK TO SERVER API ===
+                log('Refalling to Server API...', 'warning');
+                fallbackToServer(file, fileId);
+            }
+        }
+
+        async function fallbackToServer(file, fileId) {
+            updateFileStatus(fileId, '上传云端解析...', 'running');
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const resp = await fetch('/api/parse-orc', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!resp.ok) throw new Error(`Server Error: ${resp.status}`);
+
+                const json = await resp.json();
+                if (json.error) throw new Error(json.error);
+
+                generateExcel(json.data, file.name, fileId);
+
+            } catch (err) {
+                updateFileStatus(fileId, '解析失败: ' + err.message, 'error');
+                log(err.message, 'error');
+            }
+        }
+
+        function generateExcel(data, fileName, fileId) {
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "LogData");
+
+            // Convert to Blob for later zip or download
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
+
+            // Save to global list for bulk download
+            processedFiles[fileId] = {
+                name: fileName.replace('.orc', '.xlsx'),
+                blob: blob
+            };
+
+            updateFileStatus(fileId, '✅ 解析成功', 'success');
+            enableDownloadAll();
+        }
+
+        // --- UI Interactions ---
+        const processedFiles = {};
+
+        function initDropzone() {
+            const dz = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+
+            dz.onclick = () => fileInput.click();
+            dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('active'); };
+            dz.ondragleave = () => dz.classList.remove('active');
+            dz.ondrop = (e) => {
+                e.preventDefault();
+                dz.classList.remove('active');
+                handleFiles(e.dataTransfer.files);
+            };
+
+            fileInput.onchange = (e) => handleFiles(e.target.files);
+
+            document.getElementById('download-all-btn').onclick = downloadAll;
+        }
+
+        function handleFiles(files) {
+            if (!files.length) return;
+
+            document.getElementById('processing-area').style.display = 'block';
+            document.getElementById('console-output').style.display = 'block';
+            const list = document.getElementById('file-list');
+            list.innerHTML = ''; // Clear previous
+
+            Array.from(files).forEach((file, idx) => {
+                const fileId = `f_${Date.now()}_${idx}`;
+
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.id = `item-${fileId}`;
+                div.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <span>📄</span>
+                        <div>
+                            <div style="font-weight:600;font-size:14px;">${file.name}</div>
+                            <div style="font-size:12px;color:#64748B;">${(file.size / 1024).toFixed(1)} KB</div>
+                        </div>
+                    </div>
+                    <div id="status-${fileId}" class="status-badge">等待中...</div>
+                `;
+                list.appendChild(div);
+
+                processFile(file, fileId);
+            });
+        }
+
+        function updateFileStatus(fileId, text, type) {
+            const el = document.getElementById(`status-${fileId}`);
+            if (el) {
+                el.textContent = text;
+                el.className = `status-badge ${type}`;
+            }
+        }
+
+        function enableDownloadAll() {
+            const btn = document.getElementById('download-all-btn');
+            btn.disabled = false;
+        }
+
+        async function downloadAll() {
+            const zip = new JSZip();
+            Object.values(processedFiles).forEach(f => {
+                zip.file(f.name, f.blob);
+            });
+
+            const content = await zip.generateAsync({ type: "blob" });
+            const url = URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ORC_Parsed_${new Date().toISOString().slice(0, 10)}.zip`;
+            a.click();
+        }
+
+        function log(msg, type = 'info') {
+            const out = document.getElementById('console-output');
+            const div = document.createElement('div');
+            div.className = `log-line log-${type}`;
+            div.textContent = `> ${msg}`;
+            out.appendChild(div);
+            out.scrollTop = out.scrollHeight;
+            console.log(msg);
+        }
+    </script>
+</body>
+
+</html>

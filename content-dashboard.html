@@ -590,7 +590,7 @@
         .sort((a, b) => b.readCount - a.readCount)
         .slice(0, 100);
 
-      let html = "<table class='gem-table'><thead><tr>";
+      let html = "<div style='overflow-x: auto;'><table class='gem-table'><thead><tr>";
       const headers = [
         "内容标题", "发表时间", "总阅读人数", "总阅读次数",
         "总分享次数", "首次分享次数", "分享产生阅读次数",
@@ -617,7 +617,7 @@
         html += "</tr>";
       });
 
-      html += "</tbody></table>";
+      html += "</tbody></table></div>";
       document.getElementById("detailTable").innerHTML = html;
     }
 
@@ -650,7 +650,7 @@
         const top = topN(data, key, 3);
         if (!top.length) return;
 
-        html += `<div class="rank-block-item">
+        html += `<div class="rank-block-item" style="overflow-x: auto;">
           <div style="font-size:13px;font-weight:600;margin-bottom:6px;">${title}</div>
           <table class='gem-table'><thead><tr>
             <th>排名</th><th>内容标题</th><th>值</th>
