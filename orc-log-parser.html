@@ -234,9 +234,46 @@
                 const out = document.getElementById('console-output');
                 if (out) {
                     out.style.display = 'block';
-                    out.innerHTML += '<div class="log-line log-warning">> ⏳ 系统正在初始化组件，请稍后重试上传...</div>';
+                    const msgId = `msg-${Date.now()}`;
+                    if (!document.getElementById('force-cloud-btn')) {
+                        out.innerHTML += `
+                            <div id="${msgId}" class="log-line log-warning">
+                                > ⏳ 系统组件初始化较慢(网络原因)... 
+                                <button id="force-cloud-btn" class="gem-btn gem-btn-xs gem-btn-primary" style="margin-left:8px; padding: 2px 8px; font-size:11px;">
+                                    ☁️ 强制云端解析
+                                </button>
+                            </div>
+                        `;
+                        // Bind click event asynchronously to ensure element exists
+                        setTimeout(() => {
+                            const btn = document.getElementById('force-cloud-btn');
+                            if (btn) {
+                                btn.onclick = () => {
+                                    btn.textContent = "正在云端解析...";
+                                    btn.disabled = true;
+
+                                    // Manually run the file processing loop via Fallback
+                                    const container = document.getElementById('file-tabs-container');
+                                    Array.from(files).forEach((file, idx) => {
+                                        const fileId = `f_${Date.now()}_${idx}`;
+
+                                        // UI: Create Tab (Inline fallback)
+                                        const btnTab = document.createElement('button');
+                                        btnTab.className = 'gem-btn gem-btn-secondary file-tab-btn';
+                                        btnTab.id = `tab-${fileId}`;
+                                        btnTab.style.cssText = 'white-space:nowrap; display:flex; align-items:center; gap:8px; padding:8px 16px; border:1px solid #E2E8F0; background:white; color:#64748B;';
+                                        btnTab.innerHTML = `<span>📄 ${file.name}</span><div id="status-icon-${fileId}" style="font-size:10px;">⏳</div>`;
+                                        btnTab.onclick = () => window._switchFile(fileId);
+                                        container.appendChild(btnTab);
+
+                                        window.fallbackToServer(file, fileId);
+                                    });
+                                };
+                            }
+                        }, 100);
+                    }
                 } else {
-                    alert("系统初始化中，请稍后...");
+                    alert("系统初始化中... 如长时间无反应请刷新页面");
                 }
             };
         }
@@ -299,6 +336,190 @@
                 el.textContent = text;
                 el.className = `status-badge ${type}`;
             }
+        }
+
+        // --- Core File Processing Logic (Non-Wasm/Fallback) ---
+
+        window.fallbackToServer = async function (file, fileId) {
+            window.updateFileStatus(fileId, '上传云端解析...', 'running');
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const resp = await fetch('/api/parse-orc', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!resp.ok) throw new Error(`Server Error: ${resp.status}`);
+
+                const json = await resp.json();
+                if (json.error) throw new Error(json.error);
+
+                window.generateExcel(json.data, file.name, fileId);
+
+            } catch (err) {
+                window.updateFileStatus(fileId, '解析失败: ' + err.message, 'error');
+                log(err.message, 'error');
+            }
+        }
+
+        window.generateExcel = function (data, fileName, fileId) {
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "LogData");
+
+            // Convert to Blob for later zip or download
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
+
+            // Save to global list
+            window.processedFiles[fileId] = {
+                name: fileName.replace('.orc', '.xlsx'),
+                blob: blob,
+                data: data,
+                originalName: fileName
+            };
+
+            window.updateFileStatus(fileId, '✅ 解析成功', 'success');
+
+            // If this is the active file, re-render to show data
+            if (window.activeFileId === fileId) {
+                window._switchFile(fileId);
+            }
+
+            enableDownloadAll();
+        }
+
+        window.downloadAll = async function () {
+            const zip = new JSZip();
+            Object.values(window.processedFiles).forEach(f => {
+                zip.file(f.name, f.blob);
+            });
+
+            const content = await zip.generateAsync({ type: "blob" });
+            const url = URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ORC_Parsed_${new Date().toISOString().slice(0, 10)}.zip`;
+            a.click();
+        }
+
+        window._downloadSingle = function (fileId) {
+            const f = window.processedFiles[fileId];
+            if (!f) return;
+            const url = URL.createObjectURL(f.blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = f.name;
+            a.click();
+        }
+
+        window._switchFile = function (fileId) {
+            // Update Active State
+            document.querySelectorAll('.file-tab-btn').forEach(b => {
+                b.style.borderColor = '#E2E8F0';
+                b.style.background = 'white';
+                b.style.color = '#64748B';
+            });
+
+            const activeTab = document.getElementById(`tab-${fileId}`);
+            if (activeTab) {
+                activeTab.style.borderColor = 'var(--gem-color-accent)';
+                activeTab.style.background = '#EFF6FF';
+                activeTab.style.color = 'var(--gem-color-accent)';
+            }
+
+            window.activeFileId = fileId;
+            const fileData = window.processedFiles[fileId];
+
+            // Render Preview
+            const previewArea = document.getElementById('main-preview-area');
+            const previewContainer = document.getElementById('active-preview-container');
+            const header = document.getElementById('active-file-header');
+            const downloadBtn = document.getElementById('download-active-btn');
+
+            previewArea.style.display = 'block';
+            previewContainer.innerHTML = ''; // Clear previous
+
+            if (fileData) {
+                header.textContent = `当前预览: ${fileData.name.replace('.xlsx', '.orc')}`;
+                downloadBtn.style.display = 'block';
+
+                if (fileData.data) {
+                    window.renderPreviewTable(fileData.data, previewContainer);
+                } else {
+                    previewContainer.innerHTML = '<div style="padding:24px;text-align:center;color:#64748B;">数据解析中或暂无预览数据...</div>';
+                }
+            } else {
+                header.textContent = '加载中...';
+                downloadBtn.style.display = 'none';
+                previewContainer.innerHTML = '<div style="padding:24px;text-align:center;color:#64748B;">正在处理...</div>';
+            }
+        }
+
+        window._downloadActiveFile = function () {
+            if (window.activeFileId) window._downloadSingle(window.activeFileId);
+        }
+
+        window._togglePreview = function (fileId) {
+            const el = document.getElementById(`preview-${fileId}`);
+            if (el.style.display === 'none') {
+                el.style.display = 'block';
+                if (!el.dataset.rendered) {
+                    const f = window.processedFiles[fileId];
+                    if (f && f.data) {
+                        window.renderPreviewTable(f.data, el);
+                        el.dataset.rendered = 'true';
+                    }
+                }
+            } else {
+                el.style.display = 'none';
+            }
+        }
+
+        window.renderPreviewTable = function (data, container) {
+            if (!data || !data.length) {
+                container.innerHTML = '<div style="color:#64748B;font-size:12px;">无数据预览</div>';
+                return;
+            }
+            const previewData = data.slice(0, 50);
+            const headers = Object.keys(previewData[0]);
+
+            const tableStyle = `width:100%;border-collapse:separate;border-spacing:0;font-size:12px;min-width:800px;`;
+            const thStyle = `text-align:left;padding:12px 16px;border-bottom:2px solid #E2E8F0;background:#F8FAFC;white-space:nowrap;position:sticky;top:0;z-index:10;font-weight:600;color:#475569;`;
+            const tdStyle = `padding:10px 16px;border-bottom:1px solid #E2E8F0;white-space:nowrap;max-width:300px;overflow:hidden;text-overflow:ellipsis;color:#334155;`;
+
+            let html = `
+            <div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:12px;color:#64748B;">预览前 50 行数据 (共 ${data.length} 行)</div>
+                <div style="font-size:11px;color:#94A3B8;">💡 按住 Shift 滚动查看更多列</div>
+            </div>
+            <div style="max-height: 400px; overflow: auto; border: 1px solid #E2E8F0; border-radius: 8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                <table style="${tableStyle}">
+                    <thead><tr>`;
+
+            headers.forEach(h => html += `<th style="${thStyle}">${h}</th>`);
+            html += `</tr></thead><tbody>`;
+
+            previewData.forEach((row, idx) => {
+                const bg = idx % 2 === 0 ? '#fff' : '#F8FAFC';
+                html += `<tr style="background:${bg}; transition: background 0.1s;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='${bg}'">`;
+                headers.forEach(h => {
+                    const val = row[h] !== undefined ? row[h] : '';
+                    const strVal = String(val);
+                    html += `<td style="${tdStyle}" title="${strVal.replace(/"/g, '&quot;')}">${strVal}</td>`;
+                });
+                html += `</tr>`;
+            });
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        }
+
+        function enableDownloadAll() {
+            const btn = document.getElementById('download-all-btn');
+            if (btn) btn.disabled = false;
         }
     </script>
 
@@ -409,69 +630,7 @@
             }
         }
 
-        async function fallbackToServer(file, fileId) {
-            updateFileStatus(fileId, '上传云端解析...', 'running');
 
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                const resp = await fetch('/api/parse-orc', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!resp.ok) throw new Error(`Server Error: ${resp.status}`);
-
-                const json = await resp.json();
-                if (json.error) throw new Error(json.error);
-
-                generateExcel(json.data, file.name, fileId);
-
-            } catch (err) {
-                updateFileStatus(fileId, '解析失败: ' + err.message, 'error');
-                log(err.message, 'error');
-            }
-        }
-
-        function generateExcel(data, fileName, fileId) {
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "LogData");
-
-            // Convert to Blob for later zip or download
-            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-            const blob = new Blob([wbout], { type: 'application/octet-stream' });
-
-            // Save to global list for bulk download
-            processedFiles[fileId] = {
-                name: fileName.replace('.orc', '.xlsx'),
-                blob: blob,
-                data: data // Store raw data for preview
-            };
-
-            updateFileStatus(fileId, '✅ 解析成功', 'success');
-
-            // Show actions (Download only now)
-            const actions = document.getElementById(`actions-${fileId}`);
-            if (actions) actions.style.display = 'flex';
-
-            // Auto render preview
-            const previewEl = document.getElementById(`preview-${fileId}`);
-            if (previewEl) {
-                previewEl.style.display = 'block';
-                renderPreviewTable(data, previewEl);
-            }
-
-            enableDownloadAll();
-        }
-
-        // --- Global State ---
-        // State is now managed via window.processedFiles and window.activeFileId from standard script
-
-        function initDropzone() {
-            // Logic moved to standard script
-        }
 
         window.handleFiles = function (files) {
             if (!files.length) return;
@@ -491,8 +650,8 @@
                 btn.id = `tab-${fileId}`;
                 btn.style.cssText = 'white-space:nowrap; display:flex; align-items:center; gap:8px; padding:8px 16px; border:1px solid #E2E8F0; background:white; color:#64748B;';
                 btn.innerHTML = `
-                    <span>📄 ${file.name}</span>
-                    <div id="status-icon-${fileId}" style="font-size:10px;">⏳</div>
+                <span>📄 ${file.name}</span>
+                <div id="status-icon-${fileId}" style="font-size:10px;">⏳</div>
                 `;
                 btn.onclick = () => window._switchFile(fileId);
 
@@ -502,276 +661,7 @@
             });
         }
 
-        window._switchFile = function (fileId) {
-            // Update Active State
-            document.querySelectorAll('.file-tab-btn').forEach(b => {
-                b.style.borderColor = '#E2E8F0';
-                b.style.background = 'white';
-                b.style.color = '#64748B';
-            });
 
-            const activeTab = document.getElementById(`tab-${fileId}`);
-            if (activeTab) {
-                activeTab.style.borderColor = 'var(--gem-color-accent)';
-                activeTab.style.background = '#EFF6FF';
-                activeTab.style.color = 'var(--gem-color-accent)';
-            }
-
-            window.activeFileId = fileId;
-            const fileData = window.processedFiles[fileId];
-
-            // Render Preview
-            const previewArea = document.getElementById('main-preview-area');
-            const previewContainer = document.getElementById('active-preview-container');
-            const header = document.getElementById('active-file-header');
-            const downloadBtn = document.getElementById('download-active-btn');
-
-            previewArea.style.display = 'block';
-            previewContainer.innerHTML = ''; // Clear previous
-
-            if (fileData) {
-                header.textContent = `当前预览: ${fileData.name.replace('.xlsx', '.orc')}`; // Show original name
-                downloadBtn.style.display = 'block';
-
-                if (fileData.data) {
-                    renderPreviewTable(fileData.data, previewContainer);
-                } else {
-                    previewContainer.innerHTML = '<div style="padding:24px;text-align:center;color:#64748B;">数据解析中或暂无预览数据...</div>';
-                }
-            } else {
-                // Loading state or not ready
-                header.textContent = '加载中...';
-                downloadBtn.style.display = 'none';
-                previewContainer.innerHTML = '<div style="padding:24px;text-align:center;color:#64748B;">正在处理...</div>';
-            }
-        }
-
-        window._downloadActiveFile = function () {
-            if (window.activeFileId) window._downloadSingle(window.activeFileId);
-        }
-
-        async function processFile(file, fileId) {
-            // Initial placeholder state
-            window.processedFiles[fileId] = {
-                name: file.name.replace('.orc', '.xlsx'), // Placeholder name
-                blob: null,
-                data: null,
-                originalName: file.name
-            };
-
-            // If no active file, switch to this one immediately (loading state)
-            if (!window.activeFileId) {
-                window._switchFile(fileId);
-            }
-
-            if (!db) {
-                updateFileStatus(fileId, 'DB未就绪', 'error');
-                return;
-            }
-
-            updateFileStatus(fileId, '解析中...', 'running');
-            const tableName = 't_' + fileId.replace(/[^a-zA-Z0-9]/g, '_');
-
-            try {
-                // 1. Register File
-                await db.registerFileHandle(file.name, file, duckdb.DuckDBDataProtocol.BROWSER_FILEREADING, true);
-                log(`Processing ${file.name}...`);
-                const result = await conn.query(`SELECT * FROM '${file.name}' LIMIT 10`);
-
-                // Convert to Array
-                const rows = result.toArray().map(row => row.toJSON());
-
-                // Export to Excel
-                if (rows.length > 0) {
-                    generateExcel(rows, file.name, fileId);
-                } else {
-                    updateFileStatus(fileId, '无数据', 'error');
-                }
-
-            } catch (err) {
-                // Determine if it's a "missing table" error which is expected for ORC in Wasm without extension
-                const isExpectedError = err.message.includes('Table with name') && err.message.includes('does not exist');
-
-                if (isExpectedError) {
-                    log(`本地 DuckDB 暂不支持直读此 ORC (需要扩展)，自动切换至云端 Python 解析...`, 'warning');
-                } else {
-                    log(`本地解析出错: ${err.message}，尝试云端解析...`, 'warning');
-                }
-
-                // === FALLBACK TO SERVER API ===
-                fallbackToServer(file, fileId);
-            }
-        }
-
-        function updateFileStatus(fileId, text, type) {
-            if (window.updateFileStatus) {
-                window.updateFileStatus(fileId, text, type);
-                return;
-            }
-            // Fallback module internal logic (if window.updateFileStatus missing)
-            const icon = document.getElementById(`status-icon-${fileId}`);
-            if (icon) {
-                if (type === 'success') icon.textContent = '✅';
-                else if (type === 'error') icon.textContent = '❌';
-                else icon.textContent = '⏳';
-            }
-        }
-
-        // ... (Keep existing fallbackToServer same structure but ensure it calls generateExcel) ...
-
-        function generateExcel(data, fileName, fileId) {
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "LogData");
-
-            // Convert to Blob for later zip or download
-            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-            const blob = new Blob([wbout], { type: 'application/octet-stream' });
-
-            // Save to global list
-            window.processedFiles[fileId] = {
-                name: fileName.replace('.orc', '.xlsx'),
-                blob: blob,
-                data: data,
-                originalName: fileName
-            };
-
-            updateFileStatus(fileId, '✅ 解析成功', 'success');
-
-            // If this is the active file, re-render to show data
-            if (window.activeFileId === fileId) {
-                window._switchFile(fileId);
-            }
-
-            enableDownloadAll();
-        }
-
-        function enableDownloadAll() {
-            const btn = document.getElementById('download-all-btn');
-            btn.disabled = false;
-        }
-
-        window.downloadAll = async function () {
-            const zip = new JSZip();
-            Object.values(window.processedFiles).forEach(f => {
-                zip.file(f.name, f.blob);
-            });
-
-            const content = await zip.generateAsync({ type: "blob" });
-            const url = URL.createObjectURL(content);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `ORC_Parsed_${new Date().toISOString().slice(0, 10)}.zip`;
-            a.click();
-        }
-
-        // Expose implementation for standard script hooks
-        window._downloadSingle = function (fileId) {
-            const f = window.processedFiles[fileId];
-            if (!f) return;
-            const url = URL.createObjectURL(f.blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = f.name;
-            a.click();
-        }
-
-        window._togglePreview = function (fileId) {
-            const el = document.getElementById(`preview-${fileId}`);
-            if (el.style.display === 'none') {
-                el.style.display = 'block';
-                // Render if not already rendered
-                if (!el.dataset.rendered) {
-                    const f = window.processedFiles[fileId];
-                    if (f && f.data) {
-                        renderPreviewTable(f.data, el);
-                        el.dataset.rendered = 'true';
-                    }
-                }
-            } else {
-                el.style.display = 'none';
-            }
-        }
-
-        function renderPreviewTable(data, container) {
-            if (!data || !data.length) {
-                container.innerHTML = '<div style="color:#64748B;font-size:12px;">无数据预览</div>';
-                return;
-            }
-            // Limit to top 50 rows
-            const previewData = data.slice(0, 50);
-            const headers = Object.keys(previewData[0]);
-
-            // Enhanced styles for scrolling and readability
-            const tableStyle = `
-                width: 100%;
-                border-collapse: separate; 
-                border-spacing: 0;
-                font-size: 12px;
-                min-width: 800px; /* Ensure table doesn't get too squeezed */
-            `;
-
-            const thStyle = `
-                text-align: left;
-                padding: 12px 16px;
-                border-bottom: 2px solid #E2E8F0;
-                background: #F8FAFC;
-                white-space: nowrap;
-                position: sticky;
-                top: 0;
-                z-index: 10;
-                font-weight: 600;
-                color: #475569;
-            `;
-
-            const tdStyle = `
-                padding: 10px 16px;
-                border-bottom: 1px solid #E2E8F0;
-                white-space: nowrap;
-                max-width: 300px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                color: #334155;
-            `;
-
-            let html = `
-            <div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-size:12px;color:#64748B;">预览前 50 行数据 (共 ${data.length} 行)</div>
-                <div style="font-size:11px;color:#94A3B8;">💡 按住 Shift 滚动查看更多列</div>
-            </div>
-            <div style="max-height: 400px; overflow: auto; border: 1px solid #E2E8F0; border-radius: 8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
-                <table style="${tableStyle}">
-                    <thead>
-                        <tr>`;
-
-            headers.forEach(h => html += `<th style="${thStyle}">${h}</th>`);
-            html += `</tr></thead><tbody>`;
-
-            previewData.forEach((row, idx) => {
-                const bg = idx % 2 === 0 ? '#fff' : '#F8FAFC'; // Zebra striping
-                html += `<tr style="background:${bg}; transition: background 0.1s;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='${bg}'">`;
-                headers.forEach(h => {
-                    const val = row[h] !== undefined ? row[h] : '';
-                    const strVal = String(val);
-                    html += `<td style="${tdStyle}" title="${strVal.replace(/"/g, '&quot;')}">${strVal}</td>`;
-                });
-                html += `</tr>`;
-            });
-
-            html += `</tbody></table></div>`;
-
-            container.innerHTML = html;
-        }
-
-        function log(msg, type = 'info') {
-            const out = document.getElementById('console-output');
-            const div = document.createElement('div');
-            div.className = `log-line log-${type}`;
-            div.textContent = `> ${msg}`;
-            out.appendChild(div);
-            out.scrollTop = out.scrollHeight;
-            console.log(msg);
-        }
     </script>
 </body>
 
