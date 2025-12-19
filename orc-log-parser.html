@@ -149,13 +149,26 @@
                 <div id="processing-area" style="display:none; margin-top: 24px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
                         <h3 style="margin:0;">文件列表</h3>
-                        <div>
+                        <div style="display:flex; gap:12px;">
+                            <button id="download-active-btn" class="gem-btn gem-btn-secondary" style="display:none;"
+                                onclick="downloadActiveFile()">⬇️ 下载当前文件</button>
                             <button id="download-all-btn" class="gem-btn gem-btn-primary" disabled>
-                                📦 打包下载所有 Excel
+                                📦 打包下载所有
                             </button>
                         </div>
                     </div>
-                    <div id="file-list" class="file-list"></div>
+
+                    <!-- File Tabs Container -->
+                    <div id="file-tabs-container"
+                        style="display:flex; gap:12px; overflow-x:auto; padding-bottom:8px; margin-bottom:16px; border-bottom:1px solid #E2E8F0;">
+                        <!-- Tabs will be injected here -->
+                    </div>
+
+                    <!-- Single Preview Area -->
+                    <div id="main-preview-area" style="min-height:200px; display:none;">
+                        <div id="active-file-header" style="margin-bottom:12px; font-weight:600; color:#334155;"></div>
+                        <div id="active-preview-container"></div>
+                    </div>
                 </div>
 
                 <div id="console-output"></div>
@@ -352,8 +365,9 @@
             enableDownloadAll();
         }
 
-        // --- UI Interactions ---
+        // --- Global State ---
         const processedFiles = {};
+        let activeFileId = null;
 
         function initDropzone() {
             const dz = document.getElementById('dropzone');
@@ -378,45 +392,168 @@
 
             document.getElementById('processing-area').style.display = 'block';
             document.getElementById('console-output').style.display = 'block';
-            const list = document.getElementById('file-list');
-            list.innerHTML = ''; // Clear previous
+
+            // Note: We append to existing tabs if adding more files
+            const container = document.getElementById('file-tabs-container');
 
             Array.from(files).forEach((file, idx) => {
                 const fileId = `f_${Date.now()}_${idx}`;
 
-                const div = document.createElement('div');
-                div.className = 'file-item';
-                div.id = `item-${fileId}`;
-                div.innerHTML = `
-                    <div style="display:flex;align-items:center;gap:12px;width:100%;">
-                        <span>📄</span>
-                        <div style="flex-grow:1;">
-                            <div style="font-weight:600;font-size:14px;">${file.name}</div>
-                            <div style="font-size:12px;color:#64748B;">${(file.size / 1024).toFixed(1)} KB</div>
-                        </div>
-                        <div id="actions-${fileId}" style="display:none; gap:8px;">
-                            <!-- Preview is now auto-shown -->
-                            <button onclick="downloadSingle('${fileId}')" class="gem-btn gem-btn-primary" style="padding:4px 12px;font-size:12px;">⬇️ 下载 Excel</button>
-                        </div>
-                        <div id="status-${fileId}" class="status-badge">等待中...</div>
-                    </div>
-                    <div id="preview-${fileId}" style="display:none; margin-top:16px; border-top:1px dashed #E2E8F0; padding-top:16px; overflow-x:auto;">
-                        <div class="gem-skeleton" style="height:100px;width:100%;"></div>
-                    </div>
+                // Create Tab
+                const btn = document.createElement('button');
+                btn.className = 'gem-btn gem-btn-secondary file-tab-btn';
+                btn.id = `tab-${fileId}`;
+                btn.style.cssText = 'white-space:nowrap; display:flex; align-items:center; gap:8px; padding:8px 16px; border:1px solid #E2E8F0; background:white; color:#64748B;';
+                btn.innerHTML = `
+                    <span>📄 ${file.name}</span>
+                    <div id="status-icon-${fileId}" style="font-size:10px;">⏳</div>
                 `;
-                list.appendChild(div);
+                btn.onclick = () => switchFile(fileId);
+
+                container.appendChild(btn);
 
                 processFile(file, fileId);
             });
         }
 
+        function switchFile(fileId) {
+            // Update Active State
+            document.querySelectorAll('.file-tab-btn').forEach(b => {
+                b.style.borderColor = '#E2E8F0';
+                b.style.background = 'white';
+                b.style.color = '#64748B';
+            });
+
+            const activeTab = document.getElementById(`tab-${fileId}`);
+            if (activeTab) {
+                activeTab.style.borderColor = 'var(--gem-color-accent)';
+                activeTab.style.background = '#EFF6FF';
+                activeTab.style.color = 'var(--gem-color-accent)';
+            }
+
+            activeFileId = fileId;
+            const fileData = processedFiles[fileId];
+
+            // Render Preview
+            const previewArea = document.getElementById('main-preview-area');
+            const previewContainer = document.getElementById('active-preview-container');
+            const header = document.getElementById('active-file-header');
+            const downloadBtn = document.getElementById('download-active-btn');
+
+            previewArea.style.display = 'block';
+            previewContainer.innerHTML = ''; // Clear previous
+
+            if (fileData) {
+                header.textContent = `当前预览: ${fileData.name.replace('.xlsx', '.orc')}`; // Show original name
+                downloadBtn.style.display = 'block';
+
+                if (fileData.data) {
+                    renderPreviewTable(fileData.data, previewContainer);
+                } else {
+                    previewContainer.innerHTML = '<div style="padding:24px;text-align:center;color:#64748B;">数据解析中或暂无预览数据...</div>';
+                }
+            } else {
+                // Loading state or not ready
+                header.textContent = '加载中...';
+                downloadBtn.style.display = 'none';
+                previewContainer.innerHTML = '<div style="padding:24px;text-align:center;color:#64748B;">正在处理...</div>';
+            }
+        }
+
+        function downloadActiveFile() {
+            if (activeFileId) downloadSingle(activeFileId);
+        }
+
+        async function processFile(file, fileId) {
+            // Initial placeholder state
+            processedFiles[fileId] = {
+                name: file.name.replace('.orc', '.xlsx'), // Placeholder name
+                blob: null,
+                data: null,
+                originalName: file.name
+            };
+
+            // If no active file, switch to this one immediately (loading state)
+            if (!activeFileId) {
+                switchFile(fileId);
+            }
+
+            if (!db) {
+                updateFileStatus(fileId, 'DB未就绪', 'error');
+                return;
+            }
+
+            updateFileStatus(fileId, '解析中...', 'running');
+            const tableName = 't_' + fileId.replace(/[^a-zA-Z0-9]/g, '_');
+
+            try {
+                // 1. Register File
+                await db.registerFileHandle(file.name, file, duckdb.DuckDBDataProtocol.BROWSER_FILEREADING, true);
+                log(`Processing ${file.name}...`);
+                const result = await conn.query(`SELECT * FROM '${file.name}' LIMIT 10`);
+
+                // Convert to Array
+                const rows = result.toArray().map(row => row.toJSON());
+
+                // Export to Excel
+                if (rows.length > 0) {
+                    generateExcel(rows, file.name, fileId);
+                } else {
+                    updateFileStatus(fileId, '无数据', 'error');
+                }
+
+            } catch (err) {
+                const isExpectedError = err.message.includes('Table with name') && err.message.includes('does not exist');
+
+                if (isExpectedError) {
+                    log(`本地 DuckDB 暂不支持直读此 ORC (需要扩展)，自动切换至云端 Python 解析...`, 'warning');
+                } else {
+                    log(`本地解析出错: ${err.message}，尝试云端解析...`, 'warning');
+                }
+
+                // === FALLBACK TO SERVER API ===
+                fallbackToServer(file, fileId);
+            }
+        }
 
         function updateFileStatus(fileId, text, type) {
-            const el = document.getElementById(`status-${fileId}`);
-            if (el) {
-                el.textContent = text;
-                el.className = `status-badge ${type}`;
+            // Update Tab Status Icon
+            const icon = document.getElementById(`status-icon-${fileId}`);
+            if (icon) {
+                if (type === 'success') icon.textContent = '✅';
+                else if (type === 'error') icon.textContent = '❌';
+                else icon.textContent = '⏳';
             }
+            // Add subtle indication to tab if desired
+        }
+
+        // ... (Keep existing fallbackToServer same structure but ensure it calls generateExcel) ...
+
+        function generateExcel(data, fileName, fileId) {
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "LogData");
+
+            // Convert to Blob for later zip or download
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
+
+            // Save to global list
+            processedFiles[fileId] = {
+                name: fileName.replace('.orc', '.xlsx'),
+                blob: blob,
+                data: data,
+                originalName: fileName
+            };
+
+            updateFileStatus(fileId, '✅ 解析成功', 'success');
+
+            // If this is the active file, re-render to show data
+            if (activeFileId === fileId) {
+                switchFile(fileId);
+            }
+
+            enableDownloadAll();
         }
 
         function enableDownloadAll() {
@@ -475,25 +612,63 @@
             const previewData = data.slice(0, 50);
             const headers = Object.keys(previewData[0]);
 
-            let html = `<div style="margin-bottom:8px;font-size:12px;color:#64748B;">预览前 50 行数据：</div>
-            <table class="gem-table" style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr>`;
+            // Enhanced styles for scrolling and readability
+            const tableStyle = `
+                width: 100%;
+                border-collapse: separate; 
+                border-spacing: 0;
+                font-size: 12px;
+                min-width: 800px; /* Ensure table doesn't get too squeezed */
+            `;
 
-            headers.forEach(h => html += `<th style="text-align:left;padding:8px;border-bottom:1px solid #E2E8F0;background:#F8FAFC;white-space:nowrap;">${h}</th>`);
+            const thStyle = `
+                text-align: left;
+                padding: 12px 16px;
+                border-bottom: 2px solid #E2E8F0;
+                background: #F8FAFC;
+                white-space: nowrap;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+                font-weight: 600;
+                color: #475569;
+            `;
+
+            const tdStyle = `
+                padding: 10px 16px;
+                border-bottom: 1px solid #E2E8F0;
+                white-space: nowrap;
+                max-width: 300px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                color: #334155;
+            `;
+
+            let html = `
+            <div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:12px;color:#64748B;">预览前 50 行数据 (共 ${data.length} 行)</div>
+                <div style="font-size:11px;color:#94A3B8;">💡 按住 Shift 滚动查看更多列</div>
+            </div>
+            <div style="max-height: 400px; overflow: auto; border: 1px solid #E2E8F0; border-radius: 8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                <table style="${tableStyle}">
+                    <thead>
+                        <tr>`;
+
+            headers.forEach(h => html += `<th style="${thStyle}">${h}</th>`);
             html += `</tr></thead><tbody>`;
 
-            previewData.forEach(row => {
-                html += `<tr>`;
+            previewData.forEach((row, idx) => {
+                const bg = idx % 2 === 0 ? '#fff' : '#F8FAFC'; // Zebra striping
+                html += `<tr style="background:${bg}; transition: background 0.1s;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='${bg}'">`;
                 headers.forEach(h => {
                     const val = row[h] !== undefined ? row[h] : '';
-                    html += `<td style="padding:8px;border-bottom:1px solid #E2E8F0;white-space:nowrap;">${String(val).slice(0, 100)}</td>`;
+                    const strVal = String(val);
+                    html += `<td style="${tdStyle}" title="${strVal.replace(/"/g, '&quot;')}">${strVal}</td>`;
                 });
                 html += `</tr>`;
             });
 
-            html += `</tbody></table>`;
-            if (data.length > 50) {
-                html += `<div style="text-align:center;padding:8px;color:#64748B;font-size:12px;">... 共 ${data.length} 行数据 ...</div>`;
-            }
+            html += `</tbody></table></div>`;
 
             container.innerHTML = html;
         }
