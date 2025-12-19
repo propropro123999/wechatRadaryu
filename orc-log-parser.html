@@ -185,10 +185,17 @@
         window.duckdb = duckdb;
 
         // UI Logic
-        document.addEventListener('DOMContentLoaded', () => {
+        // Since type="module" is deferred, DOMContentLoaded might have already fired.
+        // We can check readyState or just run initAuth if body exists (which it does).
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                initAuth();
+                initDropzone();
+            });
+        } else {
             initAuth();
             initDropzone();
-        });
+        }
 
         // --- Auth Logic ---
         function initAuth() {
@@ -576,6 +583,12 @@
         }
 
         // --- New Logic for UI Enhancement ---
+        // Expose to window for HTML onclick handlers
+        window.downloadSingle = downloadSingle;
+        window.downloadActiveFile = downloadActiveFile;
+        window.switchFile = switchFile;
+        window.togglePreview = togglePreview;
+
         function downloadSingle(fileId) {
             const f = processedFiles[fileId];
             if (!f) return;
