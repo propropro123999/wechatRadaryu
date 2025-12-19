@@ -227,6 +227,20 @@
         window.processedFiles = {};
         window.activeFileId = null;
 
+        // Placeholder until module loads
+        if (!window.handleFiles) {
+            window.handleFiles = (files) => {
+                console.warn("Module not loaded yet");
+                const out = document.getElementById('console-output');
+                if (out) {
+                    out.style.display = 'block';
+                    out.innerHTML += '<div class="log-line log-warning">> ⏳ 系统正在初始化组件，请稍后重试上传...</div>';
+                } else {
+                    alert("系统初始化中，请稍后...");
+                }
+            };
+        }
+
         function initDropzone() {
             const dz = document.getElementById('dropzone');
             const fileInput = document.getElementById('fileInput');
@@ -299,30 +313,36 @@
         // --- DuckDB Logic ---
         let db = null;
         let conn = null;
+        let initPromise = null;
 
         // Expose init function
         window.initDuckDB = async function () {
-            if (db) return; // Already init
+            if (initPromise) return initPromise;
 
-            log('Initializing DuckDB-Wasm...');
-            try {
-                const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
-                const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
-                const worker_url = URL.createObjectURL(
-                    new Blob([`importScripts("${bundle.mainWorker}");`], { type: 'text/javascript' })
-                );
+            initPromise = (async () => {
+                log('Initializing DuckDB-Wasm...');
+                try {
+                    const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
+                    const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
+                    const worker_url = URL.createObjectURL(
+                        new Blob([`importScripts("${bundle.mainWorker}");`], { type: 'text/javascript' })
+                    );
 
-                const worker = new Worker(worker_url);
-                const logger = new duckdb.ConsoleLogger();
-                db = new duckdb.AsyncDuckDB(logger, worker);
-                await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
-                conn = await db.connect();
+                    const worker = new Worker(worker_url);
+                    const logger = new duckdb.ConsoleLogger();
+                    db = new duckdb.AsyncDuckDB(logger, worker);
+                    await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+                    conn = await db.connect();
 
-                log('✅ DuckDB Ready!', 'success');
-            } catch (err) {
-                log('❌ DuckDB Init Failed: ' + err.message, 'error');
-                console.error(err);
-            }
+                    log('✅ DuckDB Ready!', 'success');
+                } catch (err) {
+                    log('❌ DuckDB Init Failed: ' + err.message, 'error');
+                    console.error(err);
+                    throw err;
+                }
+            })();
+
+            return initPromise;
         }
 
         // Check if we should init immediately (if auth passed before module loaded)
@@ -331,9 +351,28 @@
         }
 
         async function processFile(file, fileId) {
+            // Initial placeholder state
+            window.processedFiles[fileId] = {
+                name: file.name.replace('.orc', '.xlsx'), // Placeholder name
+                blob: null,
+                data: null,
+                originalName: file.name
+            };
+
+            // If no active file, switch to this one immediately (loading state)
+            if (!window.activeFileId) {
+                window._switchFile(fileId);
+            }
+
+            // Ensure DB is ready
             if (!db) {
-                updateFileStatus(fileId, 'DB未就绪', 'error');
-                return;
+                updateFileStatus(fileId, '初始化DB...', 'running');
+                try {
+                    await window.initDuckDB();
+                } catch (err) {
+                    updateFileStatus(fileId, 'DB初始化失败', 'error');
+                    return;
+                }
             }
 
             updateFileStatus(fileId, '解析中...', 'running');
@@ -342,25 +381,7 @@
             try {
                 // 1. Register File
                 await db.registerFileHandle(file.name, file, duckdb.DuckDBDataProtocol.BROWSER_FILEREADING, true);
-
-                // 2. Attempt to read ORC
-                // Note: DuckDB-Wasm currently has limited ORC support.
-                // We will try `read_csv` as a fallback test or `read_parquet` if we can assume implicit.
-                // But for ORC, we might need the extension or it might fail.
-                // Since this is experimental, we try `SELECT * FROM 'filename'` and hope auto-detect works or fails gracefully.
-
                 log(`Processing ${file.name}...`);
-
-                // Try selecting raw first to see if it detects format
-                // In generic DuckDB, it needs `INSTALL orc; LOAD orc;`
-                // In Wasm, extensions are tricky.
-
-                // Fallback Plan B Logic (Server-side) injection here if Wasm fails
-                // For now, let's try Wasm.
-
-                // Attempt to load extension if necessary (this might fail in Wasm)
-                // await conn.query("INSTALL orc; LOAD orc;"); 
-
                 const result = await conn.query(`SELECT * FROM '${file.name}' LIMIT 10`);
 
                 // Convert to Array
