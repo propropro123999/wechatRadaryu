@@ -281,10 +281,16 @@
                 }
 
             } catch (err) {
-                log(`Error on ${file.name}: ${err.message}`, 'error');
+                // Determine if it's a "missing table" error which is expected for ORC in Wasm without extension
+                const isExpectedError = err.message.includes('Table with name') && err.message.includes('does not exist');
+
+                if (isExpectedError) {
+                    log(`本地 DuckDB 暂不支持直读此 ORC (需要扩展)，自动切换至云端 Python 解析...`, 'warning');
+                } else {
+                    log(`本地解析出错: ${err.message}，尝试云端解析...`, 'warning');
+                }
 
                 // === FALLBACK TO SERVER API ===
-                log('Refalling to Server API...', 'warning');
                 fallbackToServer(file, fileId);
             }
         }
@@ -326,10 +332,15 @@
             // Save to global list for bulk download
             processedFiles[fileId] = {
                 name: fileName.replace('.orc', '.xlsx'),
-                blob: blob
+                blob: blob,
+                data: data // Store raw data for preview
             };
 
             updateFileStatus(fileId, '✅ 解析成功', 'success');
+            // Show actions
+            const actions = document.getElementById(`actions-${fileId}`);
+            if (actions) actions.style.display = 'flex';
+
             enableDownloadAll();
         }
 
@@ -369,14 +380,21 @@
                 div.className = 'file-item';
                 div.id = `item-${fileId}`;
                 div.innerHTML = `
-                    <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="display:flex;align-items:center;gap:12px;width:100%;">
                         <span>📄</span>
-                        <div>
+                        <div style="flex-grow:1;">
                             <div style="font-weight:600;font-size:14px;">${file.name}</div>
                             <div style="font-size:12px;color:#64748B;">${(file.size / 1024).toFixed(1)} KB</div>
                         </div>
+                        <div id="actions-${fileId}" style="display:none; gap:8px;">
+                            <button onclick="togglePreview('${fileId}')" class="gem-btn gem-btn-secondary" style="padding:4px 12px;font-size:12px;">👁️ 预览</button>
+                            <button onclick="downloadSingle('${fileId}')" class="gem-btn gem-btn-primary" style="padding:4px 12px;font-size:12px;">⬇️ 下载 Excel</button>
+                        </div>
+                        <div id="status-${fileId}" class="status-badge">等待中...</div>
                     </div>
-                    <div id="status-${fileId}" class="status-badge">等待中...</div>
+                    <div id="preview-${fileId}" style="display:none; margin-top:16px; border-top:1px dashed #E2E8F0; padding-top:16px; overflow-x:auto;">
+                        <div class="gem-skeleton" style="height:100px;width:100%;"></div>
+                    </div>
                 `;
                 list.appendChild(div);
 
@@ -409,6 +427,66 @@
             a.href = url;
             a.download = `ORC_Parsed_${new Date().toISOString().slice(0, 10)}.zip`;
             a.click();
+        }
+
+        // --- New Logic for UI Enhancement ---
+        function downloadSingle(fileId) {
+            const f = processedFiles[fileId];
+            if (!f) return;
+            const url = URL.createObjectURL(f.blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = f.name;
+            a.click();
+        }
+
+        function togglePreview(fileId) {
+            const el = document.getElementById(`preview-${fileId}`);
+            if (el.style.display === 'none') {
+                el.style.display = 'block';
+                // Render if not already rendered
+                if (!el.dataset.rendered) {
+                    const f = processedFiles[fileId];
+                    if (f && f.data) {
+                        renderPreviewTable(f.data, el);
+                        el.dataset.rendered = 'true';
+                    }
+                }
+            } else {
+                el.style.display = 'none';
+            }
+        }
+
+        function renderPreviewTable(data, container) {
+            if (!data || !data.length) {
+                container.innerHTML = '<div style="color:#64748B;font-size:12px;">无数据预览</div>';
+                return;
+            }
+            // Limit to top 50 rows
+            const previewData = data.slice(0, 50);
+            const headers = Object.keys(previewData[0]);
+
+            let html = `<div style="margin-bottom:8px;font-size:12px;color:#64748B;">预览前 50 行数据：</div>
+            <table class="gem-table" style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr>`;
+
+            headers.forEach(h => html += `<th style="text-align:left;padding:8px;border-bottom:1px solid #E2E8F0;background:#F8FAFC;white-space:nowrap;">${h}</th>`);
+            html += `</tr></thead><tbody>`;
+
+            previewData.forEach(row => {
+                html += `<tr>`;
+                headers.forEach(h => {
+                    const val = row[h] !== undefined ? row[h] : '';
+                    html += `<td style="padding:8px;border-bottom:1px solid #E2E8F0;white-space:nowrap;">${String(val).slice(0, 100)}</td>`;
+                });
+                html += `</tr>`;
+            });
+
+            html += `</tbody></table>`;
+            if (data.length > 50) {
+                html += `<div style="text-align:center;padding:8px;color:#64748B;font-size:12px;">... 共 ${data.length} 行数据 ...</div>`;
+            }
+
+            container.innerHTML = html;
         }
 
         function log(msg, type = 'info') {
