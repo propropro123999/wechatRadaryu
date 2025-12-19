@@ -240,6 +240,37 @@
 
 ---
 
+## 💡 核心技术架构 (Core Architecture)
+
+为了方便后续维护，这里简要说明项目的核心技术决策：
+
+### 1. 混合解析策略 (Hybrid Parsing) - ORC 工具
+- **首选 (Client-Side)**：使用 `DuckDB-Wasm` 在浏览器端直接解析 ORC 文件，速度快且保护隐私。
+- **兜底 (Server-Fallback)**：若客户端 DuckDB 初始化失败（如 CDN 被墙），自动降级调用 `/api/parse-orc` (Python Serverless Function) 进行解析。
+- **强制模式**：提供“强制云端解析”按钮，允许用户跳过本地加载等待。
+
+### 2. 纯前端架构 (Client-First)
+- **无构建工具**：所有页面均为原生 HTML/ES6 模块，无需 Webpack/Vite 打包，修改即生效。
+- **内存处理**：所有数据的筛选、搜索（如 `window.filterPreview`）均在浏览器内存中完成，保证极速响应。
+
+### 3. 设计系统 (Gemini UI)
+- 使用 `gemini-ui.css` 统一风格，基于 CSS Variables (`var(--gem-color-primary)`) 管理主题。
+- 关键组件（卡片、表格、按钮）实现了响应式和深色模式兼容（预留）。
+
+### 4. 模块实现概览 (Modules Summary)
+
+| 工具文件 | 核心库/技术 | 关键逻辑/算法 |
+| :--- | :--- | :--- |
+| `content-dashboard.html` | Plotly.js, XLSX | 基础数据聚合，Canvas 四象限绘图 |
+| `bandao-ops-dashboard.html` | Plotly.js | 时间序列聚合 (Time-Series Aggregation) |
+| `page-traffic-dashboard.html` | URL Parsing | 跨域处理 (Title Fetching), URL 归一化 |
+| `youmeng.html` | XLSX | 跨 Sheet 数据合并 (Reduce), 自动类型推断 |
+| `orc-log-parser.html` | DuckDB-Wasm, PyORC | 客户端 SQL 查询, Python Serverless Fallback |
+| `yiban-dashboard.html` | Fuzzy Search | 模糊字段匹配 (Fuzzy Matching), 转化率计算 |
+| `image-compress.html` | Canvas API, JSZip | 浏览器端图像压缩 (Blob Conversion) |
+
+---
+
 ## 📝 使用注意事项
 
 ### 数据安全
