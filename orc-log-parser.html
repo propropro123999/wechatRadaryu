@@ -176,50 +176,36 @@
         </div>
     </div>
 
-    <!-- DuckDB Wasm Scripts -->
-    <!-- Recommended CDN setup for DuckDB-Wasm -->
-    <script type="module">
-        import * as duckdb from 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/+esm';
-
-        // Global exports for UI logic
-        window.duckdb = duckdb;
-
-        // UI Logic
-        // Since type="module" is deferred, DOMContentLoaded might have already fired.
-        // We can check readyState or just run initAuth if body exists (which it does).
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                initAuth();
-                initDropzone();
-            });
-        } else {
+    <!-- Auth & UI Logic (Standard Script) -->
+    <script>
+        // --- Auth Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
             initAuth();
             initDropzone();
-        }
+        });
 
-        // --- Auth Logic ---
         function initAuth() {
             const savedCode = localStorage.getItem('orc_auth_code');
             if (verifyCode(savedCode)) {
                 showApp();
             }
 
-            document.getElementById('auth-btn').onclick = () => {
-                const code = document.getElementById('auth-code').value.trim();
-                if (verifyCode(code)) {
-                    localStorage.setItem('orc_auth_code', code);
-                    showApp();
-                } else {
-                    document.getElementById('auth-error').textContent = '授权码无效';
-                }
-            };
+            const btn = document.getElementById('auth-btn');
+            if (btn) {
+                btn.onclick = () => {
+                    const code = document.getElementById('auth-code').value.trim();
+                    if (verifyCode(code)) {
+                        localStorage.setItem('orc_auth_code', code);
+                        showApp();
+                    } else {
+                        document.getElementById('auth-error').textContent = '授权码无效';
+                    }
+                };
+            }
         }
 
         function verifyCode(code) {
-            // Hardcoded check against auth-codes.json structure (simplified)
-            const validCodes = [
-                'dcone2025', 'ORC-2025-A1B2', 'ORC-2025-C3D4'
-            ];
+            const validCodes = ['dcone2025', 'ORC-2025-A1B2', 'ORC-2025-C3D4'];
             return validCodes.includes(code);
         }
 
@@ -227,15 +213,97 @@
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('app').style.display = 'block';
 
-            // Initialize DuckDB when app shows
-            initDuckDB();
+            // Trigger DuckDB init if available
+            if (window.initDuckDB) {
+                window.initDuckDB();
+            } else {
+                // If module hasn't loaded yet, set a flag
+                window.appReady = true;
+            }
         }
+
+        // --- UI Interactions ---
+        // Expose global state for module to use
+        window.processedFiles = {};
+        window.activeFileId = null;
+
+        function initDropzone() {
+            const dz = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+
+            if (dz && fileInput) {
+                dz.onclick = () => fileInput.click();
+                dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('active'); };
+                dz.ondragleave = () => dz.classList.remove('active');
+                dz.ondrop = (e) => {
+                    e.preventDefault();
+                    dz.classList.remove('active');
+                    if (window.handleFiles) window.handleFiles(e.dataTransfer.files);
+                };
+
+                fileInput.onchange = (e) => {
+                    if (window.handleFiles) window.handleFiles(e.target.files);
+                }
+            }
+
+            const dlBtn = document.getElementById('download-all-btn');
+            if (dlBtn) {
+                dlBtn.onclick = () => {
+                    if (window.downloadAll) window.downloadAll();
+                }
+            }
+        }
+
+        // Global UI handlers
+        window.downloadSingle = (fileId) => { if (window._downloadSingle) window._downloadSingle(fileId); }
+        window.downloadActiveFile = () => { if (window._downloadActiveFile) window._downloadActiveFile(); }
+        window.switchFile = (fileId) => { if (window._switchFile) window._switchFile(fileId); }
+        window.togglePreview = (fileId) => { if (window._togglePreview) window._togglePreview(fileId); }
+
+        // Logger Helper
+        window.log = (msg, type = 'info') => {
+            const out = document.getElementById('console-output');
+            if (!out) return;
+            const div = document.createElement('div');
+            div.className = `log-line log-${type}`;
+            div.textContent = `> ${msg}`;
+            out.appendChild(div);
+            out.scrollTop = out.scrollHeight;
+            console.log(msg);
+        }
+
+        window.updateFileStatus = (fileId, text, type) => {
+            const icon = document.getElementById(`status-icon-${fileId}`);
+            if (icon) {
+                if (type === 'success') icon.textContent = '✅';
+                else if (type === 'error') icon.textContent = '❌';
+                else icon.textContent = '⏳';
+            }
+            // Also update list item status if exists
+            const el = document.getElementById(`status-${fileId}`);
+            if (el) {
+                el.textContent = text;
+                el.className = `status-badge ${type}`;
+            }
+        }
+    </script>
+
+    <!-- DuckDB Wasm Scripts -->
+    <!-- Recommended CDN setup for DuckDB-Wasm -->
+    <script type="module">
+        import * as duckdb from 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/+esm';
+
+        // Global exports
+        window.duckdb = duckdb;
 
         // --- DuckDB Logic ---
         let db = null;
         let conn = null;
 
-        async function initDuckDB() {
+        // Expose init function
+        window.initDuckDB = async function () {
+            if (db) return; // Already init
+
             log('Initializing DuckDB-Wasm...');
             try {
                 const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
@@ -255,6 +323,11 @@
                 log('❌ DuckDB Init Failed: ' + err.message, 'error');
                 console.error(err);
             }
+        }
+
+        // Check if we should init immediately (if auth passed before module loaded)
+        if (window.appReady) {
+            window.initDuckDB();
         }
 
         async function processFile(file, fileId) {
@@ -373,28 +446,13 @@
         }
 
         // --- Global State ---
-        const processedFiles = {};
-        let activeFileId = null;
+        // State is now managed via window.processedFiles and window.activeFileId from standard script
 
         function initDropzone() {
-            const dz = document.getElementById('dropzone');
-            const fileInput = document.getElementById('fileInput');
-
-            dz.onclick = () => fileInput.click();
-            dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('active'); };
-            dz.ondragleave = () => dz.classList.remove('active');
-            dz.ondrop = (e) => {
-                e.preventDefault();
-                dz.classList.remove('active');
-                handleFiles(e.dataTransfer.files);
-            };
-
-            fileInput.onchange = (e) => handleFiles(e.target.files);
-
-            document.getElementById('download-all-btn').onclick = downloadAll;
+            // Logic moved to standard script
         }
 
-        function handleFiles(files) {
+        window.handleFiles = function (files) {
             if (!files.length) return;
 
             document.getElementById('processing-area').style.display = 'block';
@@ -415,7 +473,7 @@
                     <span>📄 ${file.name}</span>
                     <div id="status-icon-${fileId}" style="font-size:10px;">⏳</div>
                 `;
-                btn.onclick = () => switchFile(fileId);
+                btn.onclick = () => window._switchFile(fileId);
 
                 container.appendChild(btn);
 
@@ -423,7 +481,7 @@
             });
         }
 
-        function switchFile(fileId) {
+        window._switchFile = function (fileId) {
             // Update Active State
             document.querySelectorAll('.file-tab-btn').forEach(b => {
                 b.style.borderColor = '#E2E8F0';
@@ -438,8 +496,8 @@
                 activeTab.style.color = 'var(--gem-color-accent)';
             }
 
-            activeFileId = fileId;
-            const fileData = processedFiles[fileId];
+            window.activeFileId = fileId;
+            const fileData = window.processedFiles[fileId];
 
             // Render Preview
             const previewArea = document.getElementById('main-preview-area');
@@ -467,13 +525,13 @@
             }
         }
 
-        function downloadActiveFile() {
-            if (activeFileId) downloadSingle(activeFileId);
+        window._downloadActiveFile = function () {
+            if (window.activeFileId) window._downloadSingle(window.activeFileId);
         }
 
         async function processFile(file, fileId) {
             // Initial placeholder state
-            processedFiles[fileId] = {
+            window.processedFiles[fileId] = {
                 name: file.name.replace('.orc', '.xlsx'), // Placeholder name
                 blob: null,
                 data: null,
@@ -481,8 +539,8 @@
             };
 
             // If no active file, switch to this one immediately (loading state)
-            if (!activeFileId) {
-                switchFile(fileId);
+            if (!window.activeFileId) {
+                window._switchFile(fileId);
             }
 
             if (!db) {
@@ -510,6 +568,7 @@
                 }
 
             } catch (err) {
+                // Determine if it's a "missing table" error which is expected for ORC in Wasm without extension
                 const isExpectedError = err.message.includes('Table with name') && err.message.includes('does not exist');
 
                 if (isExpectedError) {
@@ -524,14 +583,17 @@
         }
 
         function updateFileStatus(fileId, text, type) {
-            // Update Tab Status Icon
+            if (window.updateFileStatus) {
+                window.updateFileStatus(fileId, text, type);
+                return;
+            }
+            // Fallback module internal logic (if window.updateFileStatus missing)
             const icon = document.getElementById(`status-icon-${fileId}`);
             if (icon) {
                 if (type === 'success') icon.textContent = '✅';
                 else if (type === 'error') icon.textContent = '❌';
                 else icon.textContent = '⏳';
             }
-            // Add subtle indication to tab if desired
         }
 
         // ... (Keep existing fallbackToServer same structure but ensure it calls generateExcel) ...
@@ -546,7 +608,7 @@
             const blob = new Blob([wbout], { type: 'application/octet-stream' });
 
             // Save to global list
-            processedFiles[fileId] = {
+            window.processedFiles[fileId] = {
                 name: fileName.replace('.orc', '.xlsx'),
                 blob: blob,
                 data: data,
@@ -556,8 +618,8 @@
             updateFileStatus(fileId, '✅ 解析成功', 'success');
 
             // If this is the active file, re-render to show data
-            if (activeFileId === fileId) {
-                switchFile(fileId);
+            if (window.activeFileId === fileId) {
+                window._switchFile(fileId);
             }
 
             enableDownloadAll();
@@ -568,9 +630,9 @@
             btn.disabled = false;
         }
 
-        async function downloadAll() {
+        window.downloadAll = async function () {
             const zip = new JSZip();
-            Object.values(processedFiles).forEach(f => {
+            Object.values(window.processedFiles).forEach(f => {
                 zip.file(f.name, f.blob);
             });
 
@@ -582,15 +644,9 @@
             a.click();
         }
 
-        // --- New Logic for UI Enhancement ---
-        // Expose to window for HTML onclick handlers
-        window.downloadSingle = downloadSingle;
-        window.downloadActiveFile = downloadActiveFile;
-        window.switchFile = switchFile;
-        window.togglePreview = togglePreview;
-
-        function downloadSingle(fileId) {
-            const f = processedFiles[fileId];
+        // Expose implementation for standard script hooks
+        window._downloadSingle = function (fileId) {
+            const f = window.processedFiles[fileId];
             if (!f) return;
             const url = URL.createObjectURL(f.blob);
             const a = document.createElement('a');
@@ -599,13 +655,13 @@
             a.click();
         }
 
-        function togglePreview(fileId) {
+        window._togglePreview = function (fileId) {
             const el = document.getElementById(`preview-${fileId}`);
             if (el.style.display === 'none') {
                 el.style.display = 'block';
                 // Render if not already rendered
                 if (!el.dataset.rendered) {
-                    const f = processedFiles[fileId];
+                    const f = window.processedFiles[fileId];
                     if (f && f.data) {
                         renderPreviewTable(f.data, el);
                         el.dataset.rendered = 'true';
