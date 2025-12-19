@@ -81,7 +81,7 @@
       }
     },
     "orc-parser": {
-      "name": "友盟 ORC 日志解析",
+      "name": "ORC 日志解析",
       "codes": {
         "dcone2025": "自定义授权",
         "ORC-2025-A1B2": "标准授权",
