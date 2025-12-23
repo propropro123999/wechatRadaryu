@@ -280,7 +280,7 @@
                 <div>添加图片后自动生成预览</div>
             </div>
             <div class="canvas-wrapper">
-                <canvas id="canvas"></canvas>
+                <canvas id="canvas" style="display:none;"></canvas>
             </div>
         </div>
     </div>
@@ -527,6 +527,9 @@
                 });
             }
         }
+
+        // Initialize State on Load
+        renderCanvas();
 
     </script>
 </body>

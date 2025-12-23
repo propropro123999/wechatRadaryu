@@ -1,41 +1,57 @@
 /* ================================================================================
-   GEMINI-INSPIRED DESIGN SYSTEM
-   Aesthetics: Airy, Glassmorphism, Vibrant Gradients, Premium Feel
+   GEMINI-INSPIRED DESIGN SYSTEM (APPLE/GLASS EDITION)
+   Aesthetics: Frosty Glass, Vibrant Mesh Gradients, Soft Glows, Premium iOS Feel
    ================================================================================ */
 
 :root {
   /* ——— Core Palette ——— */
-  --gem-color-bg-body: #F0F4F9;
-  /* Very light cool gray, typical Gemini background */
-  --gem-color-bg-surface: #FFFFFF;
-  --gem-color-bg-surface-glass: rgba(255, 255, 255, 0.85);
+  /* Replaced flat gray with a transparent base for mesh gradients */
+  --gem-color-bg-body: #F5F7FA;
 
-  --gem-color-text-primary: #1F1F1F;
-  --gem-color-text-secondary: #444746;
-  --gem-color-text-tertiary: #767676;
+  /* Glass Surfaces */
+  --gem-color-bg-surface: rgba(255, 255, 255, 0.75);
+  /* High transparency for glass effect */
+  --gem-color-bg-surface-glass: rgba(255, 255, 255, 0.6);
+  --gem-color-border-glass: rgba(255, 255, 255, 0.8);
+
+  --gem-color-text-primary: #111827;
+  /* Darker, higher contrast */
+  --gem-color-text-secondary: #4B5563;
+  --gem-color-text-tertiary: #9CA3AF;
 
   /* ——— Brand Gradients & Accents ——— */
-  --gem-gradient-primary: linear-gradient(135deg, #4285F4, #9B72CB, #D96570);
-  /* Google-ish/Gemini gradient */
-  --gem-gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 100%);
-  --gem-gradient-subtle: linear-gradient(120deg, #E8F0FE 0%, #F3E8FD 100%);
+  /* More vivid, iOS-style gradients */
+  --gem-gradient-primary: linear-gradient(135deg, #007AFF, #5856D6, #FF2D55);
+  --gem-gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.5) 100%);
+  --gem-gradient-mesh: radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
+  /* Gentle pastel mesh for light mode */
+  --gem-bg-mesh:
+    radial-gradient(at 0% 0%, rgba(167, 243, 208, 0.3) 0, transparent 50%),
+    radial-gradient(at 50% 10%, rgba(165, 243, 252, 0.3) 0, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(224, 231, 255, 0.5) 0, transparent 50%),
+    radial-gradient(at 80% 100%, rgba(253, 186, 116, 0.2) 0, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(196, 181, 253, 0.3) 0, transparent 50%);
 
-  --gem-color-accent: #1A73E8;
-  --gem-color-accent-hover: #1557B0;
+  --gem-color-accent: #007AFF;
+  /* iOS Blue */
+  --gem-color-accent-hover: #0056B3;
 
   /* ——— Shapes & Effects ——— */
-  --gem-radius-sm: 8px;
-  --gem-radius-md: 16px;
-  --gem-radius-lg: 24px;
-  --gem-radius-xl: 32px;
+  --gem-radius-sm: 10px;
+  --gem-radius-md: 18px;
+  --gem-radius-lg: 28px;
+  /* Increased for friendlier look */
+  --gem-radius-xl: 36px;
   --gem-radius-full: 9999px;
 
-  --gem-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
-  --gem-shadow-card: 0 4px 20px rgba(0, 0, 0, 0.05);
-  --gem-shadow-floating: 0 10px 40px rgba(0, 0, 0, 0.12);
-  --gem-shadow-inner: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  /* Softer, colorful shadows (Glows) */
+  --gem-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --gem-shadow-card: 0 8px 32px rgba(31, 38, 135, 0.07);
+  --gem-shadow-floating: 0 12px 48px rgba(31, 38, 135, 0.15);
+  --gem-shadow-glass: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
 
-  --gem-font-sans: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --gem-font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', sans-serif;
+  --gem-blur-lg: blur(20px);
 }
 
 /* ——— Reset & Base ——— */
@@ -48,10 +64,15 @@ body {
   margin: 0;
   padding: 0;
   font-family: var(--gem-font-sans);
-  background-color: var(--gem-color-bg-body);
+  background-color: #F8FAFC;
+  /* Mesh Gradient Background */
+  background-image: var(--gem-bg-mesh);
+  background-attachment: fixed;
+  background-size: 100% 100%;
   color: var(--gem-color-text-primary);
-  line-height: 1.5;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }
 
 h1,
@@ -60,21 +81,24 @@ h3,
 h4,
 h5 {
   margin: 0;
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  /* Bolder headings */
+  letter-spacing: -0.02em;
+  /* Tighter tracking */
 }
 
 h1 {
-  font-size: 32px;
+  font-size: 36px;
   line-height: 1.2;
   background: var(--gem-gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
+  margin-bottom: 24px;
 }
 
 h2 {
-  font-size: 24px;
+  font-size: 26px;
   margin-bottom: 16px;
   color: var(--gem-color-text-primary);
 }
@@ -82,27 +106,29 @@ h2 {
 p {
   margin: 0 0 16px;
   color: var(--gem-color-text-secondary);
+  font-size: 15px;
+  /* Slightly larger for readability */
 }
 
 a {
   text-decoration: none;
   color: inherit;
-  transition: opacity 0.2s;
+  transition: all 0.2s;
 }
 
 a:hover {
-  opacity: 0.8;
+  text-decoration: none;
 }
 
 
 /* ——— Utility Classes ——— */
 .container {
-  max-width: 1200px;
+  max-width: 1280px;
+  /* Wider container */
   margin: 0 auto;
-  padding: 40px 24px;
+  padding: 40px 32px;
 }
 
-/* Enhanced Flex Utilities */
 .flex {
   display: flex;
 }
@@ -119,7 +145,6 @@ a:hover {
   flex-direction: column;
 }
 
-/* Removed global flex-wrap to satisfy "prefer previous layout" */
 .gap-2 {
   gap: 8px;
 }
@@ -147,7 +172,7 @@ a:hover {
 }
 
 .grid-2 {
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
 /* ——— Components ——— */
@@ -155,59 +180,42 @@ a:hover {
 /* Glass Card */
 .gem-card {
   background: var(--gem-color-bg-surface);
+  backdrop-filter: var(--gem-blur-lg);
+  -webkit-backdrop-filter: var(--gem-blur-lg);
   border-radius: var(--gem-radius-lg);
-  padding: 24px;
+  padding: 32px;
   box-shadow: var(--gem-shadow-card);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
   overflow: hidden;
-  /* Prevent content overflow */
-  word-wrap: break-word;
 }
 
 .gem-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px) scale(1.01);
   box-shadow: var(--gem-shadow-floating);
-}
-
-/* Add a subtle shine effect on hover */
-.gem-card::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(120deg, transparent 40%, rgba(255, 255, 255, 0.4) 50%, transparent 60%);
-  transform: translateX(-100%);
-  transition: transform 0.6s;
-  pointer-events: none;
-}
-
-.gem-card:hover::after {
-  transform: translateX(100%);
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.85);
 }
 
 /* Inputs */
 .gem-input {
   width: 100%;
-  padding: 12px 16px;
+  padding: 14px 18px;
   border-radius: var(--gem-radius-md);
-  border: 1px solid #E0E3E7;
-  background: #EFF3F8;
-  font-size: 14px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.5);
+  /* Semi-transparent */
+  font-size: 15px;
   transition: all 0.2s;
   color: var(--gem-color-text-primary);
-  box-sizing: border-box;
-  /* Ensure padding doesn't affect width */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02), 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 
 .gem-input:focus {
   background: #FFFFFF;
-  border-color: #4285F4;
-  /* Google Blue */
-  box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.15);
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.02);
+  outline: none;
 }
 
 /* Buttons */
@@ -215,57 +223,65 @@ a:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 24px;
+  padding: 12px 28px;
   border-radius: var(--gem-radius-full);
-  font-weight: 500;
-  font-size: 14px;
+  font-weight: 600;
+  font-size: 15px;
   cursor: pointer;
   border: none;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  /* Prevent text wrapping inside buttons */
-  flex-shrink: 0;
-  /* Prevent button shrinking */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.01em;
+}
+
+.gem-btn:active {
+  transform: scale(0.96);
 }
 
 .gem-btn-primary {
   background: var(--gem-gradient-primary);
+  background-size: 200% auto;
   color: white;
-  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+  box-shadow: 0 4px 14px rgba(0, 122, 255, 0.3);
 }
 
 .gem-btn-primary:hover {
-  filter: brightness(1.05);
-  box-shadow: 0 6px 16px rgba(66, 133, 244, 0.4);
+  background-position: right center;
+  box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
   transform: translateY(-1px);
 }
 
 .gem-btn-secondary {
-  background: #FFFFFF;
-  color: var(--gem-color-accent);
-  border: 1px solid #E0E3E7;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  color: var(--gem-color-text-primary);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
 .gem-btn-secondary:hover {
-  background: #F8FAFC;
-  border-color: #D1D5DB;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* ——— Unified Navbar ——— */
+/* ——— Floating Glass Navbar ——— */
 .gem-navbar {
   position: sticky;
-  top: 0;
+  top: 16px;
+  /* Floating look */
+  margin: 0 16px;
+  border-radius: 20px;
+  /* Pill shape */
   z-index: 1000;
-  height: 64px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  height: 70px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  padding: 0 32px;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
 }
 
 .gem-navbar-brand {
@@ -274,37 +290,30 @@ a:hover {
   gap: 12px;
   text-decoration: none;
   color: var(--gem-color-text-primary);
-  font-weight: 600;
-  font-size: 18px;
-  transition: opacity 0.2s;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.02em;
 }
 
 .gem-navbar-brand:hover {
   opacity: 0.8;
 }
 
-.gem-navbar-icon {
-  font-size: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .gem-navbar-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
-/* ——— App Switcher (Dropdown) ——— */
+/* ——— App Switcher ——— */
 .gem-app-switcher {
   position: relative;
   display: inline-block;
 }
 
 .gem-app-switcher-btn {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -318,39 +327,42 @@ a:hover {
 }
 
 .gem-app-switcher-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.04);
   color: var(--gem-color-accent);
 }
 
 .gem-app-switcher-menu {
   position: absolute;
-  top: 100%;
+  top: 120%;
+  /* Adjusted for floating nav */
   right: 0;
-  margin-top: 8px;
-  width: 280px;
-  background: #FFFFFF;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  padding: 16px;
+  width: 320px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 24px;
   display: none;
-  /* Hidden by default */
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  opacity: 0;
-  transform: translateY(-10px);
-  animation: fadeInDropdown 0.2s forwards;
+  gap: 16px;
+  animation: fadeInDropdown 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Ensure z-index is high enough */
+/* Fix visibility on hover */
 .gem-app-switcher:hover .gem-app-switcher-menu {
   display: grid;
 }
 
 @keyframes fadeInDropdown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -359,45 +371,44 @@ a:hover {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-align: center;
   text-decoration: none;
-  padding: 12px 4px;
-  border-radius: 12px;
+  padding: 12px 8px;
+  border-radius: 16px;
   color: var(--gem-color-text-secondary);
   transition: all 0.2s;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
 .gem-app-item:hover {
-  background: #F0F4F9;
-  color: var(--gem-color-accent);
-  transform: scale(1.05);
+  background: rgba(0, 122, 255, 0.08);
+  /* Light blue tint */
+  color: #007AFF;
+  transform: translateY(-2px);
 }
 
 .gem-app-icon {
-  font-size: 24px;
-  margin-bottom: 6px;
+  font-size: 28px;
+  margin-bottom: 8px;
 }
 
 /* ——— Tags/Chips ——— */
 .gem-chip {
   display: inline-flex;
-  padding: 4px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  background: #EFF3F8;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.04);
   color: var(--gem-color-text-secondary);
-  border: 1px solid transparent;
 }
 
 .gem-chip-accent {
-  background: #E8F0FE;
-  color: #1967D2;
+  background: rgba(0, 122, 255, 0.1);
+  color: #007AFF;
 }
 
-/* Skeleton Loading */
+/* ——— Helpers ——— */
 .gem-skeleton {
   background: linear-gradient(90deg, #F0F4F9 25%, #E5E9EE 50%, #F0F4F9 75%);
   background-size: 200% 100%;
@@ -415,21 +426,20 @@ a:hover {
   }
 }
 
-/* ——— Animations ——— */
+.animate-fade-in {
+  animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
 
   to {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.animate-fade-in {
-  animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .delay-1 {
@@ -444,41 +454,56 @@ a:hover {
   animation-delay: 0.3s;
 }
 
-/* Table Styles for Dashboards */
+/* Table Styles */
 .gem-table {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  /* Spacing for cards look */
+  font-size: 15px;
 }
 
 .gem-table th {
   text-align: left;
-  padding: 12px 16px;
-  color: var(--gem-color-text-secondary);
+  padding: 16px;
+  color: #9CA3AF;
   font-weight: 600;
-  border-bottom: 1px solid #E0E3E7;
-  white-space: nowrap;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  border: none;
 }
 
 .gem-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #E0E3E7;
+  padding: 16px;
+  background: white;
+  border-top: 1px solid rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.02);
   color: var(--gem-color-text-primary);
-  white-space: nowrap;
 }
 
-.gem-table tr:last-child td {
-  border-bottom: none;
+.gem-table tr td:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  border-left: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.gem-table tr td:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  border-right: 1px solid rgba(0, 0, 0, 0.02);
 }
 
 .gem-table tr:hover td {
   background-color: #F8FAFC;
+  transform: scale(1.005);
+  transition: transform 0.2s;
 }
 
-/* Custom Scrollbar */
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -486,10 +511,12 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D1D5DB;
-  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #9CA3AF;
+  background-color: rgba(0, 0, 0, 0.25);
 }
