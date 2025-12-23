@@ -43,11 +43,11 @@
         .preview-panel {
             background: #F1F5F9;
             border-radius: 16px;
-            padding: 40px;
+            padding: 24px;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            overflow: auto;
+            align-items: center;
+            overflow: hidden;
             border: 2px dashed #CBD5E1;
             min-height: 500px;
         }
@@ -56,12 +56,17 @@
             box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.25);
             background: white;
             line-height: 0;
-            /* Remove gap */
             max-width: 100%;
+            max-height: 80vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        #previewCanvas {
+        #canvas {
             max-width: 100%;
+            max-height: 80vh;
+            width: auto;
             height: auto;
             display: block;
         }
