@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>长图拼接工具 - ICviews Tools</title>
+
+    <!-- Design System -->
+    <link rel="stylesheet" href="gemini-ui.css" />
+    <link rel="stylesheet" href="design-system-modern.css" />
+    <link rel="stylesheet" href="tool-pages-interactions.css" />
+
+    <!-- SortableJS for Drag and Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <style>
+        /* Specific Layout */
+        .app-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 24px;
+            padding: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+            min-height: calc(100vh - 80px);
+            /* nav height */
+        }
+
+        /* Left Sidebar: Controls */
+        .controls-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #E2E8F0;
+            height: fit-content;
+            position: sticky;
+            top: 24px;
+        }
+
+        /* Right Side: Preview */
+        .preview-panel {
+            background: #F1F5F9;
+            border-radius: 16px;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow: auto;
+            border: 2px dashed #CBD5E1;
+            min-height: 500px;
+        }
+
+        .canvas-wrapper {
+            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.25);
+            background: white;
+            line-height: 0;
+            /* Remove gap */
+            max-width: 100%;
+        }
+
+        #previewCanvas {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Dropzone Styles */
+        .dropzone {
+            border: 2px dashed #CBD5E1;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            background: #F8FAFC;
+            transition: all 0.2s;
+            cursor: pointer;
+            margin-bottom: 24px;
+        }
+
+        .dropzone:hover,
+        .dropzone.active {
+            border-color: var(--gem-color-accent);
+            background: #EFF6FF;
+        }
+
+        /* Image List Styles */
+        .image-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 24px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .image-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #E2E8F0;
+            cursor: grab;
+            transition: box-shadow 0.2s;
+        }
+
+        .image-item:active {
+            cursor: grabbing;
+        }
+
+        .image-item.sortable-ghost {
+            opacity: 0.4;
+            background: #EFF6FF;
+            border-color: var(--gem-color-accent);
+        }
+
+        .img-thumb {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 4px;
+            background: #eee;
+        }
+
+        .img-info {
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .img-name {
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #334155;
+        }
+
+        .img-meta {
+            font-size: 11px;
+            color: #64748B;
+        }
+
+        .img-remove {
+            color: #94A3B8;
+            cursor: pointer;
+            padding: 4px;
+            font-size: 16px;
+        }
+
+        .img-remove:hover {
+            color: #EF4444;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .app-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-panel {
+                position: static;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Unified Navbar -->
+    <nav class="gem-navbar">
+        <a href="#" class="gem-navbar-brand">
+            <span class="gem-navbar-icon">🖼️</span>
+            <span>长图拼接工具</span>
+        </a>
+
+        <div class="gem-navbar-actions">
+            <a href="index.html" class="gem-btn gem-btn-secondary"
+                style="border-radius: 8px; padding: 6px 16px; font-size: 13px;">
+                🏠 返回首页
+            </a>
+        </div>
+    </nav>
+
+    <div class="app-layout">
+        <!-- Left: Controls -->
+        <div class="controls-panel">
+
+            <!-- Upload Area -->
+            <div class="dropzone" id="dropzone">
+                <div style="font-size:32px;margin-bottom:8px;">📂</div>
+                <div style="font-size:14px;font-weight:600;color:#1E293B;">点击或拖拽添加图片</div>
+                <div style="font-size:12px;color:#64748B;">支持 JPG, PNG, WEBP</div>
+                <input type="file" id="fileInput" multiple accept="image/*" style="display:none;">
+            </div>
+
+            <!-- Settings -->
+            <div class="form-group">
+                <label class="form-label">拼接方向</label>
+                <select id="direction" class="gem-input">
+                    <option value="vertical">⬇️ 竖向长图 (公众号/手机)</option>
+                    <option value="horizontal">➡️ 横向拼接 (电脑/对比)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" style="display:flex;justify-content:space-between;">
+                    <span>间距 (Gap)</span>
+                    <span id="gapVal" style="color:var(--gem-color-accent);">0px</span>
+                </label>
+                <input type="range" id="gap" min="0" max="100" value="0"
+                    style="width:100%; accent-color:var(--gem-color-accent);">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">背景颜色</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="color" id="bgColor" value="#ffffff"
+                        style="height:38px; width:50px; padding:0; border:none; background:none; cursor:pointer;">
+                    <input type="text" id="bgColorText" value="#ffffff" class="gem-input"
+                        style="flex-grow:1; font-family:monospace;">
+                </div>
+            </div>
+
+            <hr style="border:0; border-top:1px solid #E2E8F0; margin:16px 0;">
+
+            <!-- Sortable List -->
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <label class="form-label">图片列表 (拖拽排序)</label>
+                <button onclick="clearAll()"
+                    style="font-size:12px; color:#EF4444; background:none; border:none; cursor:pointer;">清空</button>
+            </div>
+            <div id="imageList" class="image-list">
+                <!-- JS will populate this -->
+            </div>
+
+            <div class="btn-group">
+                <button id="downloadBtn" class="gem-btn gem-btn-primary w-full" disabled>
+                    ⬇️ 下载图片
+                </button>
+            </div>
+        </div>
+
+        <!-- Right: Preview -->
+        <div class="preview-panel" id="previewPanel">
+            <div id="emptyState" style="text-align:center; color:#94A3B8; margin-top:100px;">
+                <div style="font-size:48px; margin-bottom:16px; opacity:0.5;">🎨</div>
+                <div>添加图片后自动生成预览</div>
+            </div>
+            <div class="canvas-wrapper">
+                <canvas id="canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State ---
+        let images = []; // Array of { id, file, element, thumbUrl, width, height, name }
+
+        // --- Elements ---
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const imageList = document.getElementById('imageList');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const emptyState = document.getElementById('emptyState');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // Controls
+        const directionSelect = document.getElementById('direction');
+        const gapInput = document.getElementById('gap');
+        const gapVal = document.getElementById('gapVal');
+        const bgColorInput = document.getElementById('bgColor');
+        const bgColorText = document.getElementById('bgColorText');
+
+        // --- Init Sortable ---
+        new Sortable(imageList, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: () => {
+                // Reorder images array based on DOM order
+                const newOrderIds = Array.from(imageList.children).map(el => el.dataset.id);
+                const newImages = [];
+                newOrderIds.forEach(id => {
+                    const img = images.find(i => i.id === id);
+                    if (img) newImages.push(img);
+                });
+                images = newImages;
+                renderCanvas();
+            }
+        });
+
+        // --- Event Listeners ---
+
+        // Upload Interactions
+        dropzone.onclick = () => fileInput.click();
+        dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add('active'); };
+        dropzone.ondragleave = () => dropzone.classList.remove('active');
+        dropzone.ondrop = (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('active');
+            handleFiles(e.dataTransfer.files);
+        };
+        fileInput.onchange = (e) => handleFiles(e.target.files);
+
+        // Settings Interactions
+        directionSelect.onchange = renderCanvas;
+
+        gapInput.oninput = () => {
+            gapVal.textContent = gapInput.value + 'px';
+            renderCanvas();
+        };
+
+        bgColorInput.oninput = (e) => {
+            bgColorText.value = e.target.value;
+            renderCanvas();
+        };
+        bgColorText.oninput = (e) => {
+            bgColorInput.value = e.target.value;
+            renderCanvas();
+        };
+
+        downloadBtn.onclick = () => {
+            const link = document.createElement('a');
+            link.download = `stitched_image_${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        };
+
+        // --- Core Logic ---
+
+        async function handleFiles(fileList) {
+            for (const file of fileList) {
+                if (!file.type.startsWith('image/')) continue;
+
+                await addImage(file);
+            }
+            renderCanvas();
+        }
+
+        function addImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const id = 'img_' + Date.now() + Math.random().toString(36).substr(2, 9);
+                        const item = {
+                            id,
+                            file,
+                            element: img,
+                            width: img.width,
+                            height: img.height,
+                            name: file.name
+                        };
+                        images.push(item);
+
+                        // Add to UI List
+                        addListItem(item, e.target.result);
+                        resolve();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function addListItem(item, thumbUrl) {
+            const div = document.createElement('div');
+            div.className = 'image-item';
+            div.dataset.id = item.id;
+            div.innerHTML = `
+          <div style="cursor:grab; color:#CBD5E1;">☰</div>
+          <img src="${thumbUrl}" class="img-thumb">
+          <div class="img-info">
+             <div class="img-name" title="${item.name}">${item.name}</div>
+             <div class="img-meta">${item.width} x ${item.height}</div>
+          </div>
+          <div class="img-remove" onclick="removeImage('${item.id}')">✕</div>
+       `;
+            imageList.appendChild(div);
+        }
+
+        window.removeImage = (id) => {
+            images = images.filter(i => i.id !== id);
+            const el = document.querySelector(`.image-item[data-id="${id}"]`);
+            if (el) el.remove();
+            renderCanvas();
+        };
+
+        window.clearAll = () => {
+            images = [];
+            imageList.innerHTML = '';
+            renderCanvas();
+        }
+
+        function renderCanvas() {
+            if (images.length === 0) {
+                canvas.style.display = 'none';
+                emptyState.style.display = 'block';
+                downloadBtn.disabled = true;
+                return;
+            }
+
+            canvas.style.display = 'block';
+            emptyState.style.display = 'none';
+            downloadBtn.disabled = false;
+
+            const dir = directionSelect.value; // 'vertical' or 'horizontal'
+            const gap = parseInt(gapInput.value) || 0;
+
+            let totalW = 0;
+            let totalH = 0;
+
+            // 1. Calculate Canvas Dimensions
+            if (dir === 'vertical') {
+                // Width = Max width of all images
+                totalW = Math.max(...images.map(i => i.width));
+                // Height = Sum of heights + gaps
+                totalH = images.reduce((sum, i) => sum + i.height, 0) + (images.length - 1) * gap;
+            } else {
+                // Height = Max height of all images
+                totalH = Math.max(...images.map(i => i.height));
+                // Width = Sum of widths + gaps
+                totalW = images.reduce((sum, i) => sum + i.width, 0) + (images.length - 1) * gap;
+            }
+
+            // Set Canvas Size
+            canvas.width = totalW;
+            canvas.height = totalH;
+
+            // 2. Clear & Fill Background
+            ctx.fillStyle = bgColorInput.value;
+            ctx.fillRect(0, 0, totalW, totalH);
+
+            // 3. Draw Images
+            let currentX = 0;
+            let currentY = 0;
+
+            images.forEach((img, idx) => {
+                if (dir === 'vertical') {
+                    // Center horizontally? Optional feature, currently align left/stretch if needed?
+                    // Let's just draw at 0,0 for now. Advanced: Center if smaller than max width.
+                    // Impl: Center align
+                    const x = (totalW - img.width) / 2;
+                    ctx.drawImage(img.element, x, currentY);
+                    currentY += img.height + gap;
+                } else {
+                    // Center vertically
+                    const y = (totalH - img.height) / 2;
+                    ctx.drawImage(img.element, currentX, y);
+                    currentX += img.width + gap;
+                }
+            });
+        }
+
+    </script>
+</body>
+
+</html>
