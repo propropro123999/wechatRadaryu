@@ -221,7 +221,13 @@
                 <select id="direction" class="gem-input">
                     <option value="vertical">⬇️ 竖向长图 (公众号/手机)</option>
                     <option value="horizontal">➡️ 横向拼接 (电脑/对比)</option>
+                    <option value="grid">▦ 网格拼接 (2x2, 3x3...)</option>
                 </select>
+            </div>
+
+            <div class="form-group" id="colGroup" style="display:none;">
+                <label class="form-label">每列图片数</label>
+                <input type="number" id="colCount" class="gem-input" value="2" min="1" max="10">
             </div>
 
             <div class="form-group">
@@ -289,6 +295,8 @@
 
         // Controls
         const directionSelect = document.getElementById('direction');
+        const colGroup = document.getElementById('colGroup');
+        const colCountInput = document.getElementById('colCount');
         const gapInput = document.getElementById('gap');
         const gapVal = document.getElementById('gapVal');
         const bgColorInput = document.getElementById('bgColor');
@@ -325,7 +333,16 @@
         fileInput.onchange = (e) => handleFiles(e.target.files);
 
         // Settings Interactions
-        directionSelect.onchange = renderCanvas;
+        directionSelect.onchange = () => {
+            if (directionSelect.value === 'grid') {
+                colGroup.style.display = 'block';
+            } else {
+                colGroup.style.display = 'none';
+            }
+            renderCanvas();
+        };
+
+        colCountInput.onchange = renderCanvas;
 
         gapInput.oninput = () => {
             gapVal.textContent = gapInput.value + 'px';
@@ -427,52 +444,83 @@
             emptyState.style.display = 'none';
             downloadBtn.disabled = false;
 
-            const dir = directionSelect.value; // 'vertical' or 'horizontal'
+            const dir = directionSelect.value; // 'vertical', 'horizontal', 'grid'
             const gap = parseInt(gapInput.value) || 0;
 
             let totalW = 0;
             let totalH = 0;
 
-            // 1. Calculate Canvas Dimensions
-            if (dir === 'vertical') {
+            if (dir === 'grid') {
+                const cols = parseInt(colCountInput.value) || 2;
+                // Calculate Cell Dimensions (Max Width and Max Height of all images)
+                // This ensures all grid cells are uniform size
+                const cellW = Math.max(...images.map(i => i.width));
+                const cellH = Math.max(...images.map(i => i.height));
+
+                const rows = Math.ceil(images.length / cols);
+
+                totalW = cols * cellW + (cols - 1) * gap;
+                totalH = rows * cellH + (rows - 1) * gap;
+
+                // Set Canvas Size
+                canvas.width = totalW;
+                canvas.height = totalH;
+
+                // Fill Background
+                ctx.fillStyle = bgColorInput.value;
+                ctx.fillRect(0, 0, totalW, totalH);
+
+                // Draw Grid
+                images.forEach((img, idx) => {
+                    const r = Math.floor(idx / cols);
+                    const c = idx % cols;
+
+                    const x = c * (cellW + gap);
+                    const y = r * (cellH + gap);
+
+                    // Center image in cell
+                    const drawX = x + (cellW - img.width) / 2;
+                    const drawY = y + (cellH - img.height) / 2;
+
+                    ctx.drawImage(img.element, drawX, drawY);
+                });
+
+            } else if (dir === 'vertical') {
                 // Width = Max width of all images
                 totalW = Math.max(...images.map(i => i.width));
                 // Height = Sum of heights + gaps
                 totalH = images.reduce((sum, i) => sum + i.height, 0) + (images.length - 1) * gap;
-            } else {
+
+                canvas.width = totalW;
+                canvas.height = totalH;
+                ctx.fillStyle = bgColorInput.value;
+                ctx.fillRect(0, 0, totalW, totalH);
+
+                let currentY = 0;
+                images.forEach((img) => {
+                    const x = (totalW - img.width) / 2;
+                    ctx.drawImage(img.element, x, currentY);
+                    currentY += img.height + gap;
+                });
+
+            } else { // horizontal
                 // Height = Max height of all images
                 totalH = Math.max(...images.map(i => i.height));
                 // Width = Sum of widths + gaps
                 totalW = images.reduce((sum, i) => sum + i.width, 0) + (images.length - 1) * gap;
-            }
 
-            // Set Canvas Size
-            canvas.width = totalW;
-            canvas.height = totalH;
+                canvas.width = totalW;
+                canvas.height = totalH;
+                ctx.fillStyle = bgColorInput.value;
+                ctx.fillRect(0, 0, totalW, totalH);
 
-            // 2. Clear & Fill Background
-            ctx.fillStyle = bgColorInput.value;
-            ctx.fillRect(0, 0, totalW, totalH);
-
-            // 3. Draw Images
-            let currentX = 0;
-            let currentY = 0;
-
-            images.forEach((img, idx) => {
-                if (dir === 'vertical') {
-                    // Center horizontally? Optional feature, currently align left/stretch if needed?
-                    // Let's just draw at 0,0 for now. Advanced: Center if smaller than max width.
-                    // Impl: Center align
-                    const x = (totalW - img.width) / 2;
-                    ctx.drawImage(img.element, x, currentY);
-                    currentY += img.height + gap;
-                } else {
-                    // Center vertically
+                let currentX = 0;
+                images.forEach((img) => {
                     const y = (totalH - img.height) / 2;
                     ctx.drawImage(img.element, currentX, y);
                     currentX += img.width + gap;
-                }
-            });
+                });
+            }
         }
 
     </script>
