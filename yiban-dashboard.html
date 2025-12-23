@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -20,6 +21,7 @@
       z-index: 9999;
       backdrop-filter: blur(8px);
     }
+
     .auth-card {
       width: 360px;
       max-width: 90vw;
@@ -29,17 +31,20 @@
       border: 1px solid #e5e7eb;
       box-shadow: 0 16px 48px rgba(15, 23, 42, 0.12);
     }
+
     .auth-title {
       font-size: 18px;
       font-weight: 700;
       margin-bottom: 4px;
       color: #0f172a;
     }
+
     .auth-subtitle {
       font-size: 12px;
       color: #475569;
       margin-bottom: 16px;
     }
+
     .auth-label {
       font-size: 12px;
       color: #475569;
@@ -47,6 +52,7 @@
       display: block;
       font-weight: 600;
     }
+
     .auth-input {
       width: 100%;
       padding: 10px 12px;
@@ -60,11 +66,13 @@
       box-sizing: border-box;
       transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s ease;
     }
+
     .auth-input:focus {
       border-color: #bfdbfe;
       box-shadow: 0 0 0 3px rgba(191, 219, 254, 0.55);
       transform: translateY(-1px);
     }
+
     .auth-btn {
       width: 100%;
       border: none;
@@ -78,25 +86,42 @@
       box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
       transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
     }
+
     .auth-btn:hover {
       transform: translateY(-1px);
       box-shadow: 0 14px 36px rgba(37, 99, 235, 0.32);
       filter: brightness(1.02);
     }
+
     .auth-error {
       margin-top: 10px;
       font-size: 11px;
       color: #dc2626;
       min-height: 16px;
     }
+
     .auth-card.shake {
       animation: shake 0.3s ease-in-out;
     }
+
     @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-6px); }
-      50% { transform: translateX(6px); }
-      75% { transform: translateX(-3px); }
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-6px);
+      }
+
+      50% {
+        transform: translateX(6px);
+      }
+
+      75% {
+        transform: translateX(-3px);
+      }
     }
 
     /* ===== 页面布局样式 ===== */
@@ -209,7 +234,8 @@
       font-weight: var(--font-weight-semibold);
     }
 
-    #loading, #error {
+    #loading,
+    #error {
       padding: var(--space-lg) var(--space-2xl);
       margin-bottom: var(--space-2xl);
       border-radius: var(--radius-lg);
@@ -400,6 +426,7 @@
     }
   </style>
 </head>
+
 <body>
   <!-- 授权层 -->
   <div id="auth-screen">
@@ -408,13 +435,7 @@
       <div class="auth-subtitle">请输入授权码访问本工具</div>
 
       <label class="auth-label" for="auth-code">授权码</label>
-      <input
-        id="auth-code"
-        class="auth-input"
-        type="text"
-        placeholder="例如：YB-2025-A1B2"
-        autocomplete="off"
-      />
+      <input id="auth-code" class="auth-input" type="text" placeholder="例如：YB-2025-A1B2" autocomplete="off" />
 
       <button class="auth-btn" id="auth-btn">确认进入</button>
 
@@ -436,6 +457,7 @@
           选择 Excel 文件
           <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" />
         </label>
+        <a href="image-stitch.html" class="topbar-home" style="margin-right:8px;">🖼️ 长图拼接</a>
         <a href="index.html" class="topbar-home">← 返回首页</a>
       </div>
     </div>
@@ -527,7 +549,7 @@
 
       <!-- 四、核心指标 TOP 5 分析 -->
       <h2>四、核心指标 TOP 5 分析</h2>
-      
+
       <div class="chart-block">
         <div class="chart-title">阅读量 TOP 5</div>
         <div class="chart-subtitle">反映整体的内容阅读结果数据</div>
@@ -736,8 +758,8 @@
         console.warn("⚠️ 朋友圈打开率字段未匹配，尝试在所有字段中查找...");
         const possibleCol = allCols.find(col => {
           const colStr = String(col);
-          return (colStr.includes("朋友圈") && colStr.includes("打")) || 
-                 (colStr.includes("朋友圈") && (colStr.includes("打开") || colStr.includes("打开率")));
+          return (colStr.includes("朋友圈") && colStr.includes("打")) ||
+            (colStr.includes("朋友圈") && (colStr.includes("打开") || colStr.includes("打开率")));
         });
         if (possibleCol) {
           console.log("找到可能的字段:", possibleCol);
@@ -765,7 +787,7 @@
           officialAccount: num(row[colMap.officialAccount]),
           readingGroup: num(row[colMap.readingGroup]),
           moments: num(row[colMap.moments]),
-          look: (function() {
+          look: (function () {
             if (!colMap.look) {
               if (rows.indexOf(row) === 0) {
                 console.warn("⚠️ 看一看字段仍未匹配");
@@ -783,7 +805,7 @@
             }
             return parsedValue;
           })(),
-          search: (function() {
+          search: (function () {
             const rawValue = colMap.search ? row[colMap.search] : null;
             const parsedValue = num(rawValue);
             if (rows.indexOf(row) === 0) {
@@ -795,7 +817,7 @@
             }
             return parsedValue;
           })(),
-          follows: (function() {
+          follows: (function () {
             const rawValue = colMap.follows ? row[colMap.follows] : null;
             const parsedValue = num(rawValue);
             // 调试第一条数据
@@ -816,7 +838,7 @@
           likes: num(row[colMap.likes]),
           dislikes: num(row[colMap.dislikes]),
           tips: num(row[colMap.tips]),
-          openRate: (function() {
+          openRate: (function () {
             const rawValue = colMap.openRate ? row[colMap.openRate] : null;
             const parsedValue = pct(rawValue);
             if (rows.indexOf(row) === 0) {
@@ -828,7 +850,7 @@
             }
             return parsedValue;
           })(),
-          shareRate: (function() {
+          shareRate: (function () {
             const rawValue = colMap.shareRate ? row[colMap.shareRate] : null;
             const parsedValue = pct(rawValue);
             if (rows.indexOf(row) === 0) {
@@ -845,7 +867,7 @@
           interactionRate: pct(row[colMap.interactionRate]),
           comments: num(row[colMap.comments]),
           // 朋友圈打开率：优先使用表头字段，如果没有则计算
-          momentsOpenRate: (function() {
+          momentsOpenRate: (function () {
             // 如果有现成的字段，直接使用
             if (colMap.momentsOpenRate) {
               const rawValue = row[colMap.momentsOpenRate];
@@ -879,7 +901,7 @@
             return rate;
           })(),
           // 计算留言率 = 留言数 / 阅读人数 * 100
-          commentRate: (function() {
+          commentRate: (function () {
             const readers = num(row[colMap.readers]);
             return (readers > 0 && colMap.comments) ? (num(row[colMap.comments]) / readers * 100) : 0;
           })(),
@@ -912,13 +934,13 @@
       renderTopLikes(data);
       renderTopShare(data);
       renderOpenRate(data);
-      
+
       // 调试：输出数据样本
       if (data.length > 0) {
         console.log("数据样本（第一条）:", data[0]);
         console.log("数据总数:", data.length);
       }
-      
+
       renderTop5Tables(data);
       renderDetailTable(data);
     }
@@ -1224,8 +1246,8 @@
         hasData: data.filter(item => item.momentsOpenRate > 0).length,
         maxValue: data.length > 0 ? Math.max(...data.map(item => item.momentsOpenRate)) : 0,
         allValues: data.map(item => item.momentsOpenRate).slice(0, 10),  // 显示前10条的值
-        sampleValues: data.slice(0, 5).map(item => ({ 
-          title: item.title, 
+        sampleValues: data.slice(0, 5).map(item => ({
+          title: item.title,
           momentsOpenRate: item.momentsOpenRate,
           moments: item.moments,
           readers: item.readers
@@ -1535,4 +1557,5 @@
     })();
   </script>
 </body>
+
 </html>
