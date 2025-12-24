@@ -127,6 +127,32 @@
 
 ---
 
+### 5.5. PDF 压缩 (`pdf-compress.html`) ⭐ 新增
+
+**功能**：浏览器端实时压缩 PDF 文件
+
+**支持特性**：
+- 📄 文件预览：分页显示，支持前后翻页
+- 🎛️ 灵活参数：
+  - 图片质量滑块（10%-100%）
+  - 最大宽度设置（600-2560px）
+  - 三档压缩强度（快速/均衡/最小）
+- 🚀 后台处理：使用 Web Worker 压缩，不卡 UI
+- 📥 即时下载：压缩完成后一键下载
+- ⚡ 无需上传：所有处理完全本地进行
+
+**压缩原理**：
+- 智能降低图片分辨率与 JPEG 质量
+- 移除 PDF 元数据（可选）
+- 保留文本和矢量内容的清晰度
+- 通常能达到 40-70% 的压缩率
+
+**数据来源**：本地上传 PDF 文件
+
+**适用场景**：减小 PDF 文件体积、邮件附件优化、存储空间优化
+
+---
+
 ### 6. 壹伴数据分析 (`yiban-dashboard.html`) ⭐ 新增
 
 **功能**：分析壹伴插件导出的 Excel 表格数据
@@ -235,8 +261,10 @@
 - **前端框架**：纯 HTML/CSS/JavaScript（无框架依赖）
 - **图表库**：Plotly.js
 - **Excel 解析**：SheetJS (xlsx.js)
+- **PDF 处理**：pdf-lib（读写 PDF）、PDF.js（预览）
 - **图片处理**：Canvas API
 - **压缩工具**：JSZip
+- **并发处理**：Web Workers（后台压缩）
 
 ---
 
@@ -268,6 +296,7 @@
 | `orc-log-parser.html` | DuckDB-Wasm, PyORC | 客户端 SQL 查询, Python Serverless Fallback |
 | `yiban-dashboard.html` | Fuzzy Search | 模糊字段匹配 (Fuzzy Matching), 转化率计算 |
 | `image-compress.html` | Canvas API, JSZip | 浏览器端图像压缩 (Blob Conversion) |
+| `pdf-compress.html` | pdf-lib, PDF.js, Web Worker | PDF 读写，分页预览，后台压缩处理 |
 
 ---
 
@@ -307,12 +336,18 @@
 wechatRadaryu/
 ├── index.html                    # 主入口页面
 ├── auth-codes.json              # 授权码配置文件
-├── content-dashboard.html      # 内容数据分析工具
+├── content-dashboard.html       # 内容数据分析工具
 ├── bandao-ops-dashboard.html    # 专栏/帖子工具
 ├── page-traffic-dashboard.html  # 页面流量分析工具
 ├── youmeng.html                 # 友盟多表流量工具
 ├── yiban-dashboard.html         # 壹伴数据分析工具
 ├── image-compress.html          # 图片压缩工具
+├── pdf-compress.html            # PDF 压缩工具
+├── article-formatter.html       # 文章排版工具
+├── orc-log-parser.html          # ORC 日志解析
+├── image-stitch.html            # 长图拼接工具
+├── js/
+│   └── pdf-compress-worker.js   # PDF 压缩 Web Worker
 ├── wechat-export-location.png   # 使用说明图片
 └── README.md                    # 本文件
 ```
@@ -338,4 +373,4 @@ wechatRadaryu/
 
 ---
 
-**最后更新**：2025-12-11
+**最后更新**：2025-12-24
