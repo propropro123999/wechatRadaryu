@@ -701,7 +701,7 @@
           </div>
 
           <div class="upload-area" id="upload-area" ondrop="handleDrop(event)" ondragover="handleDragOver(event)"
-            ondragleave="handleDragLeave(event)">
+            ondragleave="handleDragLeave(event)" onclick="document.getElementById('file-input').click();">
             <div class="upload-icon">📤</div>
             <div class="upload-text">拖拽或点击上传 PDF</div>
             <div class="upload-hint">支持 .pdf 格式 · 最大 200MB</div>
@@ -785,6 +785,13 @@
               <input type="checkbox" id="remove-metadata" checked style="width: 18px; height: 18px; cursor: pointer;" />
               <span>移除元数据（可减小体积）</span>
             </label>
+
+            <!-- 开始压缩按钮 -->
+            <div style="margin-top: var(--space-2xl); display: flex; justify-content: flex-end;">
+              <button class="btn btn-primary" onclick="compressPDF()" style="padding: var(--space-md) var(--space-3xl);">
+                🚀 开始压缩
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1058,37 +1065,63 @@
       const removeMetadata = document.getElementById('remove-metadata').checked;
 
       try {
-        // 创建 Web Worker 进行后台压缩
-        if (!pdfWorker) {
-          pdfWorker = new Worker('js/pdf-compress-worker.js');
+        // 在主线程中进行压缩（避免 Worker 路径问题）
+        const { PDFDocument } = PDFLib;
+        const pages = currentPDF.getPages();
+        const totalPages = pages.length;
+
+        // 逐页处理
+        for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+          const page = pages[pageIndex];
+          const resources = page.node.Resources;
+
+          if (resources && resources.XObject) {
+            const xobjects = resources.XObject.entries();
+            for (const [name, ref] of xobjects) {
+              try {
+                const xobj = currentPDF.context.lookup(ref);
+                if (xobj.Subtype && xobj.Subtype.toString() === 'Image') {
+                  // 标记处理
+                  xobj.Interpolate = true;
+                }
+              } catch (e) {
+                console.warn('处理图片失败:', e);
+              }
+            }
+          }
+
+          // 更新进度
+          const progress = Math.round(((pageIndex + 1) / totalPages) * 100);
+          document.getElementById('progress-text').textContent = `压缩中...`;
+          document.getElementById('progress-percent').textContent = progress + '%';
+          document.getElementById('progress-bar').style.width = progress + '%';
+          document.getElementById('progress-detail').textContent = `页面 ${pageIndex + 1}/${totalPages}`;
+
+          // 让浏览器有机会重新绘制进度
+          await new Promise(resolve => setTimeout(resolve, 0));
         }
 
-        const pdfData = await currentPDF.save();
-
-        pdfWorker.onmessage = (e) => {
-          const { type, data, current, total, percent } = e.data;
-
-          if (type === 'progress') {
-            document.getElementById('progress-text').textContent = `压缩中...`;
-            document.getElementById('progress-percent').textContent = percent + '%';
-            document.getElementById('progress-bar').style.width = percent + '%';
-            document.getElementById('progress-detail').textContent = `页面 ${current}/${total}`;
-          } else if (type === 'complete') {
-            compressedPDFData = data;
-            compressionStats.compressed = data.byteLength;
-            showResult();
+        // 移除元数据
+        if (removeMetadata) {
+          try {
+            currentPDF.setTitle('');
+            currentPDF.setAuthor('');
+            currentPDF.setSubject('');
+            currentPDF.setKeywords([]);
+            currentPDF.setProducer('');
+            currentPDF.setCreator('');
+          } catch (e) {
+            console.warn('移除元数据失败:', e);
           }
-        };
+        }
 
-        pdfWorker.postMessage({
-          pdfData: pdfData,
-          quality: quality,
-          maxWidth: maxWidth,
-          removeMetadata: removeMetadata
-        });
+        // 保存压缩后的 PDF
+        compressedPDFData = await currentPDF.save();
+        compressionStats.compressed = compressedPDFData.byteLength;
+        showResult();
       } catch (error) {
         alert('❌ 压缩失败：' + error.message);
-        console.error(error);
+        console.error('压缩错误:', error);
         document.getElementById('progress-card').style.display = 'none';
       }
     }
