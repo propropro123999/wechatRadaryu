@@ -314,6 +314,19 @@
         </div>
     </div>
 
+    <!-- Diagnostics Panel (Hidden by default) -->
+    <div id="diagnostics-panel"
+        style="display:none; max-width:1200px; margin: 20px auto; padding: 20px; background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+        <h3>🐞 诊断面板</h3>
+        <div style="margin-bottom:10px; display:flex; gap:10px;">
+            <button class="action-btn" onclick="insertTestImage()">🖼️ 插入测试图片 (验证编辑器能力)</button>
+            <button class="action-btn" style="background:#666;" onclick="$('#raw-log').val('')">清空日志</button>
+        </div>
+        <textarea id="raw-log"
+            style="width:100%; height:200px; font-family:monospace; font-size:12px; padding:10px; border:1px solid #ccc; border-radius:8px;"
+            placeholder="日志将显示在这里..."></textarea>
+    </div>
+
     <div id="toast" class="status-toast">操作完成</div>
 
     <!-- WangEditor JS -->
@@ -367,9 +380,34 @@
 
         // Debug: Log HTML to see if images are present but hidden
         function debugHTML() {
-            console.log(editor.getHtml());
-            alert(editor.getHtml().substring(0, 500) + '...');
+            $('#diagnostics-panel').show();
+            // Scroll to diagnostics
+            $('html, body').animate({
+                scrollTop: $("#diagnostics-panel").offset().top
+            }, 500);
+
+            logRaw('Current Editor HTML:\n' + editor.getHtml());
         }
+
+        function logRaw(msg) {
+            const $log = $('#raw-log');
+            const current = $log.val();
+            const time = new Date().toLocaleTimeString();
+            $log.val(`[${time}] ${msg}\n\n` + current);
+        }
+
+        function insertTestImage() {
+            logRaw('Attempting to insert test image...');
+            const testHtml = '<p>Test Image:<br><img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png" alt="Google Logo" style="max-width:100%;"/></p>';
+            try {
+                editor.dangerouslyInsertHtml(testHtml);
+                logRaw('Inserted successfully.');
+            } catch (e) {
+                logRaw('Insert failed: ' + e.message);
+            }
+        }
+
+        // --- Core Functions ---
 
         // --- Core Functions ---
 
