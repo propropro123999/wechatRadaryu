@@ -297,6 +297,9 @@
 
                 <!-- Main Actions -->
                 <button class="action-btn"
+                    style="background-color: white; color: #333; border: 1px solid #ddd; box-shadow:none; margin-right:8px;"
+                    onclick="debugHTML()">🐞 Debug</button>
+                <button class="action-btn"
                     style="background-color: white; color: #333; border: 1px solid #ddd; box-shadow:none;"
                     onclick="copyToClipboard()">📋 复制结果</button>
                 <button class="action-btn" onclick="formatText()">✨ 一键排版</button>
@@ -322,7 +325,12 @@
         // Editor Configuration
         const editorConfig = {
             placeholder: '在此输入内容...',
-            MENU_CONF: {},
+            MENU_CONF: {
+                'uploadImage': {
+                    // Enable base64 upload for local usage
+                    base64LimitKB: 10 * 1024 // 10MB
+                }
+            },
             onChange(editor) {
                 // html = editor.getHtml()
             }
@@ -343,6 +351,18 @@
             config: {},
             mode: 'default'
         });
+
+        // Debug: Log HTML to see if images are present but hidden
+        function debugHTML() {
+            console.log(editor.getHtml());
+            alert(editor.getHtml().substring(0, 500) + '...');
+        }
+
+        // Ensure Base64 upload is enabled (default in V5 but let's be explicit)
+        // Note: For local upload to work without backend, we MUST use base64
+        editorConfig.MENU_CONF['uploadImage'] = {
+            base64LimitKB: 5 * 1024 // 5MB
+        }
 
         // --- Core Functions ---
 
