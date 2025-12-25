@@ -271,6 +271,28 @@
             </div>
         </div>
 
+        <!-- Diagnostics Panel (Moved to Top) -->
+        <div id="diagnostics-panel"
+            style="max-width:1200px; margin: 0 auto 20px auto; padding: 15px; background:#fff1f0; border:2px dashed #ff4d4f; border-radius:12px; display:block;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="color:#ff4d4f; margin:0; font-size:16px;">🐞 诊断面板</h3>
+                <span style="font-size:12px; color:#666;">遇到问题如导入失败，请复制下方日志反馈</span>
+            </div>
+
+            <div style="margin-bottom:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <button class="action-btn" onclick="insertTestImage()">🖼️ 插入测试图片</button>
+                <button class="action-btn" style="background:#666;" onclick="$('#raw-log').val('')">清空</button>
+                <label
+                    style="font-size:13px; font-weight:bold; color:#d93025; display:flex; align-items:center; background: #fff; padding: 4px 8px; border-radius: 4px; border: 1px solid #ffccc7;">
+                    <input type="checkbox" id="rawMode" style="margin-right:4px;">
+                    ⚠️ 强力模式 (跳过清理)
+                </label>
+            </div>
+            <textarea id="raw-log"
+                style="width:100%; height:120px; font-family:monospace; font-size:12px; padding:10px; border:1px solid #ffccc7; border-radius:8px; background:#fff; white-space: pre;"
+                readonly placeholder="点击 [导入] 按钮后，详细日志将显示在这里..."></textarea>
+        </div>
+
         <!-- Editor Card -->
         <div class="editor-card">
 
@@ -314,22 +336,7 @@
         </div>
     </div>
 
-    <!-- Diagnostics Panel (Visible for debugging) -->
-    <div id="diagnostics-panel"
-        style="max-width:1200px; margin: 20px auto; padding: 20px; background:#f8f9fa; border:2px dashed #ff4d4f; border-radius:12px;">
-        <h3 style="color:#ff4d4f; margin-top:0;">🐞 诊断面板 (调试模式)</h3>
-        <div style="margin-bottom:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            <button class="action-btn" onclick="insertTestImage()">🖼️ 插入测试图片</button>
-            <button class="action-btn" style="background:#666;" onclick="$('#raw-log').val('')">清空日志</button>
-            <label style="font-size:13px; font-weight:bold; color:#d93025; display:flex; align-items:center;">
-                <input type="checkbox" id="rawMode" style="margin-right:4px;">
-                ⚠️ 强力模式 (跳过清理，直接插入)
-            </label>
-        </div>
-        <textarea id="raw-log"
-            style="width:100%; height:200px; font-family:monospace; font-size:12px; padding:10px; border:1px solid #ccc; border-radius:8px;"
-            placeholder="日志将显示在这里..."></textarea>
-    </div>
+
 
     <div id="toast" class="status-toast">操作完成</div>
 
@@ -446,9 +453,18 @@
 
                     // --- Raw Mode Check ---
                     if ($('#rawMode').is(':checked')) {
-                        logRaw('⚠️ Raw Mode: Skipping all cleanup. Inserting raw HTML.');
-                        editor.dangerouslyInsertHtml(content.innerHTML);
-                        showToast('⚠️ 暴力导入完成');
+                        logRaw('⚠️ Raw Mode: Skipping all cleanup.');
+                        let rawHtml = content.innerHTML;
+                        // Force visibility
+                        rawHtml = rawHtml.replace(/visibility:\s*hidden/gi, 'visibility: visible');
+                        logRaw(`Raw HTML length: ${rawHtml.length}`);
+
+                        try {
+                            editor.dangerouslyInsertHtml(rawHtml);
+                            showToast('⚠️ 暴力导入完成');
+                        } catch (e) {
+                            logRaw('Raw insert failed: ' + e.message);
+                        }
                         return;
                     }
 
