@@ -423,7 +423,11 @@
                     // 3. Remove scripts and styles
                     content.querySelectorAll('script, style').forEach(el => el.remove());
 
-                    editor.setHtml(content.innerHTML);
+                    // WangEditor's setHtml is strict and may strip external images.
+                    // We use dangerouslyInsertHtml to bypass this for imported articles.
+                    editor.clear();
+                    editor.dangerouslyInsertHtml(content.innerHTML);
+
                     showToast(`✅ 成功导入正文 (含 ${imgCount} 张图片)`);
                 } else {
                     showToast('⚠️ 未找到正文');
