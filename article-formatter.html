@@ -11,6 +11,8 @@
     <!-- jQuery -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
 
+    <!-- WangEditor V5 CSS -->
+    <link href="https://unpkg.com/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
     <style>
         body {
             background-color: var(--gem-color-background);
@@ -81,28 +83,19 @@
             flex-shrink: 0;
         }
 
-        /* Native Editor Styles */
-        .native-editor {
+        /* WangEditor Toolbar Area */
+        #toolbar-container {
+            border-bottom: 1px solid #e1e4e8;
+            background-color: #fcfcfc;
+            flex-shrink: 0;
+        }
+
+        /* WangEditor Text Area */
+        #editor-container {
             flex-grow: 1;
-            overflow-y: auto;
+            overflow-y: hidden;
+            /* WangEditor handles scroll internally */
             background-color: #fff;
-            padding: 24px;
-            outline: none;
-            line-height: 1.6;
-            font-size: 16px;
-            color: #333;
-        }
-
-        .native-editor img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 10px 0;
-        }
-
-        .native-editor p {
-            margin-bottom: 1em;
-            min-height: 1em;
         }
 
         /* Custom Styles for Checkbox & Inputs */
@@ -272,8 +265,8 @@
                 </a>
                 <h1 style="font-size: 24px; margin-top: 12px; display:flex; align-items:center; gap:8px;">
                     文章一键排版
-                    <span class="gem-chip gem-chip-accent"
-                        style="font-size: 11px; vertical-align: middle;">Native</span>
+                    <span class="gem-chip gem-chip-accent" style="font-size: 11px; vertical-align: middle;">WangEditor
+                        V5</span>
                 </h1>
                 <p style="color: var(--gem-color-text-secondary); font-size: 14px;">自动清理格式、规范标点、中英文加空格 (支持富文本编辑)。</p>
             </div>
@@ -316,10 +309,11 @@
                 <button class="action-btn" onclick="formatText()">✨ 一键排版</button>
             </div>
 
-            <!-- Native Editor Content -->
-            <div id="editor-content" class="native-editor" contenteditable="true" placeholder="在此输入内容...">
-                <p>📝 粘贴文章内容，或使用上方导入链接...</p>
-            </div>
+            <!-- 2. WangEditor Toolbar -->
+            <div id="toolbar-container"></div>
+
+            <!-- 3. WangEditor Content -->
+            <div id="editor-container"></div>
 
         </div>
     </div>
@@ -328,12 +322,54 @@
 
     <div id="toast" class="status-toast">操作完成</div>
 
+    <!-- WangEditor JS -->
+    <script src="https://unpkg.com/@wangeditor/editor@latest/dist/index.js"></script>
+
     <script>
-        // Native Editor Logic
+        const { createEditor, createToolbar } = window.wangEditor;
 
+        // Editor Configuration
+        const editorConfig = {
+            placeholder: '在此输入内容...',
+            MENU_CONF: {
+                'uploadImage': {
+                    // Custom Upload: Force everything to be Data URI (Base64)
+                    async customUpload(file, insertFn) {
+                        try {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                // insertFn(url, alt, href)
+                                insertFn(e.target.result, file.name, '');
+                            };
+                            reader.readAsDataURL(file);
+                        } catch (err) {
+                            showToast('❌ 图片处理失败');
+                            console.error(err);
+                        }
+                    }
+                }
+            },
+            onChange(editor) {
+                // html = editor.getHtml()
+            }
+        };
 
+        // Initialize Editor
+        const editor = createEditor({
+            selector: '#editor-container',
+            html: '<p>📝 粘贴文章内容，或使用上方导入链接...</p>',
+            config: editorConfig,
+            mode: 'default'
+        });
 
-        // --- Core Functions ---
+        // Initialize Toolbar
+        const toolbar = createToolbar({
+            editor,
+            selector: '#toolbar-container',
+            config: {},
+            mode: 'default'
+        });
+
 
         // --- Core Functions ---
 
@@ -412,8 +448,9 @@
                     // Extra safety: replace any remaining visibility: hidden in string
                     const safeHtml = htmlToInsert.replace(/visibility:\s*hidden/gi, 'visibility: visible');
 
-                    // Native DOM Insert
-                    $('#editor-content').html(safeHtml);
+                    // WangEditor Insertion
+                    editor.clear();
+                    editor.dangerouslyInsertHtml(safeHtml);
                     showToast(`✅ 导入成功 (代理 ${images.length} 张图片)`);
 
                 } else {
@@ -429,9 +466,8 @@
         }
 
         function formatText() {
-            // Get Content
-            const $editor = $('#editor-content');
-            const rawHtml = $editor.html();
+            // Get HTML from editor
+            const rawHtml = editor.getHtml();
             if (!rawHtml || rawHtml === '<p><br></p>') return showToast('⚠️ 内容为空');
 
             // Virtual DOM processing
@@ -475,7 +511,7 @@
             }
 
             // Set back to editor
-            $editor.html($temp.html());
+            editor.setHtml($temp.html());
             showToast('✨ 排版完成');
         }
 
@@ -501,22 +537,28 @@
         }
 
         function copyToClipboard() {
-            // Native Copy for ContentEditable
-            const $content = document.getElementById('editor-content');
-
+            // WangEditor: select the content div
+            // .w-e-text-container [contenteditable]
             const selection = window.getSelection();
             selection.removeAllRanges();
             const range = document.createRange();
-            range.selectNodeContents($content);
-            selection.addRange(range);
 
-            try {
-                document.execCommand('copy');
-                showToast('已复制 (保留格式)');
-            } catch (e) {
-                showToast('复制失败');
+            // Try to find the editor container provided by WangEditor
+            const $content = document.querySelector('.w-e-text-container [contenteditable="true"]');
+
+            if ($content) {
+                range.selectNodeContents($content);
+                selection.addRange(range);
+                try {
+                    document.execCommand('copy');
+                    showToast('已复制 (保留格式)');
+                } catch (e) {
+                    showToast('复制失败');
+                }
+                selection.removeAllRanges();
+            } else {
+                showToast('无法定位编辑器内容');
             }
-            selection.removeAllRanges();
         }
 
         function showToast(msg) {
