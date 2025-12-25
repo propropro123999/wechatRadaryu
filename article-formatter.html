@@ -365,7 +365,7 @@
                     content.style.visibility = 'visible';
                     content.style.opacity = '1';
 
-                    // 2. Image Processing (Critical: Convert data-src to src)
+                    // 2. Image Processing (Critical: Convert data-src to Proxy URL)
                     const images = content.querySelectorAll('img');
                     images.forEach(img => {
                         let realSrc = img.getAttribute('data-src');
@@ -375,12 +375,15 @@
                             // Standardize source
                             realSrc = realSrc.replace(/&amp;/g, '&');
 
+                            // Use Proxy for WeChat Images
+                            const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(realSrc)}`;
+
                             // Re-apply to src and clear interference
-                            img.setAttribute('src', realSrc);
+                            img.setAttribute('src', proxyUrl);
                             img.setAttribute('referrerpolicy', 'no-referrer');
 
                             // Remove Wechat-specific lazy load attributes that might hide the image
-                            ['data-src', 'data-type', 'loading', 'class'].forEach(attr => img.removeAttribute(attr));
+                            ['data-src', 'data-type', 'loading', 'class', 'style'].forEach(attr => img.removeAttribute(attr));
 
                             // Apply safe default styles to ensure visibility in editor
                             img.style.cssText = 'max-width: 100%; height: auto; display: block; margin: 10px 0; visibility: visible !important; opacity: 1 !important;';
@@ -400,8 +403,8 @@
                         });
                     });
 
-                    // 4. Remove Scripts/Styles
-                    content.querySelectorAll('script, style').forEach(el => el.remove());
+                    // 4. Remove Scripts/Styles/Iframes
+                    content.querySelectorAll('script, style, iframe').forEach(el => el.remove());
 
                     // 5. Final Insertion
                     const htmlToInsert = content.innerHTML;
@@ -411,7 +414,7 @@
 
                     // Native DOM Insert
                     $('#editor-content').html(safeHtml);
-                    showToast(`✅ 导入成功 (Processed ${images.length} images)`);
+                    showToast(`✅ 导入成功 (代理 ${images.length} 张图片)`);
 
                 } else {
                     showToast('⚠️ 未找到正文内容');
