@@ -451,18 +451,26 @@
                     // 3. Remove scripts and styles
                     content.querySelectorAll('script, style').forEach(el => el.remove());
 
-                    // WangEditor's setHtml is strict and may strip external images.
-                    // We use dangerouslyInsertHtml to bypass this for imported articles.
-                    // Delay to ensure editor instance is ready and no race conditions
-                    setTimeout(() => {
-                        editor.focus(); // Ensure focus
-                        editor.clear(); // Clear existing
-                        // Small delay again to ensure clear is processed if async internally (rare but safe)
-                        setTimeout(() => {
-                            editor.dangerouslyInsertHtml(content.innerHTML);
-                            showToast(`✅ 成功导入正文 (含 ${imgCount} 张图片)`);
-                        }, 50);
-                    }, 300);
+                    // Simplify: Use setHtml directly. 
+                    // To avoid image stripping, we ensure images have standard src attributes (done above).
+                    // We also log the content length to verify date fetching.
+                    const htmlToInsert = content.innerHTML;
+
+                    // Diagnostic
+                    if (htmlToInsert.length < 100) {
+                        alert('Warning: Fetched content is very short. Check Debug log.');
+                    }
+                    console.log('Inserting HTML length:', htmlToInsert.length);
+
+                    try {
+                        editor.setHtml(htmlToInsert);
+                        showToast(`✅ 成功导入 (图片: ${imgCount})`);
+                    } catch (e) {
+                        console.error('Editor setHtml failed:', e);
+                        // Fallback
+                        editor.dangerouslyInsertHtml(htmlToInsert);
+                        showToast(`⚠️ 强制导入 (图片: ${imgCount})`);
+                    }
 
                 } else {
                     showToast('⚠️ 未找到正文');
