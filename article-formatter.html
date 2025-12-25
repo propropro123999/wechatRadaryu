@@ -373,17 +373,32 @@
                     // WeChat uses data-src. We must move it to src.
                     // Also strip other heavy attributes to avoid editor lag.
                     const images = content.querySelectorAll('img');
-                    for (let img of images) {
-                        const src = img.getAttribute('data-src');
-                        if (src) {
-                            img.setAttribute('src', src);
-                            img.setAttribute('referrerpolicy', 'no-referrer'); // Critical for WeChat
-                            img.removeAttribute('data-src');
+                    let imgCount = 0;
 
-                            // Reset styles to ensure visibility
-                            img.style.cssText = 'max-width: 100%; height: auto; display: block; margin: 10px 0;';
-                            // Remove Wechat lazyload classes and others
+                    for (let img of images) {
+                        // WeChat often creates images with data-src and src as placeholder.
+                        // We strictly prefer data-src, but fallback to src if data-src is missing.
+                        let realSrc = img.getAttribute('data-src');
+                        if (!realSrc) realSrc = img.getAttribute('src');
+
+                        if (realSrc) {
+                            imgCount++;
+                            // Clean up the URL (sometimes has &amp;)
+                            realSrc = realSrc.replace(/&amp;/g, '&');
+
+                            // Rebuild the image tag to be clean for WangEditor
+                            img.setAttribute('src', realSrc);
+                            img.setAttribute('referrerpolicy', 'no-referrer');
+
+                            // Remove potential interfering attributes
+                            img.removeAttribute('data-src');
+                            img.removeAttribute('data-type');
                             img.removeAttribute('class');
+                            img.removeAttribute('loading'); // Remove lazy loading
+                            img.removeAttribute('style'); // Clear styles first
+
+                            // Force display styles
+                            img.style.cssText = 'max-width: 100%; height: auto; display: block; margin: 10px 0;';
                         }
                     }
 
@@ -409,7 +424,7 @@
                     content.querySelectorAll('script, style').forEach(el => el.remove());
 
                     editor.setHtml(content.innerHTML);
-                    showToast('✅ 导入成功');
+                    showToast(`✅ 成功导入正文 (含 ${imgCount} 张图片)`);
                 } else {
                     showToast('⚠️ 未找到正文');
                 }
