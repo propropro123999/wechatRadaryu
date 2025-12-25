@@ -327,8 +327,21 @@
             placeholder: '在此输入内容...',
             MENU_CONF: {
                 'uploadImage': {
-                    // Enable base64 upload for local usage
-                    base64LimitKB: 10 * 1024 // 10MB
+                    // Custom Upload: Force everything to be Data URI (Base64)
+                    // This avoids any server dependency or file size fallback issues.
+                    async customUpload(file, insertFn) {
+                        try {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                // insertFn(url, alt, href)
+                                insertFn(e.target.result, file.name, '');
+                            };
+                            reader.readAsDataURL(file);
+                        } catch (err) {
+                            showToast('❌ 图片处理失败');
+                            console.error(err);
+                        }
+                    }
                 }
             },
             onChange(editor) {
@@ -356,12 +369,6 @@
         function debugHTML() {
             console.log(editor.getHtml());
             alert(editor.getHtml().substring(0, 500) + '...');
-        }
-
-        // Ensure Base64 upload is enabled (default in V5 but let's be explicit)
-        // Note: For local upload to work without backend, we MUST use base64
-        editorConfig.MENU_CONF['uploadImage'] = {
-            base64LimitKB: 5 * 1024 // 5MB
         }
 
         // --- Core Functions ---
