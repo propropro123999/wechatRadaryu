@@ -272,26 +272,7 @@
         </div>
 
         <!-- Diagnostics Panel (Moved to Top) -->
-        <div id="diagnostics-panel"
-            style="max-width:1200px; margin: 0 auto 20px auto; padding: 15px; background:#fff1f0; border:2px dashed #ff4d4f; border-radius:12px; display:block;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3 style="color:#ff4d4f; margin:0; font-size:16px;">🐞 诊断面板</h3>
-                <span style="font-size:12px; color:#666;">遇到问题如导入失败，请复制下方日志反馈</span>
-            </div>
 
-            <div style="margin-bottom:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                <button class="action-btn" onclick="insertTestImage()">🖼️ 插入测试图片</button>
-                <button class="action-btn" style="background:#666;" onclick="$('#raw-log').val('')">清空</button>
-                <label
-                    style="font-size:13px; font-weight:bold; color:#d93025; display:flex; align-items:center; background: #fff; padding: 4px 8px; border-radius: 4px; border: 1px solid #ffccc7;">
-                    <input type="checkbox" id="rawMode" style="margin-right:4px;">
-                    ⚠️ 强力模式 (跳过清理)
-                </label>
-            </div>
-            <textarea id="raw-log"
-                style="width:100%; height:120px; font-family:monospace; font-size:12px; padding:10px; border:1px solid #ffccc7; border-radius:8px; background:#fff; white-space: pre;"
-                readonly placeholder="点击 [导入] 按钮后，详细日志将显示在这里..."></textarea>
-        </div>
 
 
 
@@ -320,9 +301,7 @@
                 <div style="flex-grow: 1;"></div>
 
                 <!-- Main Actions -->
-                <button class="action-btn"
-                    style="background-color: white; color: #333; border: 1px solid #ddd; box-shadow:none; margin-right:8px;"
-                    onclick="debugHTML()">🐞 Debug</button>
+
                 <button class="action-btn"
                     style="background-color: white; color: #333; border: 1px solid #ddd; box-shadow:none;"
                     onclick="copyToClipboard()">📋 复制结果</button>
@@ -391,43 +370,14 @@
             mode: 'default'
         });
 
-        // Debug: Log HTML to see if images are present but hidden
-        function debugHTML() {
-            $('#diagnostics-panel').show();
-            // Scroll to diagnostics
-            $('html, body').animate({
-                scrollTop: $("#diagnostics-panel").offset().top
-            }, 500);
 
-            logRaw('Current Editor HTML:\n' + editor.getHtml());
-        }
-
-        function logRaw(msg) {
-            const $log = $('#raw-log');
-            const current = $log.val();
-            const time = new Date().toLocaleTimeString();
-            $log.val(`[${time}] ${msg}\n\n` + current);
-        }
-
-        function insertTestImage() {
-            logRaw('Attempting to insert test image...');
-            const testHtml = '<p>Test Image:<br><img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png" alt="Google Logo" style="max-width:100%;"/></p>';
-            try {
-                editor.dangerouslyInsertHtml(testHtml);
-                logRaw('Inserted successfully.');
-            } catch (e) {
-                logRaw('Insert failed: ' + e.message);
-            }
-        }
 
         // --- Core Functions ---
 
         // --- Core Functions ---
 
         async function importArticle() {
-            logRaw('--- Starting Import ---');
             const url = $('#articleUrl').val().trim();
-            logRaw('URL: ' + url);
 
             if (!url) return showToast('⚠️ 请输入文章链接');
             if (url.indexOf('mp.weixin.qq.com') < 0) return showToast('⚠️ 仅支持微信公众号文章');
@@ -437,126 +387,74 @@
             $btn.html('<span class="spinner"></span> 导入中').prop('disabled', true);
 
             try {
-                // Call Vercel API (proxy)
+                // Call Vercel API
                 const resp = await fetch(`/api/fetch-article?url=${encodeURIComponent(url)}`);
                 const json = await resp.json();
 
                 if (!resp.ok) throw new Error(json.error || 'Fetch failed');
                 if (!json.html) throw new Error('无内容');
 
-                // Parse
-                // Parse
+                // Parse HTML
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(json.html, 'text/html');
                 const content = doc.querySelector('#js_content');
 
                 if (content) {
-                    logRaw('Found #js_content');
+                    // 1. Force Content Visibility (Fixes blank editor issue)
+                    content.style.visibility = 'visible';
+                    content.style.opacity = '1';
 
-                    // --- Raw Mode Check ---
-                    if ($('#rawMode').is(':checked')) {
-                        logRaw('⚠️ Raw Mode: Skipping all cleanup.');
-                        let rawHtml = content.innerHTML;
-                        // Force visibility
-                        rawHtml = rawHtml.replace(/visibility:\s*hidden/gi, 'visibility: visible');
-                        logRaw(`Raw HTML length: ${rawHtml.length}`);
-
-                        try {
-                            editor.dangerouslyInsertHtml(rawHtml);
-                            showToast('⚠️ 暴力导入完成');
-                        } catch (e) {
-                            logRaw('Raw insert failed: ' + e.message);
-                        }
-                        return;
-                    }
-
-                    // 1. Image Fixes
-                    // WeChat uses data-src. We must move it to src.
-                    // Also strip other heavy attributes to avoid editor lag.
+                    // 2. Image Processing (Critical: Convert data-src to src)
                     const images = content.querySelectorAll('img');
-                    let imgCount = 0;
-                    logRaw(`Found ${images.length} images in parsed DOM.`);
-
-                    for (let img of images) {
-                        // WeChat often creates images with data-src and src as placeholder.
-                        // We strictly prefer data-src, but fallback to src if data-src is missing.
+                    images.forEach(img => {
                         let realSrc = img.getAttribute('data-src');
                         if (!realSrc) realSrc = img.getAttribute('src');
 
                         if (realSrc) {
-                            imgCount++;
-                            // Clean up the URL (sometimes has &amp;)
+                            // Standardize source
                             realSrc = realSrc.replace(/&amp;/g, '&');
 
-                            // Rebuild the image tag to be clean for WangEditor
+                            // Re-apply to src and clear interference
                             img.setAttribute('src', realSrc);
                             img.setAttribute('referrerpolicy', 'no-referrer');
 
-                            // Debug log for first 3 images
-                            if (imgCount <= 3) {
-                                logRaw(`Img ${imgCount} src: ${realSrc.substring(0, 50)}...`);
-                            }
+                            // Remove Wechat-specific lazy load attributes that might hide the image
+                            ['data-src', 'data-type', 'loading', 'class'].forEach(attr => img.removeAttribute(attr));
 
-                            // Remove potential interfering attributes
-                            img.removeAttribute('data-src');
-                            img.removeAttribute('data-type');
-                            img.removeAttribute('class');
-                            img.removeAttribute('loading'); // Remove lazy loading
-                            img.removeAttribute('style'); // Clear styles first
-
-                            // Apply simple safe styles
-                            img.style.maxWidth = '100%';
-                            img.style.height = 'auto';
-                            img.style.display = 'block';
-                            img.style.margin = '10px 0';
-                        }
-                    }
-
-                    // 2. Structure Normalization (Critical for Editor Stability)
-                    // WangEditor prefers flat structures (p, div, h1-h5).
-                    // WeChat uses deeply nested <section>. contenteditable handles them poorly sometimes.
-                    // We replace <section> with <div> or <p> depending on content.
-                    const structuralTags = ['section', 'article', 'aside', 'footer', 'header'];
-                    structuralTags.forEach(tag => {
-                        const elements = content.querySelectorAll(tag);
-                        for (let el of elements) {
-                            // Create a div wrapper
-                            const div = document.createElement('div');
-                            div.innerHTML = el.innerHTML;
-                            // Copy styles if needed? No, let's keep it clean for editing.
-                            // But maybe copy just text-align?
-                            if (el.style.textAlign) div.style.textAlign = el.style.textAlign;
-                            el.parentNode.replaceChild(div, el);
+                            // Apply safe default styles to ensure visibility in editor
+                            img.style.cssText = 'max-width: 100%; height: auto; display: block; margin: 10px 0; visibility: visible !important; opacity: 1 !important;';
                         }
                     });
 
+                    // 3. Flatten Structure for Editor Stability
+                    // Replace <section> with <div> to play nice with contenteditable
+                    const structuralTags = ['section', 'article', 'aside', 'footer', 'header'];
+                    structuralTags.forEach(tag => {
+                        content.querySelectorAll(tag).forEach(el => {
+                            const div = document.createElement('div');
+                            div.innerHTML = el.innerHTML;
+                            // Preserve minimal styling if needed, but clearing is safer for "one-click format"
+                            if (el.style.textAlign) div.style.textAlign = el.style.textAlign;
+                            el.parentNode.replaceChild(div, el);
+                        });
+                    });
 
-                    // 3. Remove scripts and styles
+                    // 4. Remove Scripts/Styles
                     content.querySelectorAll('script, style').forEach(el => el.remove());
 
-                    // Simplify: Use setHtml directly. 
-                    // To avoid image stripping, we ensure images have standard src attributes (done above).
-                    // We also log the content length to verify date fetching.
+                    // 5. Final Insertion
+                    // Use dangerouslyInsertHtml to bypass over-aggressive sanitization
                     const htmlToInsert = content.innerHTML;
 
-                    // Diagnostic
-                    if (htmlToInsert.length < 100) {
-                        alert('Warning: Fetched content is very short. Check Debug log.');
-                    }
-                    console.log('Inserting HTML length:', htmlToInsert.length);
+                    // Extra safety: replace any remaining visibility: hidden in string
+                    const safeHtml = htmlToInsert.replace(/visibility:\s*hidden/gi, 'visibility: visible');
 
-                    try {
-                        editor.setHtml(htmlToInsert);
-                        showToast(`✅ 成功导入 (图片: ${imgCount})`);
-                    } catch (e) {
-                        console.error('Editor setHtml failed:', e);
-                        // Fallback
-                        editor.dangerouslyInsertHtml(htmlToInsert);
-                        showToast(`⚠️ 强制导入 (图片: ${imgCount})`);
-                    }
+                    editor.clear(); // Clear first
+                    editor.dangerouslyInsertHtml(safeHtml);
+                    showToast(`✅ 导入成功 (Processed ${images.length} images)`);
 
                 } else {
-                    showToast('⚠️ 未找到正文');
+                    showToast('⚠️ 未找到正文内容');
                 }
 
             } catch (err) {
