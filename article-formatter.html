@@ -314,10 +314,10 @@
         </div>
     </div>
 
-    <!-- Diagnostics Panel (Hidden by default) -->
+    <!-- Diagnostics Panel (Visible for debugging) -->
     <div id="diagnostics-panel"
-        style="display:none; max-width:1200px; margin: 20px auto; padding: 20px; background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-        <h3>🐞 诊断面板</h3>
+        style="max-width:1200px; margin: 20px auto; padding: 20px; background:#f8f9fa; border:2px dashed #ff4d4f; border-radius:12px;">
+        <h3 style="color:#ff4d4f; margin-top:0;">🐞 诊断面板 (调试模式)</h3>
         <div style="margin-bottom:10px; display:flex; gap:10px;">
             <button class="action-btn" onclick="insertTestImage()">🖼️ 插入测试图片 (验证编辑器能力)</button>
             <button class="action-btn" style="background:#666;" onclick="$('#raw-log').val('')">清空日志</button>
@@ -412,7 +412,10 @@
         // --- Core Functions ---
 
         async function importArticle() {
+            logRaw('--- Starting Import ---');
             const url = $('#articleUrl').val().trim();
+            logRaw('URL: ' + url);
+
             if (!url) return showToast('⚠️ 请输入文章链接');
             if (url.indexOf('mp.weixin.qq.com') < 0) return showToast('⚠️ 仅支持微信公众号文章');
 
