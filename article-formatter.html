@@ -8,16 +8,17 @@
     <title>文章一键排版 - ICviews Tools</title>
     <link rel="stylesheet" href="gemini-ui.css" />
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- jQuery -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <!-- WangEditor V5 CSS -->
+    <link href="https://unpkg.com/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
     <style>
         body {
             background-color: var(--gem-color-background);
             color: var(--gem-color-text-primary);
             font-family: 'Google Sans', 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
             height: 100vh;
-            /* Fixed height */
             overflow: hidden;
-            /* Prevent body scroll */
             display: flex;
             flex-direction: column;
         }
@@ -28,7 +29,6 @@
             padding: 24px;
             width: 100%;
             height: 100%;
-            /* Full height */
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -40,7 +40,6 @@
             align-items: center;
             margin-bottom: 24px;
             flex-shrink: 0;
-            /* Header doesn't shrink */
         }
 
         .back-link {
@@ -56,33 +55,49 @@
             color: var(--gem-color-accent);
         }
 
+        /* Editor Card & Layout */
         .editor-card {
             background: #FFFFFF;
             border-radius: 24px;
-            padding: 0;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.02);
             border: 1px solid rgba(0, 0, 0, 0.05);
-            overflow: hidden;
+            overflow: hidden !important;
+            /* Force hide overflow to let flex children handle it */
             display: flex;
             flex-direction: column;
             flex-grow: 1;
             min-height: 0;
-            /* Important for flex child scrolling */
+            position: relative;
         }
 
-        .toolbar-container {
-            padding: 16px 24px;
+        /* Top Actions Bar (Custom) */
+        .actions-bar {
+            padding: 12px 24px;
             background: #fafbfc;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #e1e4e8;
             display: flex;
             flex-wrap: wrap;
             gap: 16px;
             align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 10;
+            flex-shrink: 0;
         }
 
+        /* WangEditor Toolbar Area */
+        #toolbar-container {
+            border-bottom: 1px solid #e1e4e8;
+            background-color: #fcfcfc;
+            flex-shrink: 0;
+        }
+
+        /* WangEditor Text Area */
+        #editor-container {
+            flex-grow: 1;
+            overflow-y: hidden;
+            /* WangEditor handles scroll internally */
+            background-color: #fff;
+        }
+
+        /* Custom Styles for Checkbox & Inputs */
         .checkbox-group {
             display: flex;
             gap: 16px;
@@ -95,28 +110,30 @@
             align-items: center;
             cursor: pointer;
             user-select: none;
-            font-size: 14px;
+            font-size: 13px;
             color: var(--gem-color-text-secondary);
+            font-weight: 500;
         }
 
         .checkbox-item input {
-            margin-right: 8px;
+            margin-right: 6px;
             accent-color: var(--gem-color-accent);
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
         }
 
         .action-btn {
             background-color: var(--gem-color-accent);
             color: white;
             border: none;
-            padding: 10px 24px;
+            padding: 8px 20px;
             border-radius: 99px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 14px;
+            font-size: 13px;
             box-shadow: 0 2px 8px rgba(26, 115, 232, 0.2);
+            white-space: nowrap;
         }
 
         .action-btn:hover {
@@ -129,40 +146,7 @@
             transform: translateY(0);
         }
 
-        .editor-content {
-            flex-grow: 1;
-            width: 100%;
-            padding: 40px;
-            outline: none;
-            overflow-y: auto;
-
-            /* WeChat Article Simulation Typography */
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans", "Microsoft YaHei", sans-serif;
-            font-size: 16px;
-            line-height: 1.6;
-            letter-spacing: 0.034em;
-            color: #333;
-            text-align: justify;
-        }
-
-        /* Enhanced Empty State */
-        .editor-content:empty:before {
-            content: '📝 粘贴文章内容，或上方导入链接...';
-            color: #aaa;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            font-size: 16px;
-            opacity: 0.6;
-        }
-
-        .editor-content p {
-            margin-bottom: 1.5em;
-            /* WeChat style paragraph spacing */
-        }
-
+        /* Toast & Spinners */
         .status-toast {
             position: fixed;
             bottom: 24px;
@@ -176,14 +160,13 @@
             opacity: 0;
             transition: opacity 0.3s;
             pointer-events: none;
-            z-index: 1000;
+            z-index: 2000;
         }
 
         .status-toast.show {
             opacity: 1;
         }
 
-        /* Loading Spinner */
         @keyframes spin {
             0% {
                 transform: rotate(0deg);
@@ -279,248 +262,247 @@
                     </svg>
                     返回工具箱
                 </a>
-                <h1 style="font-size: 24px; margin-top: 12px;">文章一键排版</h1>
-                <p style="color: var(--gem-color-text-secondary); font-size: 14px;">自动清理格式、规范标点、中英文加空格。</p>
+                <h1 style="font-size: 24px; margin-top: 12px; display:flex; align-items:center; gap:8px;">
+                    文章一键排版
+                    <span class="gem-chip gem-chip-accent" style="font-size: 11px; vertical-align: middle;">WangEditor
+                        V5</span>
+                </h1>
+                <p style="color: var(--gem-color-text-secondary); font-size: 14px;">自动清理格式、规范标点、中英文加空格 (支持富文本编辑)。</p>
             </div>
         </div>
 
-        <!-- Interface -->
+        <!-- Editor Card -->
         <div class="editor-card">
-            <div class="toolbar-container">
 
-                <!-- URL Import Section -->
-                <div
-                    style="width: 100%; display: flex; gap: 8px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px dashed #eee;">
-                    <input type="text" id="articleUrl" placeholder="🔗 粘贴微信公众号文章链接 (https://mp.weixin.qq.com/s/...)"
-                        style="flex-grow: 1; padding: 10px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none;">
-                    <button class="action-btn" onclick="importArticle()" style="font-weight: bold; color: white;">📥
-                        导入文章</button>
+            <!-- 1. Actions Bar (Import & Format Settings) -->
+            <div class="actions-bar">
+                <!-- URL Import -->
+                <div style="display: flex; gap: 8px; flex: 1; max-width: 500px;">
+                    <input type="text" id="articleUrl" placeholder="🔗 粘贴微信公众号文章链接..."
+                        style="flex-grow: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; outline: none;">
+                    <button class="action-btn" onclick="importArticle()" style="background:#4F46E5;">📥 导入</button>
                 </div>
 
+                <div style="width: 1px; height: 24px; background: #eee; margin: 0 8px;"></div>
+
+                <!-- Settings -->
                 <div class="checkbox-group">
-                    <label class="checkbox-item">
-                        <input id="clearSign" name="clearSign" type="checkbox" checked="checked">
-                        <span>格式化 (加空格/直角引号)</span>
-                    </label>
-                    <label class="checkbox-item">
-                        <input id="clearAttr" name="clearAttr" type="checkbox" checked="checked">
-                        <span>清除属性 (Style/Class)</span>
-                    </label>
-                    <label class="checkbox-item">
-                        <input id="clearA" name="clearA" type="checkbox" checked="checked">
-                        <span>清除链接</span>
-                    </label>
-                    <label class="checkbox-item">
-                        <input id="clearImg" name="clearImg" type="checkbox">
-                        <span>清除图片</span>
-                    </label>
+                    <label class="checkbox-item"><input id="clearSign" type="checkbox" checked>格式化(空格/引号)</label>
+                    <label class="checkbox-item"><input id="clearAttr" type="checkbox" checked>清除样式</label>
+                    <label class="checkbox-item"><input id="clearLink" type="checkbox" checked>清除链接</label>
+                    <label class="checkbox-item"><input id="clearImg" type="checkbox">清除图片</label>
                 </div>
+
                 <div style="flex-grow: 1;"></div>
-                <!-- Add a Copy button for convenience -->
+
+                <!-- Main Actions -->
                 <button class="action-btn"
-                    style="background-color: white; color: var(--gem-color-text-secondary); border: 1px solid #eee; box-shadow: none; margin-right: 8px;"
-                    onclick="copyToClipboard()">📋 复制</button>
+                    style="background-color: white; color: #333; border: 1px solid #ddd; box-shadow:none;"
+                    onclick="copyToClipboard()">📋 复制结果</button>
                 <button class="action-btn" onclick="formatText()">✨ 一键排版</button>
             </div>
 
-            <div id="editor" class="editor-content" contenteditable="true"></div>
+            <!-- 2. WangEditor Toolbar -->
+            <div id="toolbar-container"></div>
+
+            <!-- 3. WangEditor Content -->
+            <div id="editor-container"></div>
+
         </div>
     </div>
 
-    <div id="toast" class="status-toast">排版完成</div>
+    <div id="toast" class="status-toast">操作完成</div>
 
-    <script type="text/javascript">
+    <!-- WangEditor JS -->
+    <script src="https://unpkg.com/@wangeditor/editor@latest/dist/index.js"></script>
+
+    <script>
+        const { createEditor, createToolbar } = window.wangEditor;
+
+        // Editor Configuration
+        const editorConfig = {
+            placeholder: '在此输入内容...',
+            MENU_CONF: {},
+            onChange(editor) {
+                // html = editor.getHtml()
+            }
+        };
+
+        // Initialize Editor
+        const editor = createEditor({
+            selector: '#editor-container',
+            html: '<p>📝 粘贴文章内容，或使用上方导入链接...</p>',
+            config: editorConfig,
+            mode: 'default' // or 'simple'
+        });
+
+        // Initialize Toolbar
+        const toolbar = createToolbar({
+            editor,
+            selector: '#toolbar-container',
+            config: {},
+            mode: 'default'
+        });
+
+        // --- Core Functions ---
+
+        async function importArticle() {
+            const url = $('#articleUrl').val().trim();
+            if (!url) return showToast('⚠️ 请输入文章链接');
+            if (url.indexOf('mp.weixin.qq.com') < 0) return showToast('⚠️ 仅支持微信公众号文章');
+
+            const $btn = $('button[onclick="importArticle()"]');
+            const originalHtml = $btn.html();
+            $btn.html('<span class="spinner"></span> 导入中').prop('disabled', true);
+
+            try {
+                // Call Vercel API
+                const resp = await fetch(`/api/fetch-article?url=${encodeURIComponent(url)}`);
+                const json = await resp.json();
+
+                if (!resp.ok) throw new Error(json.error || 'Fetch failed');
+                if (!json.html) throw new Error('无内容');
+
+                // Parse
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(json.html, 'text/html');
+                const content = doc.querySelector('#js_content');
+
+                if (content) {
+                    // Pre-process images for WangEditor friendly format
+                    content.querySelectorAll('img').forEach(img => {
+                        const src = img.getAttribute('data-src') || img.src;
+                        if (src) {
+                            img.src = src;
+                            img.setAttribute('referrerpolicy', 'no-referrer');
+                            img.removeAttribute('data-src');
+                            img.style.maxWidth = '100%';
+                            img.style.height = 'auto';
+                        }
+                    });
+
+                    editor.setHtml(content.innerHTML);
+                    showToast('✅ 导入成功');
+                } else {
+                    showToast('⚠️ 未找到正文');
+                }
+
+            } catch (err) {
+                showToast('❌ ' + err.message);
+            } finally {
+                $btn.html(originalHtml).prop('disabled', false);
+            }
+        }
+
         function formatText() {
-            var $editor = $('#editor');
-            // Create a temporary container to manipulate DOM
-            var $temp = $('<div>').html($editor.html());
+            // Get HTML from editor
+            const rawHtml = editor.getHtml();
+            if (!rawHtml || rawHtml === '<p><br></p>') return showToast('⚠️ 内容为空');
 
-            // 1. DOM-based Cleaning (More robust than Regex)
+            // Virtual DOM processing
+            const $temp = $('<div>').html(rawHtml);
+
+            // 1. Remove Attributes (Styles/Classes)
             if ($('#clearAttr').is(':checked')) {
-                // Find ALL elements
                 $temp.find('*').each(function () {
-                    var $el = $(this);
+                    const $el = $(this);
 
-                    // Remove all attributes. We need to do this carefully.
-                    // We can't use .removeAttrs() as it's not standard jQuery
-                    // Native simplified approach:
-                    var attributes = $.map(this.attributes, function (item) {
-                        return item.name;
+                    // Logic to keep some attrs (e.g. img src)
+                    const keepImg = !$('#clearImg').is(':checked') && $el.is('img');
+                    const keepLink = !$('#clearLink').is(':checked') && $el.is('a');
+
+                    // Native attributes map
+                    $.each(this.attributes || [], function (i, attr) {
+                        const name = attr.name;
+                        if (keepImg && (name === 'src' || name === 'alt' || name === 'width' || name === 'height' || name === 'referrerpolicy')) return;
+                        if (keepLink && (name === 'href' || name === 'target')) return;
+                        // Always keep 'col' 'row' for tables? WangEditor tables need specific details.
+                        // Let's be safer: if it is a table-related tag, we might want to be careful.
+                        // For now, aggressive cleaning.
+                        $el.removeAttr(name);
                     });
 
-                    // List of attributes to KEEP (if any)
-                    // Adjust logic based on checkboxes
-                    var keepImg = !$('#clearImg').is(':checked') && $el.is('img');
-                    var keepLink = !$('#clearA').is(':checked') && $el.is('a');
-
-                    $.each(attributes, function (i, item) {
-                        // Logic: Remove everything by default
-                        // If it's an image and we keep images, keep src
-                        if (keepImg && (item === 'src' || item === 'alt')) return;
-                        // If it's a link and we keep links, keep href
-                        if (keepLink && (item === 'href' || item === 'target')) return;
-
-                        // Otherwise remove
-                        $el.removeAttr(item);
-                    });
-
-                    // Specific tag conversions
-                    // Convert section, div, article to p
-                    if ($el.is('section, div, article, aside, header, footer, nav')) {
-                        // Replace with P, keeping content
-                        var $p = $('<p>').html($el.html());
-                        $el.replaceWith($p);
-                    }
-
-                    // Remove span/font tags but keep text
-                    if ($el.is('span, font')) {
-                        $el.replaceWith($el.html());
-                    }
+                    // Re-add referrerpolicy for images if kept
+                    if (keepImg) $el.attr('referrerpolicy', 'no-referrer');
                 });
             }
 
-            // 2. Remove Links if requested
-            if ($('#clearA').is(':checked')) {
-                $temp.find('a').each(function () {
-                    $(this).replaceWith($(this).html());
-                });
+            // 2. Remove Links
+            if ($('#clearLink').is(':checked')) {
+                $temp.find('a').each(function () { $(this).replaceWith($(this).html()); });
             }
 
-            // 3. Remove Images if requested
+            // 3. Remove Images
             if ($('#clearImg').is(':checked')) {
                 $temp.find('img').remove();
             }
 
-            // 4. Content Formatting (Regex is still good for text manipulation)
-            var content = $temp.html();
-
+            // 4. Text Spacing & Punctuation (Regex on HTML string is tricky, best on text nodes)
+            // But for simplicity, we do it on the whole string carefully, OR we iterate text nodes.
+            // Let's use the previous "whole string" approach but be careful not to break tags.
+            // Actually, safe way is to iterate text nodes.
             if ($('#clearSign').is(':checked')) {
-                // Regex for text content (same as before)
-                content = content.replace(/([\u4E00-\u9FA3])([A-Za-z0-9\(\[\{@#])/g, '$1 $2');
-                content = content.replace(/([A-Za-z0-9\.,!@#%?\)\]\}])([\u4E00-\u9FA3])/g, '$1 $2');
-                content = content.replace(/([〔〕（）。，！？《》—“”「」]) +/g, '$1');
-                content = content.replace(/ +([〔〕（）。，！？《》—“”「」])/g, '$1');
-                content = content.replace(/ +/g, ' ');
-                content = content.replace(/“/g, "「");
-                content = content.replace(/”/g, "」");
-                content = content.replace(/‘/g, "『");
-                content = content.replace(/’/g, "』");
+                processTextNodes($temp[0]);
             }
 
-            // Update Temp with regex processed content
-            $temp.html(content);
+            // Set back to editor
+            editor.setHtml($temp.html());
+            showToast('✨ 排版完成');
+        }
 
-            // 5. Aggressive Empty Line Cleanup (Using DOM)
-            // Traverse again to find empty P tags
-            // We loop backwards or repeatedly to handle nested empties
-            $temp.find('p').each(function () {
-                var html = $(this).html().replace(/&nbsp;/g, ' ').replace(/<br\s*\/?>/g, ' ').trim();
-                if (html === '') {
-                    $(this).remove();
+        // Helper: Traverse and process text nodes only
+        function processTextNodes(node) {
+            if (node.nodeType === 3) { // Text Node
+                let text = node.nodeValue;
+                // Add Spaces
+                text = text.replace(/([\u4E00-\u9FA3])([A-Za-z0-9\(\[\{@#])/g, '$1 $2');
+                text = text.replace(/([A-Za-z0-9\.,!@#%?\)\]\}])([\u4E00-\u9FA3])/g, '$1 $2');
+                // Punctuation
+                text = text.replace(/([〔〕（）。，！？《》—“”「」]) +/g, '$1');
+                text = text.replace(/ +([〔〕（）。，！？《》—“”「」])/g, '$1');
+                text = text.replace(/“/g, "「").replace(/”/g, "」");
+
+                node.nodeValue = text;
+            } else if (node.nodeType === 1 && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
+                // Recursion
+                for (let i = 0; i < node.childNodes.length; i++) {
+                    processTextNodes(node.childNodes[i]);
                 }
-            });
-            // Also clean up any lingering br tags that are direct children of root if needed (though we wrapped in p)
-
-            $editor.html($temp.html());
-            showToast('排版已完成');
+            }
         }
 
         function copyToClipboard() {
-            var $editor = $('#editor');
+            // WangEditor doesn't have a direct "Select All and Copy" command that returns clipboard data easily
+            // We use the DOM approach on the editor body
+            const $body = $(editor.getEditableContainer()); // .w-e-text-container
 
-            // Create a temporary range to select the content
-            var range = document.createRange();
-            range.selectNodeContents($editor[0]);
-            var selection = window.getSelection();
+            // We need the ACTUAL content div inside, usually .w-e-text-container [contenteditable]
+            // But selecting #editor-container text works too.
+            // Using standard API if possible? 
+            // editor.getText() is plain text. editor.getHtml() is HTML.
+            // To copy rich text, we must select the DOM.
+
+            const selection = window.getSelection();
             selection.removeAllRanges();
+            const range = document.createRange();
+            range.selectNodeContents(document.getElementById('editor-container').querySelector('.w-e-text-container') || document.getElementById('editor-container'));
             selection.addRange(range);
 
             try {
                 document.execCommand('copy');
-                showToast('已复制到剪贴板');
-            } catch (err) {
+                showToast('已复制 (保留格式)');
+            } catch (e) {
                 showToast('复制失败');
             }
-
-            // Clear selection
             selection.removeAllRanges();
         }
 
         function showToast(msg) {
-            var $toast = $('#toast');
+            const $toast = $('#toast');
             $toast.text(msg).addClass('show');
-            setTimeout(function () {
-                $toast.removeClass('show');
-            }, 2000);
+            setTimeout(() => $toast.removeClass('show'), 2000);
         }
 
-        async function importArticle() {
-            var url = $('#articleUrl').val().trim();
-            if (!url) {
-                showToast('⚠️ 请先输入文章链接');
-                return;
-            }
-
-            // Simple client-side validation
-            if (url.indexOf('mp.weixin.qq.com') < 0) {
-                showToast('⚠️ 仅支持微信公众号文章链接');
-                return;
-            }
-
-            var $btn = $('button[onclick="importArticle()"]');
-            var originalHtml = $btn.html();
-            $btn.html('<span class="spinner"></span> 导入中...').prop('disabled', true).css('opacity', 0.8);
-
-            try {
-                // Call our Vercel API
-                const response = await fetch(`/api/fetch-article?url=${encodeURIComponent(url)}`);
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Fetch failed');
-                }
-
-                if (!data.html) {
-                    throw new Error('No content received');
-                }
-
-                // Parse HTML to extract #js_content
-                var parser = new DOMParser();
-                var doc = parser.parseFromString(data.html, 'text/html');
-                var articleContent = doc.querySelector('#js_content');
-
-                if (articleContent) {
-                    // Success!
-                    // Process images:
-                    // 1. Promote data-src to src
-                    // 2. Add explicit no-referrer policy to individual images
-                    // 3. Reset max-width to ensure they fit
-                    var images = articleContent.querySelectorAll('img');
-                    images.forEach(img => {
-                        var realSrc = img.getAttribute('data-src') || img.src;
-                        if (realSrc) {
-                            img.src = realSrc;
-                            img.setAttribute('referrerpolicy', 'no-referrer');
-                            img.style.maxWidth = '100%';
-                            img.style.height = 'auto'; // Prevent collapse
-                            img.style.display = 'block'; // Block display
-                            img.style.margin = '10px auto'; // Center
-                        }
-                    });
-
-                    $('#editor').html(articleContent.innerHTML);
-                    showToast('✅ 文章导入成功！');
-                } else {
-                    showToast('⚠️ 未能识别文章正文内容');
-                }
-
-            } catch (err) {
-                console.error(err);
-                showToast('❌ 导入失败: ' + err.message);
-            } finally {
-                $btn.html(originalHtml).prop('disabled', false).css('opacity', 1);
-            }
-        }
     </script>
 </body>
 
