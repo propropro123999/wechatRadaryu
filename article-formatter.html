@@ -356,7 +356,7 @@
             $btn.html('<span class="spinner"></span> 导入中').prop('disabled', true);
 
             try {
-                // Call Vercel API
+                // Call Vercel API (proxy)
                 const resp = await fetch(`/api/fetch-article?url=${encodeURIComponent(url)}`);
                 const json = await resp.json();
 
@@ -369,17 +369,44 @@
                 const content = doc.querySelector('#js_content');
 
                 if (content) {
-                    // Pre-process images for WangEditor friendly format
-                    content.querySelectorAll('img').forEach(img => {
-                        const src = img.getAttribute('data-src') || img.src;
+                    // 1. Image Fixes
+                    // WeChat uses data-src. We must move it to src.
+                    // Also strip other heavy attributes to avoid editor lag.
+                    const images = content.querySelectorAll('img');
+                    for (let img of images) {
+                        const src = img.getAttribute('data-src');
                         if (src) {
-                            img.src = src;
-                            img.setAttribute('referrerpolicy', 'no-referrer');
+                            img.setAttribute('src', src);
+                            img.setAttribute('referrerpolicy', 'no-referrer'); // Critical for WeChat
                             img.removeAttribute('data-src');
-                            img.style.maxWidth = '100%';
-                            img.style.height = 'auto';
+
+                            // Reset styles to ensure visibility
+                            img.style.cssText = 'max-width: 100%; height: auto; display: block; margin: 10px 0;';
+                            // Remove Wechat lazyload classes and others
+                            img.removeAttribute('class');
+                        }
+                    }
+
+                    // 2. Structure Normalization (Critical for Editor Stability)
+                    // WangEditor prefers flat structures (p, div, h1-h5).
+                    // WeChat uses deeply nested <section>. contenteditable handles them poorly sometimes.
+                    // We replace <section> with <div> or <p> depending on content.
+                    const structuralTags = ['section', 'article', 'aside', 'footer', 'header'];
+                    structuralTags.forEach(tag => {
+                        const elements = content.querySelectorAll(tag);
+                        for (let el of elements) {
+                            // Create a div wrapper
+                            const div = document.createElement('div');
+                            div.innerHTML = el.innerHTML;
+                            // Copy styles if needed? No, let's keep it clean for editing.
+                            // But maybe copy just text-align?
+                            if (el.style.textAlign) div.style.textAlign = el.style.textAlign;
+                            el.parentNode.replaceChild(div, el);
                         }
                     });
+
+                    // 3. Remove scripts and styles
+                    content.querySelectorAll('script, style').forEach(el => el.remove());
 
                     editor.setHtml(content.innerHTML);
                     showToast('✅ 导入成功');
@@ -388,6 +415,7 @@
                 }
 
             } catch (err) {
+                console.error(err);
                 showToast('❌ ' + err.message);
             } finally {
                 $btn.html(originalHtml).prop('disabled', false);
