@@ -318,9 +318,13 @@
     <div id="diagnostics-panel"
         style="max-width:1200px; margin: 20px auto; padding: 20px; background:#f8f9fa; border:2px dashed #ff4d4f; border-radius:12px;">
         <h3 style="color:#ff4d4f; margin-top:0;">🐞 诊断面板 (调试模式)</h3>
-        <div style="margin-bottom:10px; display:flex; gap:10px;">
-            <button class="action-btn" onclick="insertTestImage()">🖼️ 插入测试图片 (验证编辑器能力)</button>
+        <div style="margin-bottom:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button class="action-btn" onclick="insertTestImage()">🖼️ 插入测试图片</button>
             <button class="action-btn" style="background:#666;" onclick="$('#raw-log').val('')">清空日志</button>
+            <label style="font-size:13px; font-weight:bold; color:#d93025; display:flex; align-items:center;">
+                <input type="checkbox" id="rawMode" style="margin-right:4px;">
+                ⚠️ 强力模式 (跳过清理，直接插入)
+            </label>
         </div>
         <textarea id="raw-log"
             style="width:100%; height:200px; font-family:monospace; font-size:12px; padding:10px; border:1px solid #ccc; border-radius:8px;"
@@ -432,16 +436,28 @@
                 if (!json.html) throw new Error('无内容');
 
                 // Parse
+                // Parse
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(json.html, 'text/html');
                 const content = doc.querySelector('#js_content');
 
                 if (content) {
+                    logRaw('Found #js_content');
+
+                    // --- Raw Mode Check ---
+                    if ($('#rawMode').is(':checked')) {
+                        logRaw('⚠️ Raw Mode: Skipping all cleanup. Inserting raw HTML.');
+                        editor.dangerouslyInsertHtml(content.innerHTML);
+                        showToast('⚠️ 暴力导入完成');
+                        return;
+                    }
+
                     // 1. Image Fixes
                     // WeChat uses data-src. We must move it to src.
                     // Also strip other heavy attributes to avoid editor lag.
                     const images = content.querySelectorAll('img');
                     let imgCount = 0;
+                    logRaw(`Found ${images.length} images in parsed DOM.`);
 
                     for (let img of images) {
                         // WeChat often creates images with data-src and src as placeholder.
@@ -458,6 +474,11 @@
                             img.setAttribute('src', realSrc);
                             img.setAttribute('referrerpolicy', 'no-referrer');
 
+                            // Debug log for first 3 images
+                            if (imgCount <= 3) {
+                                logRaw(`Img ${imgCount} src: ${realSrc.substring(0, 50)}...`);
+                            }
+
                             // Remove potential interfering attributes
                             img.removeAttribute('data-src');
                             img.removeAttribute('data-type');
@@ -465,8 +486,11 @@
                             img.removeAttribute('loading'); // Remove lazy loading
                             img.removeAttribute('style'); // Clear styles first
 
-                            // Force display styles
-                            img.style.cssText = 'max-width: 100%; height: auto; display: block; margin: 10px 0;';
+                            // Apply simple safe styles
+                            img.style.maxWidth = '100%';
+                            img.style.height = 'auto';
+                            img.style.display = 'block';
+                            img.style.margin = '10px 0';
                         }
                     }
 
