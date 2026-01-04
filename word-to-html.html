@@ -349,40 +349,68 @@
 
         async function copyRichText() {
             const content = document.getElementById('preview-content');
-            const htmlContent = content.innerHTML;
 
             try {
-                // 方案1: 使用现代 Clipboard API (支持更好的富文本)
-                if (navigator.clipboard && navigator.clipboard.write) {
-                    const blob = new Blob([htmlContent], { type: 'text/html' });
-                    const plainText = content.innerText;
+                // 方案1: 使用 copy 事件监听器 - 最可靠的方法
+                const copyHandler = (e) => {
+                    e.preventDefault();
+                    e.clipboardData.setData('text/html', content.innerHTML);
+                    e.clipboardData.setData('text/plain', content.innerText);
+                    document.removeEventListener('copy', copyHandler);
+                };
 
-                    const clipboardItem = new ClipboardItem({
-                        'text/html': blob,
-                        'text/plain': new Blob([plainText], { type: 'text/plain' })
-                    });
+                document.addEventListener('copy', copyHandler);
 
-                    await navigator.clipboard.write([clipboardItem]);
-                    alert('图文内容已复制！现在可以直接粘贴到编辑器中。');
+                // 选中内容并触发复制
+                const range = document.createRange();
+                range.selectNodeContents(content);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                const success = document.execCommand('copy');
+                selection.removeAllRanges();
+
+                if (success) {
+                    alert('图文内容已复制！现在可以粘贴到微信公众号、Word 等编辑器中。');
                     return;
                 }
             } catch (err) {
-                console.warn('Clipboard API failed, trying fallback method', err);
+                console.warn('Copy event method failed:', err);
             }
 
-            // 方案2: 兜底方案 - 使用传统方法
+            // 方案2: 使用现代 Clipboard API
+            try {
+                if (navigator.clipboard && navigator.clipboard.write) {
+                    const htmlBlob = new Blob([content.innerHTML], { type: 'text/html' });
+                    const textBlob = new Blob([content.innerText], { type: 'text/plain' });
+
+                    const clipboardItem = new ClipboardItem({
+                        'text/html': htmlBlob,
+                        'text/plain': textBlob
+                    });
+
+                    await navigator.clipboard.write([clipboardItem]);
+                    alert('图文内容已复制！现在可以粘贴到编辑器中。');
+                    return;
+                }
+            } catch (err) {
+                console.warn('Clipboard API failed:', err);
+            }
+
+            // 方案3: 最后的兜底方案
             try {
                 const range = document.createRange();
-                range.selectNode(content);
+                range.selectNodeContents(content);
                 window.getSelection().removeAllRanges();
                 window.getSelection().addRange(range);
 
                 document.execCommand('copy');
                 window.getSelection().removeAllRanges();
-                alert('图文内容已复制！如果图片未成功粘贴，请尝试使用"复制HTML代码"功能。');
+                alert('内容已复制！如果图片未显示，请尝试在浏览器中手动选中内容后按 Ctrl+C (或 Cmd+C) 复制。');
             } catch (err) {
-                console.error('Copy failed', err);
-                alert('复制失败，请尝试手动选中复制，或使用"复制HTML代码"功能。');
+                console.error('All copy methods failed:', err);
+                alert('自动复制失败。请手动选中内容后按 Ctrl+C (或 Cmd+C) 复制。');
             }
         }
 
