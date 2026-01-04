@@ -10,6 +10,70 @@
     <!-- Mammoth.js for DOCX parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <style>
+        /* Auth Overlay Styles */
+        .auth-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            z-index: 9999;
+        }
+
+        .auth-card {
+            width: 400px;
+            max-width: 90vw;
+            background: var(--gem-color-bg-surface);
+            backdrop-filter: var(--gem-blur-lg);
+            -webkit-backdrop-filter: var(--gem-blur-lg);
+            border-radius: var(--gem-radius-lg);
+            padding: 32px;
+            box-shadow: var(--gem-shadow-card);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .auth-icon-wrapper {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #007AFF, #5856D6);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+        }
+
+        .auth-icon-wrapper svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .error-message {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #D32F2F;
+            font-size: 13px;
+        }
+
+        .animate-scale-in {
+            animation: scaleIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
         .drop-zone {
             border: 2px dashed var(--gem-color-border);
             border-radius: 16px;
@@ -283,26 +347,43 @@
             });
         }
 
-        function copyRichText() {
+        async function copyRichText() {
             const content = document.getElementById('preview-content');
-
-            // Create a range to select the content
-            const range = document.createRange();
-            range.selectNode(content);
-            window.getSelection().removeAllRanges();
-            window.getSelection().addRange(range);
+            const htmlContent = content.innerHTML;
 
             try {
-                // Execute copy command
-                document.execCommand('copy');
-                alert('图文内容已复制！现在可以直接粘贴到编辑器中。');
+                // 方案1: 使用现代 Clipboard API (支持更好的富文本)
+                if (navigator.clipboard && navigator.clipboard.write) {
+                    const blob = new Blob([htmlContent], { type: 'text/html' });
+                    const plainText = content.innerText;
+
+                    const clipboardItem = new ClipboardItem({
+                        'text/html': blob,
+                        'text/plain': new Blob([plainText], { type: 'text/plain' })
+                    });
+
+                    await navigator.clipboard.write([clipboardItem]);
+                    alert('图文内容已复制！现在可以直接粘贴到编辑器中。');
+                    return;
+                }
             } catch (err) {
-                console.error('Copy failed', err);
-                alert('复制失败，请尝试手动选中复制。');
+                console.warn('Clipboard API failed, trying fallback method', err);
             }
 
-            // Clear selection
-            window.getSelection().removeAllRanges();
+            // 方案2: 兜底方案 - 使用传统方法
+            try {
+                const range = document.createRange();
+                range.selectNode(content);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+
+                document.execCommand('copy');
+                window.getSelection().removeAllRanges();
+                alert('图文内容已复制！如果图片未成功粘贴，请尝试使用"复制HTML代码"功能。');
+            } catch (err) {
+                console.error('Copy failed', err);
+                alert('复制失败，请尝试手动选中复制，或使用"复制HTML代码"功能。');
+            }
         }
 
         // --- Auth Logic (Copied from other tools) ---
