@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Word 转 HTML 工具 - ICviews</title>
+    <link rel="stylesheet" href="gemini-ui.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Mammoth.js for DOCX parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <style>
+        .drop-zone {
+            border: 2px dashed var(--gem-color-border);
+            border-radius: 16px;
+            padding: 48px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 24px;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.drag-over {
+            border-color: var(--gem-color-primary);
+            background: rgba(66, 133, 244, 0.05);
+            transform: scale(1.01);
+        }
+
+        .preview-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: none;
+            /* Hidden by default */
+        }
+
+        .preview-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--gem-color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #F8F9FA;
+        }
+
+        .preview-content {
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            min-height: 400px;
+            overflow-y: auto;
+            max-height: 800px;
+        }
+
+        /* Word Content Styles for Preview */
+        .word-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .word-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1em 0;
+        }
+
+        .word-content td,
+        .word-content th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Auth Overlay -->
+    <div id="auth-overlay" class="auth-overlay" style="display: flex;">
+        <div class="auth-card animate-scale-in">
+            <div class="auth-icon-wrapper">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                </svg>
+            </div>
+            <h2 style="margin-bottom: 8px;">Word 转 HTML 工具</h2>
+            <p style="color: var(--gem-color-text-secondary); margin-bottom: 24px; font-size: 14px;">请输入授权码以继续使用</p>
+            <div class="input-group" style="margin-bottom: 24px;">
+                <input type="text" id="auth-code-input" class="gem-input" placeholder="输入授权码" autocomplete="off">
+            </div>
+            <button class="gem-button gem-button-primary" onclick="verifyAuth()" style="width: 100%;">
+                验证授权
+            </button>
+            <div id="auth-error" class="error-message" style="margin-top: 12px; display: none;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                </svg>
+                <span>授权码无效</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container animate-fade-in" id="main-content" style="display: none; max-width: 1000px;">
+
+        <!-- Header -->
+        <header style="margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between;">
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="gem-button gem-button-secondary"
+                    style="padding: 8px; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+                    </svg>
+                </a>
+                <div>
+                    <h1 style="font-size: 24px; margin-bottom: 4px;">Word 转 HTML</h1>
+                    <p style="color: var(--gem-color-text-secondary); font-size: 14px;">.docx 格式 · 智能图文保留 · 纯本地处理</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Drop Zone -->
+        <div class="drop-zone" id="drop-zone">
+            <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
+            <h3 style="margin-bottom: 8px; color: var(--gem-color-text-primary);">拖拽 Word 文档到这里</h3>
+            <p style="color: var(--gem-color-text-secondary); margin-bottom: 24px;">支持 .docx 格式，最大支持 50MB</p>
+            <button class="gem-button gem-button-primary" onclick="document.getElementById('file-input').click()">
+                选择文件
+            </button>
+            <input type="file" id="file-input" accept=".docx" style="display: none;">
+        </div>
+
+        <!-- Preview Section -->
+        <div class="preview-container" id="preview-container">
+            <div class="preview-header">
+                <div class="flex items-center gap-2">
+                    <span style="font-weight: 500;" id="file-name-display">Document.docx</span>
+                    <span class="gem-chip gem-chip-success">转换成功</span>
+                </div>
+                <div class="flex gap-2">
+                    <button class="gem-button gem-button-secondary" onclick="copyHTML()">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right: 4px;">
+                            <path
+                                d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                        </svg>
+                        复制 HTML 代码
+                    </button>
+                    <button class="gem-button gem-button-primary" onclick="copyRichText()">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right: 4px;">
+                            <path
+                                d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                        </svg>
+                        复制图文内容
+                    </button>
+                </div>
+            </div>
+            <div class="preview-content word-content" id="preview-content">
+                <!-- Converted content will appear here -->
+            </div>
+        </div>
+
+        <!-- Hidden container for clipboard operations -->
+        <div id="clipboard-helper" contenteditable="true" style="position: absolute; left: -9999px;"></div>
+
+    </div>
+
+    <script>
+        // --- Auth Configuration ---
+        const TOOL_KEY = 'word-parser';
+        let AUTH_CODES = {}; // Will load from json
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAuthCodes();
+            checkAuth();
+
+            // Setup Drop Zone
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('file-input');
+
+            // Prevent default drag behaviors
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            // Highlight drop zone when item is dragged over it
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            // Handle dropped files
+            dropZone.addEventListener('drop', handleDrop, false);
+            fileInput.addEventListener('change', (e) => handleFiles(e.target.files), false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight(e) {
+            document.getElementById('drop-zone').classList.add('drag-over');
+        }
+
+        function unhighlight(e) {
+            document.getElementById('drop-zone').classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            const file = files[0];
+
+            if (!file.name.endsWith('.docx')) {
+                alert('仅支持 .docx 格式的 Word 文档');
+                return;
+            }
+
+            // Update UI
+            document.getElementById('file-name-display').innerText = file.name;
+            document.getElementById('preview-content').innerHTML = '<div style="text-align:center; padding: 40px; color: #666;">正在转换中...</div>';
+            document.getElementById('preview-container').style.display = 'block';
+
+            // Process File
+            const reader = new FileReader();
+            reader.onload = function (loadEvent) {
+                const arrayBuffer = loadEvent.target.result;
+                convertDocxToHtml(arrayBuffer);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function convertDocxToHtml(arrayBuffer) {
+            mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
+                .then(displayResult)
+                .catch(handleError);
+        }
+
+        function displayResult(result) {
+            const html = result.value; // The generated HTML
+            const messages = result.messages; // Any messages, such as warnings during conversion
+
+            document.getElementById('preview-content').innerHTML = html;
+
+            if (messages.length > 0) {
+                console.log('Conversion messages:', messages);
+            }
+        }
+
+        function handleError(err) {
+            console.error(err);
+            document.getElementById('preview-content').innerHTML = `
+                <div style="text-align:center; color: #D32F2F;">
+                    <h3>转换失败</h3>
+                    <p>${err.message}</p>
+                </div>
+            `;
+        }
+
+        function copyHTML() {
+            const content = document.getElementById('preview-content').innerHTML;
+            navigator.clipboard.writeText(content).then(() => {
+                alert('HTML 代码已复制到剪贴板');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                alert('复制失败，请重试');
+            });
+        }
+
+        function copyRichText() {
+            const content = document.getElementById('preview-content');
+
+            // Create a range to select the content
+            const range = document.createRange();
+            range.selectNode(content);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+
+            try {
+                // Execute copy command
+                document.execCommand('copy');
+                alert('图文内容已复制！现在可以直接粘贴到编辑器中。');
+            } catch (err) {
+                console.error('Copy failed', err);
+                alert('复制失败，请尝试手动选中复制。');
+            }
+
+            // Clear selection
+            window.getSelection().removeAllRanges();
+        }
+
+        // --- Auth Logic (Copied from other tools) ---
+        async function loadAuthCodes() {
+            try {
+                const response = await fetch('auth-codes.json');
+                const data = await response.json();
+                AUTH_CODES = data.tools[TOOL_KEY]?.codes || {};
+            } catch (error) {
+                console.warn('Failed to load auth-codes.json, using fallback');
+                // Fallback for local testing without server
+                AUTH_CODES = { "WORD-2025-LOCAL": "Local Dev" };
+            }
+        }
+
+        function checkAuth() {
+            const storedCode = localStorage.getItem(`auth_code_${TOOL_KEY}`);
+            if (storedCode && validateCode(storedCode)) {
+                showContent();
+            } else {
+                document.getElementById('auth-overlay').style.display = 'flex';
+            }
+        }
+
+        function validateCode(code) {
+            return AUTH_CODES.hasOwnProperty(code);
+        }
+
+        function verifyAuth() {
+            const input = document.getElementById('auth-code-input');
+            const code = input.value.trim();
+            const errorMsg = document.getElementById('auth-error');
+
+            if (validateCode(code)) {
+                localStorage.setItem(`auth_code_${TOOL_KEY}`, code);
+                showContent();
+            } else {
+                errorMsg.style.display = 'flex';
+                input.classList.add('error');
+            }
+        }
+
+        function showContent() {
+            document.getElementById('auth-overlay').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>
