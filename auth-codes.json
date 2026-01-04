@@ -103,6 +103,13 @@
         "PDF-2025-S9T0": "标准授权",
         "dcone2025": "自定义授权"
       }
+    },
+    "word-parser": {
+      "name": "Word 转 HTML 工具",
+      "codes": {
+        "dcone2025": "自定义授权",
+        "WORD-2025-A1B2": "标准授权"
+      }
     }
   },
   "_legacy_codes": {
