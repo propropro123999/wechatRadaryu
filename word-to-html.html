@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Mammoth.js for DOCX parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <!-- JSZip for Download -->
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <style>
         /* Auth Overlay Styles */
         .auth-overlay {
@@ -68,6 +70,7 @@
                 opacity: 0;
                 transform: scale(0.9);
             }
+
             to {
                 opacity: 1;
                 transform: scale(1);
@@ -137,6 +140,46 @@
         .word-content th {
             border: 1px solid #ddd;
             padding: 8px;
+        }
+
+        /* Image Controls Overlay */
+        .img-wrapper {
+            position: relative;
+            display: inline-block;
+            margin: 10px 0;
+            max-width: 100%;
+        }
+
+        .img-controls {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: none;
+            gap: 6px;
+            z-index: 10;
+        }
+
+        .img-wrapper:hover .img-controls {
+            display: flex;
+        }
+
+        .img-btn {
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: background 0.2s;
+        }
+
+        .img-btn:hover {
+            background: rgba(0, 122, 255, 0.9);
         }
     </style>
 </head>
@@ -215,6 +258,12 @@
                         </svg>
                         复制 HTML 代码
                     </button>
+                    <button class="gem-button gem-button-secondary" onclick="downloadAllImages()">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right: 4px;">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                        </svg>
+                        下载图片包
+                    </button>
                     <button class="gem-button gem-button-primary" onclick="copyRichText()">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right: 4px;">
                             <path
@@ -240,7 +289,7 @@
         let AUTH_CODES = {}; // Will load from json
 
         // --- Initialization ---
-        document.addEventListener('DOMContentLoaded', async () => {
+        documenstener('DOMContentLoaded', async () => {
             await loadAuthCodes();
             checkAuth();
 
@@ -287,7 +336,7 @@
             handleFiles(files);
         }
 
-        function handleFiles(files) {
+        function(files) {
             if (files.length === 0) return;
             const file = files[0];
 
@@ -301,31 +350,165 @@
             document.getElementById('preview-content').innerHTML = '<div style="text-align:center; padding: 40px; color: #666;">正在转换中...</div>';
             document.getElementById('preview-container').style.display = 'block';
 
-            // Process File
+            // Proce ss File
             const reader = new FileReader();
             reader.onload = function (loadEvent) {
                 const arrayBuffer = loadEvent.target.result;
                 convertDocxToHtml(arrayBuffer);
             };
             reader.readAsArrayBuffer(file);
-        }
+         }
 
-        function convertDocxToHtml(arrayBuffer) {
+        function co nvertDocxToHtml(arrayBuffer) {
             mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
                 .then(displayResult)
                 .catch(handleError);
         }
 
-        function displayResult(result) {
-            const html = result.value; // The generated HTML
-            const messages = result.messages; // Any messages, such as warnings during conversion
+        async function displayResult(result) {
+            const rawHtml = result.value;
+            const msult.messages;
 
-            document.getElementById('preview-content').innerHTML = html;
+            // Post-process HTML: Resize images and add wr       const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = rawHtml;
+
+            const imgs = tempDiv.querySelectorAll('img');
+            const processedImages = [];
+
+            for (let img of imgs) {
+                const src = img.getAttribute('src');
+                if (src && src.startsWith('data:image')) {
+                    // Resize large images
+                    try {
+                        const newSrc = await resizeImage(src, 800); // Max width 800px
+                        img.setAttribute('src', newSrc);
+                    } catch (e) {
+                        console.warn('Image resize failed, using original', e);
+                    }
+                }
+                
+                // Wrap in div for controls
+                // We'll replace the img element with the wrapper in the DOM
+                const wrapper = document.createElement('div');
+               ssName = 'img-wrapper';
+                
+                // Clone img to keep attributes, but we need to insert wrapper
+                // Replace img with wrapper, then append img to wrapper
+                img.parentNode.insertBefore(wrapper, i         wrapper.appendChild(img);
+
+                // Add Controls
+                const controls = document.createElement('div');
+                controls.className = 'img-controls';
+                controls.innerHTML = `
+                    <button class="img-btn" onclick="copySingleImitle="复制图片">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                        复制
+                    </button>
+                    <button class="img-btn" onclick="downloadSingleImage(this)" title="下载图片">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                        下载
+                    </button>
+                `;
+                wrapper.appendChild(controls);
+            }
+
+            document.getElementById('preview-content').innerHTML = tempDiv.innerHTML;
 
             if (messages.length > 0) {
                 console.log('Conversion messages:', messages);
             }
         }
+
+        // --- Image Optimization Utility ---
+        function resizeImage(base64Str, maxWidth) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    let w = img.width;
+                    let h = img.height;
+
+                    if (w <= maxWidth) {
+                        resolve(base64Str); // No resize needed
+                        return;
+                    }
+
+                    // Calculate new dimensions
+                    const ratio = maxWidth / w;
+                    w = maxWidth;
+                    h = h * ratio;
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.Ima 0, 0, w, h);
+                    
+                    // Comress to JPEG 0.8 to save space
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
+                };
+                img.onerror = reject;
+                img.src = base64Str;
+            });
+        }
+
+        // --- Individual Image Controls ---
+        window.copySingleImage = async (btn) => {
+            const wrapper = btn.closest('.img-wrapper');
+            const img = wrapper.querySelector('img');
+            
+            try {
+                const response = await fetch(img.src);
+                const blob = await response.blob();
+                await navigator.clipboard.write([
+                    new ClipboardItem({ [blob.type]: blob })
+                ]);
+                alert('图片已复制');
+            } catch (e) {
+                console.error(e);
+                alert('复制失败');
+            }
+        };
+
+        window.downloadSingleImage = (btn) => {
+            const wrapper = btn.closest('.img-wrapper');
+            const img = wrapper.querySelector('img');
+            const link = document.createElement('a');
+            link.download = `image_${Date.now()}.jpg`;
+            link.href = img.src;
+            link.click();
+        };
+
+        // --- Bulk Download ---
+        window.downloadAllImages = async () => {
+            const zip = new JSZip();
+            const imgs = document.querySelectorAll('#preview-content img');
+            if (imgs.length === 0) return alert('没有发现图片');
+
+            const folder = zip.folder("images");
+            let count = 0;
+
+            for (let i = 0; i < imgs.length; i++) {
+                const src = imgs[i].src;
+                if (!src.startsWith('data:image')) continue;
+
+                // Extract base64 data
+                const data = src.split(',')[1];
+                const type = src.substring(src.indexOf(':') + 1, src.indexOf(';'));
+                const ext = type.split('/')[1] || 'jpg';
+                
+                folder.file(`image_${i + 1}.${ext}`, data, { base64: true });
+                count++;
+            }
+
+            if (count === 0) return alert('没有可供下载的图片');
+
+            const content = await zip.generateAsync({ type: "blob" });
+            const url = URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `word_images_${Date.now()}.zip`;
+            a.click();
+        };
 
         function handleError(err) {
             console.error(err);
@@ -348,7 +531,20 @@
         }
 
         async function copyRichText() {
-            const content = document.getElementById('preview-content');
+            // Clone content to strip controls before copying
+            const contentOriginal = document.getElementById('preview-content');
+            const contentClone = contentOriginal.cloneNode(true);
+            
+            // Remove all .img-controls and unwrap .img-wrapper
+            contentClone.querySelectorAll('.img-controls').forEach(el => el.remove());
+            
+            // Unwrap innerHTML of wrappers (optional, but cleaner)
+            // Actually, keep wrapper div but with no styles is fine, 
+            // or just copy the simplified structure.
+            // Let's just remove the buttons is enough, the wrapper div is harmless if unstyled or simple relative.
+            // But to be safe for editors, let's keep it simple.
+            
+            const content = contentClone;
 
             try {
                 // 方案1: 使用 copy 事件监听器 - 最可靠的方法
