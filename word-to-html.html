@@ -250,7 +250,16 @@
                     <span style="font-weight: 500;" id="file-name-display">Document.docx</span>
                     <span class="gem-chip gem-chip-success">转换成功</span>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 items-center">
+                    <!-- Cloud Bridge Toggle -->
+                    <div style="display: flex; align-items: center; margin-right: 12px;">
+                        <input type="checkbox" id="cloud-bridge-toggle" style="margin-right: 6px;">
+                        <label for="cloud-bridge-toggle" style="font-size: 14px; cursor: pointer;"
+                            title="开启后，图片会自动上传到免费图床，解决知乎等平台无法粘贴图片的问题">
+                            开启图床中转 (Beta)
+                        </label>
+                    </div>
+
                     <button class="gem-button gem-button-secondary" onclick="copyHTML()">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right: 4px;">
                             <path
@@ -606,6 +615,46 @@
 
             const content = contentClone;
 
+            // --- Cloud Bridge Integration ---
+            const useCloud = document.getElementById('cloud-bridge-toggle').checked;
+            if (useCloud) {
+                // Determine images to upload
+                const imagesToUpload = Array.from(content.querySelectorAll('img'))
+                    .filter(img => img.src.startsWith('data:image'));
+
+                if (imagesToUpload.length > 0) {
+                    const confirmUpload = confirm(`检测到 ${imagesToUpload.length} 张图片。开启图床中转需要将这些图片上传到云端生成外链，是否继续？\n(这可能需要几秒钟，取决于图片数量)`);
+
+                    if (confirmUpload) {
+                        try {
+                            // Show loading indicator
+                            const originalBtnText = document.querySelector('button[onclick="copyRichText()"]').innerText;
+                            document.querySelector('button[onclick="copyRichText()"]').innerText = '正在上传图片...';
+
+                            // Upload all images sequentially
+                            for (let i = 0; i < imagesToUpload.length; i++) {
+                                const img = imagesToUpload[i];
+                                document.querySelector('button[onclick="copyRichText()"]').innerText = `正在上传 (${i + 1}/${imagesToUpload.length})...`;
+
+                                const cloudUrl = await uploadImageToCloud(img.src);
+                                if (cloudUrl) {
+                                    img.src = cloudUrl;
+                                    img.setAttribute('data-cloud-uploaded', 'true');
+                                }
+                            }
+
+                            // Restore button text
+                            document.querySelector('button[onclick="copyRichText()"]').innerText = originalBtnText;
+
+                        } catch (e) {
+                            console.error('Cloud upload failed:', e);
+                            alert('部分图片上传失败，将使用原始格式复制。建议尝试"下载图片包"方案。');
+                            document.querySelector('button[onclick="copyRichText()"]').innerText = '复制图文内容';
+                        }
+                    }
+                }
+            }
+
             try {
                 // 方案1: 使用 copy 事件监听器 - 最可靠的方法
                 const copyHandler = (e) => {
@@ -713,6 +762,29 @@
         function showContent() {
             document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('main-content').style.display = 'block';
+        }
+
+        async function uploadImageToCloud(base64Data) {
+            try {
+                const response = await fetch('/api/upload-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ image: base64Data })
+                });
+
+                const data = await response.json();
+                if (data.url) {
+                    return data.url;
+                } else {
+                    console.warn('Upload API error:', data);
+                    return null;
+                }
+            } catch (e) {
+                console.error('Upload network error:', e);
+                return null;
+            }
         }
     </script>
 </body>
