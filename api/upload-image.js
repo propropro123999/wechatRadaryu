@@ -93,7 +93,13 @@ module.exports = (req, res) => {
                     // Let's try to parse as JSON, if fail, assume text.
 
                     const text = data.trim();
+                    if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) {
+                        res.status(502).json({ error: 'Upstream returned HTML (likely Cloudflare block)' });
+                        return;
+                    }
+
                     let finalUrl = '';
+                    // ... rest of logic
 
                     if (text.startsWith('http')) {
                         finalUrl = text;

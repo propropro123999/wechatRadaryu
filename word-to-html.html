@@ -896,25 +896,96 @@
                 }
             }
 
+            // Helper to convert Base64 to Blob
+            function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
+                const byteCharacters = atob(b64Data);
+                const byteArrays = [];
+
+                for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                    const slice = byteCharacters.slice(offset, offset + sliceSize);
+                    const byteNumbers = new Array(slice.length);
+                    for (let i = 0; i < slice.length; i++) {
+                        byteNumbers[i] = slice.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    byteArrays.push(byteArray);
+                }
+
+                const blob = new Blob(byteArrays, { type: contentType });
+                return blob;
+            }
+
             async function uploadImageToCloud(base64Data) {
                 try {
-                    const response = await fetch('/api/upload-image', {
+                    // Prepare FormData for Direct Upload
+                    // Split base64: "data:image/jpeg;base64,....."
+                    const parts = base64Data.split(';base64,');
+                    const contentType = parts[0].split(':')[1];
+                    const rawBase64 = parts[1];
+
+                    const blob = b64toBlob(rawBase64, contentType);
+                    const formData = new FormData();
+                    formData.append('image', blob, 'upload.jpg');
+
+                    console.log('Attempting Direct Client-Side Upload...');
+
+                    // Try Direct Upload to bypass Cloudflare on Vercel
+                    const response = await fetch('https://i.111666.best/image', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Auth-Token': 'dcone2025'
+                            // Content-Type is set automatically by fetch with FormData
                         },
+                        body: formData
+                    });
+
+                    const text = await response.text();
+                    console.log('Upload Response:', text);
+
+                    let finalUrl = '';
+                    try {
+                        // Try parsing JSON
+                        const json = JSON.parse(text);
+                        finalUrl = json.url || json.data?.url || json.src || json.message;
+                    } catch (e) {
+                        // If text, check if it's a URL
+                        if (text.startsWith('http')) finalUrl = text;
+                        else if (text.startsWith('/')) finalUrl = 'https://i.111666.best' + text;
+                    }
+
+                    if (finalUrl && finalUrl.startsWith('http')) {
+                        return finalUrl;
+                    } else {
+                        console.warn('Direct upload failed or returned invalid data:', text);
+                        // Fallback to Proxy if Direct fails (e.g. CORS block)
+                        // But if Direct blocked by Cloudflare, Proxy likely blocked too. 
+                        // Let's try Proxy as last resort.
+                        return await uploadImageToCloudProxy(base64Data);
+                    }
+
+                } catch (e) {
+                    console.error('Direct upload network error (CORS?):', e);
+                    return await uploadImageToCloudProxy(base64Data);
+                }
+            }
+
+            async function uploadImageToCloudProxy(base64Data) {
+                try {
+                    console.log('Falling back to Proxy Upload...');
+                    const response = await fetch('/api/upload-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ image: base64Data })
                     });
 
                     const data = await response.json();
-                    if (data.url) {
+                    if (data.url && data.url.startsWith('http')) {
                         return data.url;
-                    } else {
-                        console.warn('Upload API error:', data);
-                        return null;
                     }
+                    console.warn('Proxy upload failed:', data);
+                    return null;
                 } catch (e) {
-                    console.error('Upload network error:', e);
+                    console.error('Proxy upload error:', e);
                     return null;
                 }
             }
