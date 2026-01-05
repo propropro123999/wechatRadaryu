@@ -26,11 +26,11 @@
   --gem-gradient-mesh: radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
   /* Gentle pastel mesh for light mode */
   --gem-bg-mesh:
-    radial-gradient(at 0% 0%, rgba(167, 243, 208, 0.3) 0, transparent 50%),
-    radial-gradient(at 50% 10%, rgba(165, 243, 252, 0.3) 0, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(224, 231, 255, 0.5) 0, transparent 50%),
-    radial-gradient(at 80% 100%, rgba(253, 186, 116, 0.2) 0, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(196, 181, 253, 0.3) 0, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(167, 243, 208, 0.4) 0, transparent 50%),
+    radial-gradient(at 50% 10%, rgba(165, 243, 252, 0.4) 0, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(224, 231, 255, 0.6) 0, transparent 50%),
+    radial-gradient(at 80% 100%, rgba(253, 186, 116, 0.3) 0, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(196, 181, 253, 0.4) 0, transparent 50%);
 
   --gem-color-accent: #007AFF;
   /* iOS Blue */
@@ -178,24 +178,83 @@ a:hover {
 /* ——— Components ——— */
 
 /* Glass Card */
+/* Glass Card */
 .gem-card {
-  background: var(--gem-color-bg-surface);
-  backdrop-filter: var(--gem-blur-lg);
-  -webkit-backdrop-filter: var(--gem-blur-lg);
-  border-radius: var(--gem-radius-lg);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border-radius: 24px;
   padding: 32px;
-  box-shadow: var(--gem-shadow-card);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.gem-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.gem-card>* {
+  position: relative;
+  z-index: 1;
 }
 
 .gem-card:hover {
-  transform: translateY(-6px) scale(1.01);
-  box-shadow: var(--gem-shadow-floating);
-  border-color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.85);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+  border-color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.75);
+}
+
+/* Bento Grid System */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 24px;
+  auto-rows: minmax(180px, auto);
+}
+
+@media (min-width: 640px) {
+  .bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .bento-grid {
+    grid-template-columns: repeat(4, 1fr);
+    /* 4 columns base */
+  }
+}
+
+.col-span-2 {
+  grid-column: span 1;
+}
+
+.row-span-2 {
+  grid-row: span 1;
+}
+
+@media (min-width: 1024px) {
+  .col-span-2 {
+    grid-column: span 2;
+  }
+
+  .row-span-2 {
+    grid-row: span 2;
+  }
 }
 
 /* Inputs */
