@@ -377,14 +377,35 @@
             const processedImages = [];
 
             for (let img of imgs) {
-                const src = img.getAttribute('src');
-                if (src && src.startsWith('data:image')) {
-                    // Resize large images
-                    try {
-                        const newSrc = await resizeImage(src, 800); // Max width 800px
-                        img.setAttribute('src', newSrc);
-                    } catch (e) {
-                        console.warn('Image resize failed, using original', e);
+                if (src) {
+                    // 1. Handle External/Malformed URLs
+                    if (!src.startsWith('data:image')) {
+                        try {
+                            // Clean URL (remove trailing quotes, spaces, etc. common in bad parsing)
+                            let cleanSrc = src.replace(/%22/g, '').replace(/"/g, '').split(' ')[0].trim();
+
+                            // Log for debugging
+                            if (src !== cleanSrc) console.log('Cleaned URL:', src, '->', cleanSrc);
+
+                            // Fetch and convert to Base64 via Proxy
+                            const newBase64 = await fetchExternalImage(cleanSrc);
+                            if (newBase64) {
+                                img.setAttribute('src', newBase64);
+                                src = newBase64; // Update local var for resizing
+                            }
+                        } catch (e) {
+                            console.warn('Failed to fetch external image:', src, e);
+                        }
+                    }
+
+                    // 2. Resize if it is now a Base64 image
+                    if (src && src.startsWith('data:image')) {
+                        try {
+                            const newSrc = await resizeImage(src, 800);
+                            img.setAttribute('src', newSrc);
+                        } catch (e) {
+                            console.warn('Image resize failed', e);
+                        }
                     }
                 }
 
@@ -418,6 +439,37 @@
 
             if (messages.length > 0) {
                 console.log('Conversion messages:', messages);
+            }
+        }
+
+        // --- External Image Helper ---
+        async function fetchExternalImage(url) {
+            try {
+                // Try Direct Fetch first (if CORS allows)
+                // If it fails, use Proxy
+                let blob;
+                try {
+                    const resp = await fetch(url);
+                    if (!resp.ok) throw new Error('Direct fetch failed');
+                    blob = await resp.blob();
+                } catch (e) {
+                    console.log('Direct fetch failed, trying proxy...', e);
+                    // Fallback to Proxy
+                    const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
+                    const resp = await fetch(proxyUrl);
+                    if (!resp.ok) throw new Error('Proxy fetch failed');
+                    blob = await resp.blob();
+                }
+
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            } catch (err) {
+                console.error('All fetch methods failed for:', url, err);
+                return null;
             }
         }
 
