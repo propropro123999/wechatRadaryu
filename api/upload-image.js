@@ -23,28 +23,42 @@ module.exports = (req, res) => {
         const { image } = req.body;
         if (!image) return res.status(400).json({ error: 'No image provided' });
 
-        // Convert Base64 to Buffer
-        const base64Data = image.split(';base64,').pop();
+        // Detect MIME type
+        // image string format: "data:image/png;base64,....."
+        const matches = image.match(/^data:(.+);base64,(.+)$/);
+        if (!matches || matches.length !== 3) {
+            return res.status(400).json({ error: 'Invalid base64 string' });
+        }
+        const mimeType = matches[1]; // e.g., 'image/png'
+        const base64Data = matches[2];
         const buffer = Buffer.from(base64Data, 'base64');
+
+        // Determine filename extension
+        const ext = mimeType.split('/')[1] || 'jpg';
+        const filename = `upload.${ext}`;
+
         const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
 
-        // Telegra.ph expects "file" field
-        const preContent = `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="upload.jpg"\r\nContent-Type: image/jpeg\r\n\r\n`;
-        const postContent = `\r\n--${boundary}--\r\n`;
+        // Catbox API: reqtype=fileupload, fileToUpload=@file
+        const fieldPart = `--${boundary}\r\nContent-Disposition: form-data; name="reqtype"\r\n\r\nfileupload\r\n`;
+        const fileHeader = `--${boundary}\r\nContent-Disposition: form-data; name="fileToUpload"; filename="${filename}"\r\nContent-Type: ${mimeType}\r\n\r\n`;
+        const postFooter = `\r\n--${boundary}--\r\n`;
 
         const bodyBuffer = Buffer.concat([
-            Buffer.from(preContent, 'utf8'),
+            Buffer.from(fieldPart, 'utf8'),
+            Buffer.from(fileHeader, 'utf8'),
             buffer,
-            Buffer.from(postContent, 'utf8')
+            Buffer.from(postFooter, 'utf8')
         ]);
 
         const options = {
-            hostname: 'telegra.ph',
-            path: '/upload',
+            hostname: 'catbox.moe',
+            path: '/user/api.php',
             method: 'POST',
             headers: {
                 'Content-Type': `multipart/form-data; boundary=${boundary}`,
-                'Content-Length': bodyBuffer.length
+                'Content-Length': bodyBuffer.length,
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36'
             }
         };
 
@@ -53,15 +67,14 @@ module.exports = (req, res) => {
             upstreamRes.on('data', (chunk) => data += chunk);
             upstreamRes.on('end', () => {
                 try {
-                    // Telegra.ph returns: [{"src":"/file/xxxx.jpg"}]
-                    const result = JSON.parse(data);
+                    // Catbox returns the raw URL as text body on success
+                    const text = data.trim();
+                    console.log('Catbox response:', text);
 
-                    if (Array.isArray(result) && result[0].src) {
-                        res.status(200).json({ url: 'https://telegra.ph' + result[0].src });
-                    } else if (result.error) {
-                        res.status(500).json({ error: result.error });
+                    if (text.startsWith('http')) {
+                        res.status(200).json({ url: text });
                     } else {
-                        res.status(500).json({ error: 'Unknown response from Telegra.ph', raw: data });
+                        res.status(500).json({ error: 'Upload failed', raw: text });
                     }
                 } catch (e) {
                     res.status(500).json({ error: e.message, raw: data });

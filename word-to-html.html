@@ -758,7 +758,7 @@
                 const content = document.getElementById('preview-content');
                 // Select ALL images that are not already on our cloud
                 const imagesToUpload = Array.from(content.querySelectorAll('img'))
-                    .filter(img => !img.src.includes('telegra.ph'));
+                    .filter(img => !img.src.includes('catbox.moe'));
 
                 if (imagesToUpload.length === 0) {
                     return alert('没有检测到需要上传的本地图片（或者图片已经上传过了）。');
@@ -821,7 +821,7 @@
                     btn.onclick = null; // Disable button effectively
                     btn.style.background = '#4CAF50';
 
-                    alert('所有图片已成功转为云链接(Telegra.ph)！\n\n现在您可以：\n1. 随意选中任意文字和图片进行复制。\n2. 粘贴到知乎等平台。');
+                    alert('所有图片已成功转为云链接(Catbox)！\n\n现在您可以：\n1. 随意选中任意文字和图片进行复制。\n2. 粘贴到知乎等平台。');
 
                 } catch (e) {
                     console.error(e);
