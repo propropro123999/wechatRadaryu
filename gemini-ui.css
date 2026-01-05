@@ -1,57 +1,48 @@
 /* ================================================================================
-   GEMINI-INSPIRED DESIGN SYSTEM (APPLE/GLASS EDITION)
-   Aesthetics: Frosty Glass, Vibrant Mesh Gradients, Soft Glows, Premium iOS Feel
+   GEMINI-INSPIRED DESIGN SYSTEM (NEO-BRUTALISM EDITION)
+   Aesthetics: High Contrast, Bold Borders, Hard Shadows, Vibrant Colors
    ================================================================================ */
 
 :root {
   /* ——— Core Palette ——— */
-  /* Replaced flat gray with a transparent base for mesh gradients */
-  --gem-color-bg-body: #F5F7FA;
+  --gem-color-bg-body: #FFFDF5;
+  /* Warm paper white */
+  --gem-color-bg-surface: #FFFFFF;
 
-  /* Glass Surfaces */
-  --gem-color-bg-surface: rgba(255, 255, 255, 0.75);
-  /* High transparency for glass effect */
-  --gem-color-bg-surface-glass: rgba(255, 255, 255, 0.6);
-  --gem-color-border-glass: rgba(255, 255, 255, 0.8);
+  --gem-color-text-primary: #000000;
+  --gem-color-text-secondary: #333333;
+  --gem-color-text-tertiary: #666666;
 
-  --gem-color-text-primary: #111827;
-  /* Darker, higher contrast */
-  --gem-color-text-secondary: #4B5563;
-  --gem-color-text-tertiary: #9CA3AF;
+  /* ——— Brand Colors ——— */
+  /* Vibrant, flat colors */
+  --gem-color-accent: #3b82f6;
+  /* Bright Blue */
+  --gem-color-purple: #a855f7;
+  --gem-color-pink: #ec4899;
+  --gem-color-orange: #f97316;
+  --gem-color-green: #22c55e;
 
-  /* ——— Brand Gradients & Accents ——— */
-  /* More vivid, iOS-style gradients */
-  --gem-gradient-primary: linear-gradient(135deg, #007AFF, #5856D6, #FF2D55);
-  --gem-gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.5) 100%);
-  --gem-gradient-mesh: radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
-  /* Gentle pastel mesh for light mode */
-  --gem-bg-mesh:
-    radial-gradient(at 0% 0%, rgba(167, 243, 208, 0.4) 0, transparent 50%),
-    radial-gradient(at 50% 10%, rgba(165, 243, 252, 0.4) 0, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(224, 231, 255, 0.6) 0, transparent 50%),
-    radial-gradient(at 80% 100%, rgba(253, 186, 116, 0.3) 0, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(196, 181, 253, 0.4) 0, transparent 50%);
+  --gem-gradient-primary: linear-gradient(to right, #3b82f6, #3b82f6);
+  /* Flat for brutalism */
 
-  --gem-color-accent: #007AFF;
-  /* iOS Blue */
-  --gem-color-accent-hover: #0056B3;
+  /* ——— Borders & Shadows ——— */
+  --gem-border-width: 3px;
+  --gem-border-color: #000000;
 
-  /* ——— Shapes & Effects ——— */
-  --gem-radius-sm: 10px;
-  --gem-radius-md: 18px;
-  --gem-radius-lg: 28px;
-  /* Increased for friendlier look */
-  --gem-radius-xl: 36px;
+  --gem-radius-sm: 6px;
+  --gem-radius-md: 12px;
+  --gem-radius-lg: 16px;
+  --gem-radius-xl: 20px;
   --gem-radius-full: 9999px;
 
-  /* Softer, colorful shadows (Glows) */
-  --gem-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --gem-shadow-card: 0 8px 32px rgba(31, 38, 135, 0.07);
-  --gem-shadow-floating: 0 12px 48px rgba(31, 38, 135, 0.15);
-  --gem-shadow-glass: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  /* Hard Shadows */
+  --gem-shadow-sm: 2px 2px 0px #000000;
+  --gem-shadow-card: 6px 6px 0px #000000;
+  --gem-shadow-floating: 10px 10px 0px #000000;
+  --gem-shadow-pressed: 0px 0px 0px #000000;
 
-  --gem-font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', sans-serif;
-  --gem-blur-lg: blur(20px);
+  --gem-font-sans: 'Space Mono', 'Courier New', 'Inter', sans-serif;
+  /* Adding Mono fallback */
 }
 
 /* ——— Reset & Base ——— */
@@ -63,15 +54,13 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: var(--gem-font-sans);
-  background-color: #F8FAFC;
-  /* Mesh Gradient Background */
-  background-image: var(--gem-bg-mesh);
-  background-attachment: fixed;
-  background-size: 100% 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--gem-color-bg-body);
+  /* Dot Pattern Background */
+  background-image: radial-gradient(#000000 1px, transparent 1px);
+  background-size: 24px 24px;
   color: var(--gem-color-text-primary);
   line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
 
@@ -81,33 +70,32 @@ h3,
 h4,
 h5 {
   margin: 0;
-  font-weight: 600;
-  /* Bolder headings */
-  letter-spacing: -0.02em;
-  /* Tighter tracking */
+  font-weight: 800;
+  color: #000;
 }
 
 h1 {
-  font-size: 36px;
-  line-height: 1.2;
-  background: var(--gem-gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  display: inline-block;
+  font-size: 42px;
   margin-bottom: 24px;
+  background: #FFD600;
+  /* Highlighter Yellow Background */
+  border: 3px solid #000;
+  box-shadow: 4px 4px 0px #000;
+  padding: 8px 16px;
+  display: inline-block;
+  transform: rotate(-2deg);
 }
 
 h2 {
   font-size: 26px;
   margin-bottom: 16px;
-  color: var(--gem-color-text-primary);
 }
 
 p {
   margin: 0 0 16px;
   color: var(--gem-color-text-secondary);
   font-size: 15px;
-  /* Slightly larger for readability */
+  font-weight: 500;
 }
 
 a {
@@ -124,7 +112,6 @@ a:hover {
 /* ——— Utility Classes ——— */
 .container {
   max-width: 1280px;
-  /* Wider container */
   margin: 0 auto;
   padding: 40px 32px;
 }
@@ -149,73 +136,58 @@ a:hover {
   gap: 8px;
 }
 
-.gap-4 {
-  gap: 16px;
-}
-
 .w-full {
   width: 100%;
 }
 
-.text-center {
-  text-align: center;
-}
-
-.truncate {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.grid {
-  display: grid;
-}
-
-.grid-2 {
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-}
-
 /* ——— Components ——— */
 
-/* Glass Card */
-/* Glass Card */
+/* Neo-Brutalism Card */
 .gem-card {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(24px) saturate(140%);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
-  border-radius: 24px;
-  padding: 32px;
-  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  background: #FFFFFF;
+  border: var(--gem-border-width) solid var(--gem-border-color);
+  border-radius: var(--gem-radius-lg);
+  padding: 28px;
+  box-shadow: var(--gem-shadow-card);
+  transition: all 0.2s cubic-bezier(0, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-.gem-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
-  z-index: 0;
-  pointer-events: none;
-}
-
-.gem-card>* {
-  position: relative;
-  z-index: 1;
-}
-
 .gem-card:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
-  border-color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.75);
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0px #000000;
+  background: #FFFFFF;
+  /* Ensure no transparency */
+}
+
+/* Specific colors for cards to pop */
+.gem-card:nth-child(1) {
+  background-color: #E0F2FE;
+}
+
+/* Light Blue */
+.gem-card:nth-child(2) {
+  background-color: #FCE7F3;
+}
+
+/* Light Pink */
+.gem-card:nth-child(3) {
+  background-color: #DCFCE7;
+}
+
+/* Light Green */
+.gem-card:nth-child(4) {
+  background-color: #FEF3C7;
+}
+
+/* Light Yellow */
+
+.gem-card:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #000000;
 }
 
 /* Bento Grid System */
@@ -262,18 +234,18 @@ a:hover {
   width: 100%;
   padding: 14px 18px;
   border-radius: var(--gem-radius-md);
-  border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.5);
-  /* Semi-transparent */
-  font-size: 15px;
+  border: 3px solid #000;
+  background: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+  box-shadow: 4px 4px 0px #000;
   transition: all 0.2s;
-  color: var(--gem-color-text-primary);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02), 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 
 .gem-input:focus {
-  background: #FFFFFF;
-  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.02);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #000;
   outline: none;
 }
 
@@ -283,13 +255,13 @@ a:hover {
   align-items: center;
   justify-content: center;
   padding: 12px 28px;
-  border-radius: var(--gem-radius-full);
-  font-weight: 600;
+  border-radius: var(--gem-radius-md);
+  font-weight: 700;
   font-size: 15px;
   cursor: pointer;
-  border: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  letter-spacing: 0.01em;
+  border: 3px solid #000;
+  transition: all 0.1s;
+  text-transform: uppercase;
 }
 
 .gem-btn:active {
@@ -297,50 +269,54 @@ a:hover {
 }
 
 .gem-btn-primary {
-  background: var(--gem-gradient-primary);
-  background-size: 200% auto;
+  background: #3b82f6;
   color: white;
-  box-shadow: 0 4px 14px rgba(0, 122, 255, 0.3);
+  box-shadow: 4px 4px 0px #000;
 }
 
 .gem-btn-primary:hover {
-  background-position: right center;
-  box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
-  transform: translateY(-1px);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #000;
+  background: #2563eb;
+}
+
+.gem-btn-primary:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px #000;
 }
 
 .gem-btn-secondary {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(10px);
-  color: var(--gem-color-text-primary);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  background: #FFF;
+  color: #000;
+  box-shadow: 4px 4px 0px #000;
 }
 
 .gem-btn-secondary:hover {
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: #f3f4f6;
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #000;
 }
 
-/* ——— Floating Glass Navbar ——— */
+.gem-btn-secondary:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px #000;
+}
+
+/* ——— Floating Navbar (Brutal) ——— */
 .gem-navbar {
   position: sticky;
   top: 16px;
-  /* Floating look */
   margin: 0 16px;
-  border-radius: 20px;
-  /* Pill shape */
+  border-radius: var(--gem-radius-lg);
   z-index: 1000;
   height: 70px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: #FFF;
+  border: 3px solid #000;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+  padding: 0 24px;
+  box-shadow: 6px 6px 0px #000;
 }
 
 .gem-navbar-brand {
@@ -348,124 +324,32 @@ a:hover {
   align-items: center;
   gap: 12px;
   text-decoration: none;
-  color: var(--gem-color-text-primary);
-  font-weight: 700;
-  font-size: 20px;
-  letter-spacing: -0.02em;
-}
-
-.gem-navbar-brand:hover {
-  opacity: 0.8;
-}
-
-.gem-navbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-/* ——— App Switcher ——— */
-.gem-app-switcher {
-  position: relative;
-  display: inline-block;
-}
-
-.gem-app-switcher-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--gem-color-text-secondary);
-  transition: all 0.2s;
-  background: transparent;
-  border: none;
-  font-size: 20px;
-}
-
-.gem-app-switcher-btn:hover {
-  background: rgba(0, 0, 0, 0.04);
-  color: var(--gem-color-accent);
-}
-
-.gem-app-switcher-menu {
-  position: absolute;
-  top: 120%;
-  /* Adjusted for floating nav */
-  right: 0;
-  width: 320px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 24px;
-  box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  padding: 24px;
-  display: none;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  animation: fadeInDropdown 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-/* Fix visibility on hover */
-.gem-app-switcher:hover .gem-app-switcher-menu {
-  display: grid;
-}
-
-@keyframes fadeInDropdown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.95);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.gem-app-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  padding: 12px 8px;
-  border-radius: 16px;
-  color: var(--gem-color-text-secondary);
-  transition: all 0.2s;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.gem-app-item:hover {
-  background: rgba(0, 122, 255, 0.08);
-  /* Light blue tint */
-  color: #007AFF;
-  transform: translateY(-2px);
-}
-
-.gem-app-icon {
-  font-size: 28px;
-  margin-bottom: 8px;
+  color: #000;
+  font-weight: 800;
+  font-size: 22px;
+  text-transform: uppercase;
 }
 
 /* ——— Tags/Chips ——— */
 .gem-chip {
   display: inline-flex;
-  padding: 6px 14px;
-  border-radius: 12px;
+  padding: 4px 12px;
+  border-radius: 6px;
   font-size: 13px;
-  font-weight: 600;
-  background: rgba(0, 0, 0, 0.04);
-  color: var(--gem-color-text-secondary);
+  font-weight: 700;
+  background: #EEE;
+  color: #000;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0px #000;
+  text-transform: uppercase;
 }
 
 .gem-chip-accent {
-  background: rgba(0, 122, 255, 0.1);
-  color: #007AFF;
+  background: #FFD600;
+  /* Yellow */
+  color: #000;
 }
+
 
 /* ——— Helpers ——— */
 .gem-skeleton {

@@ -10,11 +10,11 @@
   <style>
     /* Page specific adjustments */
     body {
-      background: radial-gradient(circle at 50% 0%, #E8F0FE 0%, #F0F4F9 60%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      /* Neo-Brutalism Background overrides */
+      background-color: #F8F0E3;
+      /* Cream/Paper */
+      background-image: radial-gradient(#000 1.5px, transparent 1.5px);
+      background-size: 20px 20px;
     }
 
     .hero-section {
@@ -26,20 +26,23 @@
     .tool-icon-wrapper {
       width: 64px;
       height: 64px;
-      border-radius: 20px;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4));
+      border-radius: 12px;
+      /* Sharper */
+      background: #FFF;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 32px;
-      box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.05);
+      /* Hard shadow & Border */
+      border: 3px solid #000;
+      box-shadow: 4px 4px 0px #000;
       margin-bottom: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      transition: transform 0.3s ease;
+      transition: transform 0.1s ease;
     }
 
     .gem-card:hover .tool-icon-wrapper {
-      transform: scale(1.1) rotate(-5deg);
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px #000;
     }
 
     .tool-link {
