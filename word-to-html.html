@@ -289,7 +289,7 @@
         let AUTH_CODES = {}; // Will load from json
 
         // --- Initialization ---
-        documenstener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             await loadAuthCodes();
             checkAuth();
 
@@ -336,7 +336,7 @@
             handleFiles(files);
         }
 
-        function(files) {
+        function handleFiles(files) {
             if (files.length === 0) return;
             const file = files[0];
 
@@ -357,9 +357,9 @@
                 convertDocxToHtml(arrayBuffer);
             };
             reader.readAsArrayBuffer(file);
-         }
+        }
 
-        function co nvertDocxToHtml(arrayBuffer) {
+        function convertDocxToHtml(arrayBuffer) {
             mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
                 .then(displayResult)
                 .catch(handleError);
@@ -367,9 +367,10 @@
 
         async function displayResult(result) {
             const rawHtml = result.value;
-            const msult.messages;
+            const messages = result.messages;
 
-            // Post-process HTML: Resize images and add wr       const tempDiv = document.createElement('div');
+            // Post-process HTML: Resize images and add wrappers
+            const tempDiv = document.createElement('div');
             tempDiv.innerHTML = rawHtml;
 
             const imgs = tempDiv.querySelectorAll('img');
@@ -386,21 +387,22 @@
                         console.warn('Image resize failed, using original', e);
                     }
                 }
-                
+
                 // Wrap in div for controls
                 // We'll replace the img element with the wrapper in the DOM
                 const wrapper = document.createElement('div');
-               ssName = 'img-wrapper';
-                
+                wrapper.className = 'img-wrapper';
+
                 // Clone img to keep attributes, but we need to insert wrapper
                 // Replace img with wrapper, then append img to wrapper
-                img.parentNode.insertBefore(wrapper, i         wrapper.appendChild(img);
+                img.parentNode.insertBefore(wrapper, img);
+                wrapper.appendChild(img);
 
                 // Add Controls
                 const controls = document.createElement('div');
                 controls.className = 'img-controls';
                 controls.innerHTML = `
-                    <button class="img-btn" onclick="copySingleImitle="复制图片">
+                    <button class="img-btn" onclick="copySingleImage(this)" title="复制图片">
                         <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
                         复制
                     </button>
@@ -441,8 +443,8 @@
                     canvas.width = w;
                     canvas.height = h;
                     const ctx = canvas.getContext('2d');
-                    ctx.Ima 0, 0, w, h);
-                    
+                    ctx.drawImage(img, 0, 0, w, h);
+
                     // Comress to JPEG 0.8 to save space
                     resolve(canvas.toDataURL('image/jpeg', 0.8));
                 };
@@ -455,7 +457,7 @@
         window.copySingleImage = async (btn) => {
             const wrapper = btn.closest('.img-wrapper');
             const img = wrapper.querySelector('img');
-            
+
             try {
                 const response = await fetch(img.src);
                 const blob = await response.blob();
@@ -495,7 +497,7 @@
                 const data = src.split(',')[1];
                 const type = src.substring(src.indexOf(':') + 1, src.indexOf(';'));
                 const ext = type.split('/')[1] || 'jpg';
-                
+
                 folder.file(`image_${i + 1}.${ext}`, data, { base64: true });
                 count++;
             }
@@ -534,16 +536,16 @@
             // Clone content to strip controls before copying
             const contentOriginal = document.getElementById('preview-content');
             const contentClone = contentOriginal.cloneNode(true);
-            
+
             // Remove all .img-controls and unwrap .img-wrapper
             contentClone.querySelectorAll('.img-controls').forEach(el => el.remove());
-            
+
             // Unwrap innerHTML of wrappers (optional, but cleaner)
             // Actually, keep wrapper div but with no styles is fine, 
             // or just copy the simplified structure.
             // Let's just remove the buttons is enough, the wrapper div is harmless if unstyled or simple relative.
             // But to be safe for editors, let's keep it simple.
-            
+
             const content = contentClone;
 
             try {
