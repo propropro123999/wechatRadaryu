@@ -820,10 +820,29 @@
                                     // Actually fetchExternalImage already tries proxy.
                                     console.warn('Could not fetch/convert external image:', cleanSrc);
 
-                                    // Last resort: If we can't fetch it to base64, maybe we can just telling the Cloud Upload to fetch the URL directly?
-                                    // But i.111666 API probably needs file upload.
-                                    // Let's rely on fetchExternalImage (which now uses the permissive proxy).
-                                    continue;
+                                    // RECOVERY STRATEGY:
+                                    // 1. Try to extract inner URL (e.g. valid S3 link inside Substack CDN)
+                                    // https://substackcdn.com/.../https://s3... 
+                                    const innerMatch = cleanSrc.match(/(https?:\/\/[a-zA-Z0-9.-]+\.s3\.amazonaws\.com\/[^"'\s]+)/);
+                                    if (innerMatch && innerMatch[1] !== cleanSrc) {
+                                        console.log('Trying inner URL:', innerMatch[1]);
+                                        const fetchedInner = await fetchExternalImage(innerMatch[1]);
+                                        if (fetchedInner) {
+                                            base64Data = fetchedInner;
+                                            // success! continue to upload
+                                        } else {
+                                            // If simple fetch fails, just use the cleaned URL as the source
+                                            // At least it fixes the Broken Image icon in the browser
+                                            img.src = cleanSrc;
+                                            console.log('Fallback: Updated src to cleaned URL (upload skipped)');
+                                            continue;
+                                        }
+                                    } else {
+                                        // No inner url, just use clean url
+                                        img.src = cleanSrc;
+                                        console.log('Fallback: Updated src to cleaned URL (upload skipped)');
+                                        continue;
+                                    }
                                 }
                             } catch (err) {
                                 console.error('Error fixing image:', err);
