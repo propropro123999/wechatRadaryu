@@ -12,12 +12,10 @@ export default async function handler(request, response) {
     try {
         const targetUrl = new URL(url);
         // Allow WeChat image domains
-        const allowedDomains = ['.qpic.cn', '.qq.com', 'mmbiz.qpic.cn'];
-        const isAllowed = allowedDomains.some(domain => targetUrl.hostname.endsWith(domain));
-
-        if (!isAllowed) {
-            return response.status(403).json({ error: 'Forbidden domain' });
-        }
+        // Allow all domains since this is a general purpose tool now
+        // const allowedDomains = ['.qpic.cn', '.qq.com', 'mmbiz.qpic.cn'];
+        // const isAllowed = allowedDomains.some(domain => targetUrl.hostname.endsWith(domain));
+        // if (!isAllowed) { return response.status(403).json({ error: 'Forbidden domain' }); }
 
         // Fetch image with headers that mimic a browser request but bypass Referer checks
         const imageResponse = await fetch(url, {

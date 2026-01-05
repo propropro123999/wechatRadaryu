@@ -480,7 +480,7 @@
                         // Fallback to Proxy
                         const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
                         const resp = await fetch(proxyUrl);
-                        if (!resp.ok) throw new Error('Proxy fetch failed');
+                        if (!resp.ok) throw new Error(`Proxy fetch failed: ${resp.status}`);
                         blob = await resp.blob();
                     }
 
@@ -790,14 +790,40 @@
                         if (!base64Data.startsWith('data:image')) {
                             console.log('Attempting to fix external URL:', base64Data);
                             try {
-                                // clean again just in case
-                                let cleanSrc = base64Data.replace(/%22/g, '').replace(/"/g, '').split(' ')[0].trim();
+                                // Robust Cleaning Logic
+                                let cleanSrc = base64Data;
+
+                                // 1. If it contains "http" multiple times (nested urls), take the last one or the one that looks real?
+                                // The user example: https://substackcdn.../https://substack-post-media...
+                                // Mammoth sometimes concats attributes.
+                                // Let's try to extract the first valid http(s) url until a space or quote.
+
+                                // Decode first to handle %22 and %20
+                                try { cleanSrc = decodeURIComponent(cleanSrc); } catch (e) { }
+
+                                // Match standard URL pattern (http/https followed by non-whitespace/non-quote)
+                                const urlMatch = cleanSrc.match(/(https?:\/\/[^\s"']+)/);
+                                if (urlMatch) {
+                                    cleanSrc = urlMatch[0];
+                                } else {
+                                    // Fallback cleanup
+                                    cleanSrc = cleanSrc.replace(/["']/g, '').split(/\s/)[0];
+                                }
+
+                                console.log('Cleaned URL:', cleanSrc);
+
                                 const fetched = await fetchExternalImage(cleanSrc);
                                 if (fetched) {
                                     base64Data = fetched;
                                 } else {
+                                    // Try proxy if direct failed (fetchExternalImage might fail on CORS)
+                                    // Actually fetchExternalImage already tries proxy.
                                     console.warn('Could not fetch/convert external image:', cleanSrc);
-                                    continue; // Skip this one if we can't get data
+
+                                    // Last resort: If we can't fetch it to base64, maybe we can just telling the Cloud Upload to fetch the URL directly?
+                                    // But i.111666 API probably needs file upload.
+                                    // Let's rely on fetchExternalImage (which now uses the permissive proxy).
+                                    continue;
                                 }
                             } catch (err) {
                                 console.error('Error fixing image:', err);
