@@ -10,11 +10,9 @@
   <style>
     /* Page specific adjustments */
     body {
-      /* Neo-Brutalism Background overrides */
-      background-color: #F8F0E3;
-      /* Cream/Paper */
-      background-image: radial-gradient(#000 1.5px, transparent 1.5px);
-      background-size: 20px 20px;
+      /* Claymorphism Background */
+      background-color: #F0F4F8;
+      background-image: none;
     }
 
     .hero-section {
@@ -26,23 +24,23 @@
     .tool-icon-wrapper {
       width: 64px;
       height: 64px;
-      border-radius: 12px;
-      /* Sharper */
-      background: #FFF;
+      border-radius: 20px;
+      background: #F0F4F8;
+      /* Same as body for clay depression or extrusion */
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 32px;
-      /* Hard shadow & Border */
-      border: 3px solid #000;
-      box-shadow: 4px 4px 0px #000;
+      /* Clay Extrusion */
+      box-shadow: 8px 8px 16px #D1D9E6, -8px -8px 16px #FFFFFF;
+      border: none;
       margin-bottom: 20px;
-      transition: transform 0.1s ease;
+      transition: all 0.3s ease;
     }
 
     .gem-card:hover .tool-icon-wrapper {
-      transform: translate(-2px, -2px);
-      box-shadow: 6px 6px 0px #000;
+      transform: scale(1.1);
+      box-shadow: 12px 12px 24px #D1D9E6, -12px -12px 24px #FFFFFF;
     }
 
     .tool-link {

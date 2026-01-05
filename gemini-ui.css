@@ -1,48 +1,53 @@
+```css
 /* ================================================================================
-   GEMINI-INSPIRED DESIGN SYSTEM (NEO-BRUTALISM EDITION)
-   Aesthetics: High Contrast, Bold Borders, Hard Shadows, Vibrant Colors
+   GEMINI-INSPIRED DESIGN SYSTEM (CLAYMORPHISM EDITION)
+   Aesthetics: Soft, Floating 3D, Rounded, Friendly, Pastel
    ================================================================================ */
 
 :root {
   /* ——— Core Palette ——— */
-  --gem-color-bg-body: #FFFDF5;
-  /* Warm paper white */
+  --gem-color-bg-body: #F0F4F8;
   --gem-color-bg-surface: #FFFFFF;
 
-  --gem-color-text-primary: #000000;
-  --gem-color-text-secondary: #333333;
-  --gem-color-text-tertiary: #666666;
+  --gem-color-text-primary: #2D3748;
+  --gem-color-text-secondary: #718096;
+  --gem-color-text-tertiary: #A0AEC0;
 
   /* ——— Brand Colors ——— */
-  /* Vibrant, flat colors */
-  --gem-color-accent: #3b82f6;
-  /* Bright Blue */
-  --gem-color-purple: #a855f7;
-  --gem-color-pink: #ec4899;
-  --gem-color-orange: #f97316;
-  --gem-color-green: #22c55e;
+  /* Soft, candy-like colors */
+  --gem-color-accent: #667EEA;
+  /* Soft Blue */
+  --gem-gradient-primary: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
 
-  --gem-gradient-primary: linear-gradient(to right, #3b82f6, #3b82f6);
-  /* Flat for brutalism */
+  /* ——— Borders & Shapes ——— */
+  --gem-radius-sm: 12px;
+  --gem-radius-md: 20px;
+  --gem-radius-lg: 32px;
+  --gem-radius-xl: 40px;
+  --gem-radius-full: 50px;
 
-  /* ——— Borders & Shadows ——— */
-  --gem-border-width: 3px;
-  --gem-border-color: #000000;
+  /* ——— Clay Shadows (The Secret Sauce) ——— */
+  /* Two shadows: one diffuse drop shadow, one inner light for volume */
+  --gem-shadow-sm:
+    8px 8px 16px #D1D9E6,
+    -8px -8px 16px #FFFFFF;
 
-  --gem-radius-sm: 6px;
-  --gem-radius-md: 12px;
-  --gem-radius-lg: 16px;
-  --gem-radius-xl: 20px;
-  --gem-radius-full: 9999px;
+  --gem-shadow-card:
+    12px 12px 24px rgba(163, 177, 198, 0.6),
+    -12px -12px 24px rgba(255, 255, 255, 1),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.5);
+  /* Inner highlight */
 
-  /* Hard Shadows */
-  --gem-shadow-sm: 2px 2px 0px #000000;
-  --gem-shadow-card: 6px 6px 0px #000000;
-  --gem-shadow-floating: 10px 10px 0px #000000;
-  --gem-shadow-pressed: 0px 0px 0px #000000;
+  --gem-shadow-floating:
+    16px 16px 32px rgba(163, 177, 198, 0.7),
+    -16px -16px 32px rgba(255, 255, 255, 1);
 
-  --gem-font-sans: 'Space Mono', 'Courier New', 'Inter', sans-serif;
-  /* Adding Mono fallback */
+  --gem-shadow-pressed:
+    inset 6px 6px 12px #D1D9E6,
+    inset -6px -6px 12px #FFFFFF;
+
+  --gem-font-sans: 'Varela Round', 'Nunito', 'Segoe UI', sans-serif;
+  /* Rounded fonts preferred */
 }
 
 /* ——— Reset & Base ——— */
@@ -54,11 +59,8 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--gem-font-sans);
   background-color: var(--gem-color-bg-body);
-  /* Dot Pattern Background */
-  background-image: radial-gradient(#000000 1px, transparent 1px);
-  background-size: 24px 24px;
   color: var(--gem-color-text-primary);
   line-height: 1.6;
   min-height: 100vh;
@@ -70,24 +72,26 @@ h3,
 h4,
 h5 {
   margin: 0;
-  font-weight: 800;
-  color: #000;
+  font-weight: 700;
+  color: var(--gem-color-text-primary);
+  letter-spacing: -0.01em;
 }
 
 h1 {
-  font-size: 42px;
+  font-size: 36px;
   margin-bottom: 24px;
-  background: #FFD600;
-  /* Highlighter Yellow Background */
-  border: 3px solid #000;
-  box-shadow: 4px 4px 0px #000;
-  padding: 8px 16px;
+  background: var(--gem-gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   display: inline-block;
-  transform: rotate(-2deg);
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  transform: none;
 }
 
 h2 {
-  font-size: 26px;
+  font-size: 24px;
   margin-bottom: 16px;
 }
 
@@ -142,30 +146,29 @@ a:hover {
 
 /* ——— Components ——— */
 
-/* Neo-Brutalism Card */
+/* Clay Card */
 .gem-card {
-  background: #FFFFFF;
-  border: var(--gem-border-width) solid var(--gem-border-color);
+  background: var(--gem-color-bg-surface);
   border-radius: var(--gem-radius-lg);
-  padding: 28px;
+  padding: 32px;
+  border: none;
   box-shadow: var(--gem-shadow-card);
-  transition: all 0.2s cubic-bezier(0, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  transform: translateY(0);
 }
 
 .gem-card:hover {
-  transform: translate(-3px, -3px);
-  box-shadow: 9px 9px 0px #000000;
-  background: #FFFFFF;
-  /* Ensure no transparency */
+  transform: translateY(-8px);
+  box-shadow: var(--gem-shadow-floating);
 }
 
-/* Specific colors for cards to pop */
+/* Specific soft colors for variety, but keeping clay look */
 .gem-card:nth-child(1) {
-  background-color: #E0F2FE;
+  background: #FFFFFF;
 }
 
 /* Light Blue */
@@ -186,8 +189,8 @@ a:hover {
 /* Light Yellow */
 
 .gem-card:active {
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0px #000000;
+  box-shadow: var(--gem-shadow-pressed);
+  transform: translateY(2px);
 }
 
 /* Bento Grid System */
@@ -232,20 +235,19 @@ a:hover {
 /* Inputs */
 .gem-input {
   width: 100%;
-  padding: 14px 18px;
+  padding: 16px 20px;
   border-radius: var(--gem-radius-md);
-  border: 3px solid #000;
-  background: #fff;
-  font-size: 16px;
-  font-weight: 600;
-  color: #000;
-  box-shadow: 4px 4px 0px #000;
+  border: none;
+  background: #F0F4F8;
+  font-size: 15px;
+  color: var(--gem-color-text-primary);
+  box-shadow: inset 4px 4px 8px #D1D9E6, inset -4px -4px 8px #FFFFFF;
   transition: all 0.2s;
 }
 
 .gem-input:focus {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px #000;
+  background: #FFFFFF;
+  box-shadow: var(--gem-shadow-sm);
   outline: none;
 }
 
@@ -254,14 +256,15 @@ a:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 28px;
-  border-radius: var(--gem-radius-md);
+  padding: 12px 32px;
+  border-radius: var(--gem-radius-full);
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
-  border: 3px solid #000;
-  transition: all 0.1s;
+  border: none;
+  transition: all 0.3s;
   text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .gem-btn:active {
@@ -269,54 +272,53 @@ a:hover {
 }
 
 .gem-btn-primary {
-  background: #3b82f6;
+  background: var(--gem-color-accent);
   color: white;
-  box-shadow: 4px 4px 0px #000;
+  box-shadow: 8px 8px 16px rgba(102, 126, 234, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.2);
 }
 
 .gem-btn-primary:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px #000;
+  transform: translateY(-2px);
+  box-shadow: 10px 10px 20px rgba(102, 126, 234, 0.5), -10px -10px 20px rgba(255, 255, 255, 0.2);
   background: #2563eb;
 }
 
 .gem-btn-primary:active {
-  transform: translate(2px, 2px);
-  box-shadow: 0px 0px 0px #000;
+  transform: translateY(1px);
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .gem-btn-secondary {
-  background: #FFF;
-  color: #000;
-  box-shadow: 4px 4px 0px #000;
+  background: #F0F4F8;
+  color: var(--gem-color-text-primary);
+  box-shadow: 8px 8px 16px #D1D9E6, -8px -8px 16px #FFFFFF;
 }
 
 .gem-btn-secondary:hover {
   background: #f3f4f6;
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px #000;
+  transform: translateY(-2px);
 }
 
 .gem-btn-secondary:active {
-  transform: translate(2px, 2px);
-  box-shadow: 0px 0px 0px #000;
+  box-shadow: var(--gem-shadow-pressed);
 }
 
-/* ——— Floating Navbar (Brutal) ——— */
+/* ——— Floating Clay Navbar ——— */
 .gem-navbar {
   position: sticky;
   top: 16px;
   margin: 0 16px;
-  border-radius: var(--gem-radius-lg);
+  border-radius: var(--gem-radius-xl);
   z-index: 1000;
   height: 70px;
-  background: #FFF;
-  border: 3px solid #000;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  box-shadow: 6px 6px 0px #000;
+  padding: 0 32px;
+  border: none;
+  box-shadow: 8px 8px 16px rgba(163, 177, 198, 0.5), -8px -8px 16px rgba(255, 255, 255, 0.8);
 }
 
 .gem-navbar-brand {
@@ -324,30 +326,29 @@ a:hover {
   align-items: center;
   gap: 12px;
   text-decoration: none;
-  color: #000;
-  font-weight: 800;
-  font-size: 22px;
-  text-transform: uppercase;
+  color: var(--gem-color-text-primary);
+  font-weight: 700;
+  font-size: 20px;
+  text-transform: none;
 }
 
 /* ——— Tags/Chips ——— */
 .gem-chip {
   display: inline-flex;
-  padding: 4px 12px;
-  border-radius: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
   font-size: 13px;
-  font-weight: 700;
-  background: #EEE;
-  color: #000;
-  border: 2px solid #000;
-  box-shadow: 2px 2px 0px #000;
-  text-transform: uppercase;
+  font-weight: 600;
+  background: #E2E8F0;
+  color: #4A5568;
+  border: none;
+  box-shadow: inset 2px 2px 5px rgba(163, 177, 198, 0.3), inset -2px -2px 5px #FFF;
+  text-transform: none;
 }
 
 .gem-chip-accent {
-  background: #FFD600;
-  /* Yellow */
-  color: #000;
+  background: #EBF8FF;
+  color: #3182CE;
 }
 
 
