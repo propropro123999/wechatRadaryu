@@ -251,188 +251,198 @@
                     <span class="gem-chip gem-chip-success">转换成功</span>
                 </div>
                 <div class="flex gap-2 items-center">
-                    <!-- Cloud Bridge Toggle -->
-                    <div style="display: flex; align-items: center; margin-right: 12px;">
-                        <input type="checkbox" id="cloud-bridge-toggle" style="margin-right: 6px;">
-                        <label for="cloud-bridge-toggle" style="font-size: 14px; cursor: pointer;"
-                            title="开启后，图片会自动上传到免费图床，解决知乎等平台无法粘贴图片的问题">
-                            开启图床中转 (Beta)
-                        </label>
-                    </div>
+                    <div class="flex gap-2 items-center">
+                        <button id="btn-cloud-upload" class="gem-button gem-button-primary" onclick="uploadAllToCloud()"
+                            style="background: linear-gradient(135deg, #10B981, #059669); border:none;">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"
+                                style="margin-right: 4px;">
+                                <path
+                                    d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
+                            </svg>
+                            一键转为云端图
+                        </button>
 
-                    <button class="gem-button gem-button-secondary" onclick="copyHTML()">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right: 4px;">
-                            <path
-                                d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-                        </svg>
-                        复制 HTML 代码
-                    </button>
-                    <button class="gem-button gem-button-secondary" onclick="downloadAllImages()">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right: 4px;">
-                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-                        </svg>
-                        下载图片包
-                    </button>
-                    <button class="gem-button gem-button-primary" onclick="copyRichText()">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right: 4px;">
-                            <path
-                                d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-                        </svg>
-                        复制图文内容
-                    </button>
+                        <button id="btn-cloud-delete" class="gem-button gem-button-secondary"
+                            onclick="deleteAllCloudImages()"
+                            style="display: none; color: #D32F2F; border-color: rgba(211, 47, 47, 0.3);">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"
+                                style="margin-right: 4px;">
+                                <path
+                                    d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                            </svg>
+                            删除云端图片
+                        </button>
+
+                        <button class="gem-button gem-button-secondary" onclick="copyHTML()">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"
+                                style="margin-right: 4px;">
+                                <path
+                                    d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                            </svg>
+                            HTML
+                        </button>
+
+                        <button class="gem-button gem-button-primary" onclick="copyRichText()">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"
+                                style="margin-right: 4px;">
+                                <path
+                                    d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                            </svg>
+                            复制全文
+                        </button>
+                    </div>
+                </div>
+                <div class="preview-content word-content" id="preview-content">
+                    <!-- Converted content will appear here -->
                 </div>
             </div>
-            <div class="preview-content word-content" id="preview-content">
-                <!-- Converted content will appear here -->
-            </div>
+
+            <!-- Hidden container for clipboard operations -->
+            <div id="clipboard-helper" contenteditable="true" style="position: absolute; left: -9999px;"></div>
+
         </div>
 
-        <!-- Hidden container for clipboard operations -->
-        <div id="clipboard-helper" contenteditable="true" style="position: absolute; left: -9999px;"></div>
+        <script>
+            // --- Auth Configuration ---
+            const TOOL_KEY = 'word-parser';
+            let AUTH_CODES = {}; // Will load from json
 
-    </div>
+            // --- Initialization ---
+            document.addEventListener('DOMContentLoaded', async () => {
+                await loadAuthCodes();
+                checkAuth();
 
-    <script>
-        // --- Auth Configuration ---
-        const TOOL_KEY = 'word-parser';
-        let AUTH_CODES = {}; // Will load from json
+                // Setup Drop Zone
+                const dropZone = document.getElementById('drop-zone');
+                const fileInput = document.getElementById('file-input');
 
-        // --- Initialization ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            await loadAuthCodes();
-            checkAuth();
+                // Prevent default drag behaviors
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false);
+                });
 
-            // Setup Drop Zone
-            const dropZone = document.getElementById('drop-zone');
-            const fileInput = document.getElementById('file-input');
+                // Highlight drop zone when item is dragged over it
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, highlight, false);
+                });
 
-            // Prevent default drag behaviors
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, preventDefaults, false);
-                document.body.addEventListener(eventName, preventDefaults, false);
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, unhighlight, false);
+                });
+
+                // Handle dropped files
+                dropZone.addEventListener('drop', handleDrop, false);
+                fileInput.addEventListener('change', (e) => handleFiles(e.target.files), false);
             });
 
-            // Highlight drop zone when item is dragged over it
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropZone.addEventListener(eventName, highlight, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, unhighlight, false);
-            });
-
-            // Handle dropped files
-            dropZone.addEventListener('drop', handleDrop, false);
-            fileInput.addEventListener('change', (e) => handleFiles(e.target.files), false);
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        function highlight(e) {
-            document.getElementById('drop-zone').classList.add('drag-over');
-        }
-
-        function unhighlight(e) {
-            document.getElementById('drop-zone').classList.remove('drag-over');
-        }
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles(files);
-        }
-
-        function handleFiles(files) {
-            if (files.length === 0) return;
-            const file = files[0];
-
-            if (!file.name.endsWith('.docx')) {
-                alert('仅支持 .docx 格式的 Word 文档');
-                return;
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
             }
 
-            // Update UI
-            document.getElementById('file-name-display').innerText = file.name;
-            document.getElementById('preview-content').innerHTML = '<div style="text-align:center; padding: 40px; color: #666;">正在转换中...</div>';
-            document.getElementById('preview-container').style.display = 'block';
+            function highlight(e) {
+                document.getElementById('drop-zone').classList.add('drag-over');
+            }
 
-            // Proce ss File
-            const reader = new FileReader();
-            reader.onload = function (loadEvent) {
-                const arrayBuffer = loadEvent.target.result;
-                convertDocxToHtml(arrayBuffer);
-            };
-            reader.readAsArrayBuffer(file);
-        }
+            function unhighlight(e) {
+                document.getElementById('drop-zone').classList.remove('drag-over');
+            }
 
-        function convertDocxToHtml(arrayBuffer) {
-            mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
-                .then(displayResult)
-                .catch(handleError);
-        }
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }
 
-        async function displayResult(result) {
-            const rawHtml = result.value;
-            const messages = result.messages;
+            function handleFiles(files) {
+                if (files.length === 0) return;
+                const file = files[0];
 
-            // Post-process HTML: Resize images and add wrappers
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = rawHtml;
-
-            const imgs = tempDiv.querySelectorAll('img');
-            const processedImages = [];
-
-            for (let img of imgs) {
-                let src = img.getAttribute('src');
-                if (src) {
-                    // 1. Handle External/Malformed URLs
-                    if (!src.startsWith('data:image')) {
-                        try {
-                            // Clean URL (remove trailing quotes, spaces, etc. common in bad parsing)
-                            let cleanSrc = src.replace(/%22/g, '').replace(/"/g, '').split(' ')[0].trim();
-
-                            // Log for debugging
-                            if (src !== cleanSrc) console.log('Cleaned URL:', src, '->', cleanSrc);
-
-                            // Fetch and convert to Base64 via Proxy
-                            const newBase64 = await fetchExternalImage(cleanSrc);
-                            if (newBase64) {
-                                img.setAttribute('src', newBase64);
-                                src = newBase64; // Update local var for resizing
-                            }
-                        } catch (e) {
-                            console.warn('Failed to fetch external image:', src, e);
-                        }
-                    }
-
-                    // 2. Resize if it is now a Base64 image
-                    if (src && src.startsWith('data:image')) {
-                        try {
-                            const newSrc = await resizeImage(src, 800);
-                            img.setAttribute('src', newSrc);
-                        } catch (e) {
-                            console.warn('Image resize failed', e);
-                        }
-                    }
+                if (!file.name.endsWith('.docx')) {
+                    alert('仅支持 .docx 格式的 Word 文档');
+                    return;
                 }
 
-                // Wrap in div for controls
-                // We'll replace the img element with the wrapper in the DOM
-                const wrapper = document.createElement('div');
-                wrapper.className = 'img-wrapper';
+                // Update UI
+                document.getElementById('file-name-display').innerText = file.name;
+                document.getElementById('preview-content').innerHTML = '<div style="text-align:center; padding: 40px; color: #666;">正在转换中...</div>';
+                document.getElementById('preview-container').style.display = 'block';
 
-                // Clone img to keep attributes, but we need to insert wrapper
-                // Replace img with wrapper, then append img to wrapper
-                img.parentNode.insertBefore(wrapper, img);
-                wrapper.appendChild(img);
+                // Proce ss File
+                const reader = new FileReader();
+                reader.onload = function (loadEvent) {
+                    const arrayBuffer = loadEvent.target.result;
+                    convertDocxToHtml(arrayBuffer);
+                };
+                reader.readAsArrayBuffer(file);
+            }
 
-                // Add Controls
-                const controls = document.createElement('div');
-                controls.className = 'img-controls';
-                controls.innerHTML = `
+            function convertDocxToHtml(arrayBuffer) {
+                mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
+                    .then(displayResult)
+                    .catch(handleError);
+            }
+
+            async function displayResult(result) {
+                const rawHtml = result.value;
+                const messages = result.messages;
+
+                // Post-process HTML: Resize images and add wrappers
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = rawHtml;
+
+                const imgs = tempDiv.querySelectorAll('img');
+                const processedImages = [];
+
+                for (let img of imgs) {
+                    let src = img.getAttribute('src');
+                    if (src) {
+                        // 1. Handle External/Malformed URLs
+                        if (!src.startsWith('data:image')) {
+                            try {
+                                // Clean URL (remove trailing quotes, spaces, etc. common in bad parsing)
+                                let cleanSrc = src.replace(/%22/g, '').replace(/"/g, '').split(' ')[0].trim();
+
+                                // Log for debugging
+                                if (src !== cleanSrc) console.log('Cleaned URL:', src, '->', cleanSrc);
+
+                                // Fetch and convert to Base64 via Proxy
+                                const newBase64 = await fetchExternalImage(cleanSrc);
+                                if (newBase64) {
+                                    img.setAttribute('src', newBase64);
+                                    src = newBase64; // Update local var for resizing
+                                }
+                            } catch (e) {
+                                console.warn('Failed to fetch external image:', src, e);
+                            }
+                        }
+
+                        // 2. Resize if it is now a Base64 image
+                        if (src && src.startsWith('data:image')) {
+                            try {
+                                const newSrc = await resizeImage(src, 800);
+                                img.setAttribute('src', newSrc);
+                            } catch (e) {
+                                console.warn('Image resize failed', e);
+                            }
+                        }
+                    }
+
+                    // Wrap in div for controls
+                    // We'll replace the img element with the wrapper in the DOM
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'img-wrapper';
+
+                    // Clone img to keep attributes, but we need to insert wrapper
+                    // Replace img with wrapper, then append img to wrapper
+                    img.parentNode.insertBefore(wrapper, img);
+                    wrapper.appendChild(img);
+
+                    // Add Controls
+                    const controls = document.createElement('div');
+                    controls.className = 'img-controls';
+                    controls.innerHTML = `
                     <button class="img-btn" onclick="copySingleImage(this)" title="复制图片">
                         <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
                         复制
@@ -442,351 +452,398 @@
                         下载
                     </button>
                 `;
-                wrapper.appendChild(controls);
-            }
-
-            document.getElementById('preview-content').innerHTML = tempDiv.innerHTML;
-
-            if (messages.length > 0) {
-                console.log('Conversion messages:', messages);
-            }
-        }
-
-        // --- External Image Helper ---
-        async function fetchExternalImage(url) {
-            try {
-                // Try Direct Fetch first (if CORS allows)
-                // If it fails, use Proxy
-                let blob;
-                try {
-                    const resp = await fetch(url);
-                    if (!resp.ok) throw new Error('Direct fetch failed');
-                    blob = await resp.blob();
-                } catch (e) {
-                    console.log('Direct fetch failed, trying proxy...', e);
-                    // Fallback to Proxy
-                    const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
-                    const resp = await fetch(proxyUrl);
-                    if (!resp.ok) throw new Error('Proxy fetch failed');
-                    blob = await resp.blob();
+                    wrapper.appendChild(controls);
                 }
 
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                });
-            } catch (err) {
-                console.error('All fetch methods failed for:', url, err);
-                return null;
+                document.getElementById('preview-content').innerHTML = tempDiv.innerHTML;
+
+                if (messages.length > 0) {
+                    console.log('Conversion messages:', messages);
+                }
             }
-        }
 
-        // --- Image Optimization Utility ---
-        function resizeImage(base64Str, maxWidth) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => {
-                    let w = img.width;
-                    let h = img.height;
-
-                    if (w <= maxWidth) {
-                        resolve(base64Str); // No resize needed
-                        return;
+            // --- External Image Helper ---
+            async function fetchExternalImage(url) {
+                try {
+                    // Try Direct Fetch first (if CORS allows)
+                    // If it fails, use Proxy
+                    let blob;
+                    try {
+                        const resp = await fetch(url);
+                        if (!resp.ok) throw new Error('Direct fetch failed');
+                        blob = await resp.blob();
+                    } catch (e) {
+                        console.log('Direct fetch failed, trying proxy...', e);
+                        // Fallback to Proxy
+                        const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
+                        const resp = await fetch(proxyUrl);
+                        if (!resp.ok) throw new Error('Proxy fetch failed');
+                        blob = await resp.blob();
                     }
 
-                    // Calculate new dimensions
-                    const ratio = maxWidth / w;
-                    w = maxWidth;
-                    h = h * ratio;
-
-                    const canvas = document.createElement('canvas');
-                    canvas.width = w;
-                    canvas.height = h;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, w, h);
-
-                    // Comress to JPEG 0.8 to save space
-                    resolve(canvas.toDataURL('image/jpeg', 0.8));
-                };
-                img.onerror = reject;
-                img.src = base64Str;
-            });
-        }
-
-        // --- Individual Image Controls ---
-        window.copySingleImage = async (btn) => {
-            const wrapper = btn.closest('.img-wrapper');
-            const img = wrapper.querySelector('img');
-
-            try {
-                const response = await fetch(img.src);
-                const blob = await response.blob();
-                await navigator.clipboard.write([
-                    new ClipboardItem({ [blob.type]: blob })
-                ]);
-                alert('图片已复制');
-            } catch (e) {
-                console.error(e);
-                alert('复制失败');
-            }
-        };
-
-        window.downloadSingleImage = (btn) => {
-            const wrapper = btn.closest('.img-wrapper');
-            const img = wrapper.querySelector('img');
-            const link = document.createElement('a');
-            link.download = `image_${Date.now()}.jpg`;
-            link.href = img.src;
-            link.click();
-        };
-
-        // --- Bulk Download ---
-        window.downloadAllImages = async () => {
-            const zip = new JSZip();
-            const imgs = document.querySelectorAll('#preview-content img');
-            if (imgs.length === 0) return alert('没有发现图片');
-
-            const folder = zip.folder("images");
-            let count = 0;
-
-            for (let i = 0; i < imgs.length; i++) {
-                const src = imgs[i].src;
-                if (!src.startsWith('data:image')) continue;
-
-                // Extract base64 data
-                const data = src.split(',')[1];
-                const type = src.substring(src.indexOf(':') + 1, src.indexOf(';'));
-                const ext = type.split('/')[1] || 'jpg';
-
-                folder.file(`image_${i + 1}.${ext}`, data, { base64: true });
-                count++;
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+                } catch (err) {
+                    console.error('All fetch methods failed for:', url, err);
+                    return null;
+                }
             }
 
-            if (count === 0) return alert('没有可供下载的图片');
+            // --- Image Optimization Utility ---
+            function resizeImage(base64Str, maxWidth) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let w = img.width;
+                        let h = img.height;
 
-            const content = await zip.generateAsync({ type: "blob" });
-            const url = URL.createObjectURL(content);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `word_images_${Date.now()}.zip`;
-            a.click();
-        };
+                        if (w <= maxWidth) {
+                            resolve(base64Str); // No resize needed
+                            return;
+                        }
 
-        function handleError(err) {
-            console.error(err);
-            document.getElementById('preview-content').innerHTML = `
+                        // Calculate new dimensions
+                        const ratio = maxWidth / w;
+                        w = maxWidth;
+                        h = h * ratio;
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+
+                        // Comress to JPEG 0.8 to save space
+                        resolve(canvas.toDataURL('image/jpeg', 0.8));
+                    };
+                    img.onerror = reject;
+                    img.src = base64Str;
+                });
+            }
+
+            // --- Individual Image Controls ---
+            window.copySingleImage = async (btn) => {
+                const wrapper = btn.closest('.img-wrapper');
+                const img = wrapper.querySelector('img');
+
+                try {
+                    const response = await fetch(img.src);
+                    const blob = await response.blob();
+                    await navigator.clipboard.write([
+                        new ClipboardItem({ [blob.type]: blob })
+                    ]);
+                    alert('图片已复制');
+                } catch (e) {
+                    console.error(e);
+                    alert('复制失败');
+                }
+            };
+
+            window.downloadSingleImage = (btn) => {
+                const wrapper = btn.closest('.img-wrapper');
+                const img = wrapper.querySelector('img');
+                const link = document.createElement('a');
+                link.download = `image_${Date.now()}.jpg`;
+                link.href = img.src;
+                link.click();
+            };
+
+            // --- Bulk Download ---
+            window.downloadAllImages = async () => {
+                const zip = new JSZip();
+                const imgs = document.querySelectorAll('#preview-content img');
+                if (imgs.length === 0) return alert('没有发现图片');
+
+                const folder = zip.folder("images");
+                let count = 0;
+
+                for (let i = 0; i < imgs.length; i++) {
+                    const src = imgs[i].src;
+                    if (!src.startsWith('data:image')) continue;
+
+                    // Extract base64 data
+                    const data = src.split(',')[1];
+                    const type = src.substring(src.indexOf(':') + 1, src.indexOf(';'));
+                    const ext = type.split('/')[1] || 'jpg';
+
+                    folder.file(`image_${i + 1}.${ext}`, data, { base64: true });
+                    count++;
+                }
+
+                if (count === 0) return alert('没有可供下载的图片');
+
+                const content = await zip.generateAsync({ type: "blob" });
+                const url = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `word_images_${Date.now()}.zip`;
+                a.click();
+            };
+
+            function handleError(err) {
+                console.error(err);
+                document.getElementById('preview-content').innerHTML = `
                 <div style="text-align:center; color: #D32F2F;">
                     <h3>转换失败</h3>
                     <p>${err.message}</p>
                 </div>
             `;
-        }
+            }
 
-        function copyHTML() {
-            const content = document.getElementById('preview-content').innerHTML;
-            navigator.clipboard.writeText(content).then(() => {
-                alert('HTML 代码已复制到剪贴板');
-            }).catch(err => {
-                console.error('Failed to copy: ', err);
-                alert('复制失败，请重试');
-            });
-        }
+            function copyHTML() {
+                const content = document.getElementById('preview-content').innerHTML;
+                navigator.clipboard.writeText(content).then(() => {
+                    alert('HTML 代码已复制到剪贴板');
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                    alert('复制失败，请重试');
+                });
+            }
 
-        async function copyRichText() {
-            // Clone content to strip controls before copying
-            const contentOriginal = document.getElementById('preview-content');
-            const contentClone = contentOriginal.cloneNode(true);
+            async function copyRichText() {
+                // Clone content to strip controls before copying
+                const contentOriginal = document.getElementById('preview-content');
+                const contentClone = contentOriginal.cloneNode(true);
 
-            // Remove all .img-controls and unwrap .img-wrapper
-            // Remove all .img-controls
-            contentClone.querySelectorAll('.img-controls').forEach(el => el.remove());
+                // Remove all .img-controls and unwrap .img-wrapper
+                // Remove all .img-controls
+                contentClone.querySelectorAll('.img-controls').forEach(el => el.remove());
 
-            // Unwrap .img-wrapper to restore clean <img> tags
-            contentClone.querySelectorAll('.img-wrapper').forEach(wrapper => {
-                // Move all children (usually just the img) before the wrapper
-                while (wrapper.firstChild) {
-                    wrapper.parentNode.insertBefore(wrapper.firstChild, wrapper);
-                }
-                // Remove the empty wrapper
-                wrapper.remove();
-            });
-
-            const content = contentClone;
-
-            // --- Cloud Bridge Integration ---
-            const useCloud = document.getElementById('cloud-bridge-toggle').checked;
-            if (useCloud) {
-                // Determine images to upload
-                const imagesToUpload = Array.from(content.querySelectorAll('img'))
-                    .filter(img => img.src.startsWith('data:image'));
-
-                if (imagesToUpload.length > 0) {
-                    const confirmUpload = confirm(`检测到 ${imagesToUpload.length} 张图片。开启图床中转需要将这些图片上传到云端生成外链，是否继续？\n(这可能需要几秒钟，取决于图片数量)`);
-
-                    if (confirmUpload) {
-                        try {
-                            // Show loading indicator
-                            const originalBtnText = document.querySelector('button[onclick="copyRichText()"]').innerText;
-                            document.querySelector('button[onclick="copyRichText()"]').innerText = '正在上传图片...';
-
-                            // Upload all images sequentially
-                            for (let i = 0; i < imagesToUpload.length; i++) {
-                                const img = imagesToUpload[i];
-                                document.querySelector('button[onclick="copyRichText()"]').innerText = `正在上传 (${i + 1}/${imagesToUpload.length})...`;
-
-                                const cloudUrl = await uploadImageToCloud(img.src);
-                                if (cloudUrl) {
-                                    img.src = cloudUrl;
-                                    img.setAttribute('data-cloud-uploaded', 'true');
-                                }
-                            }
-
-                            // Restore button text
-                            document.querySelector('button[onclick="copyRichText()"]').innerText = originalBtnText;
-
-                        } catch (e) {
-                            console.error('Cloud upload failed:', e);
-                            alert('部分图片上传失败，将使用原始格式复制。建议尝试"下载图片包"方案。');
-                            document.querySelector('button[onclick="copyRichText()"]').innerText = '复制图文内容';
-                        }
+                // Unwrap .img-wrapper to restore clean <img> tags
+                contentClone.querySelectorAll('.img-wrapper').forEach(wrapper => {
+                    // Move all children (usually just the img) before the wrapper
+                    while (wrapper.firstChild) {
+                        wrapper.parentNode.insertBefore(wrapper.firstChild, wrapper);
                     }
-                }
-            }
-
-            try {
-                // 方案1: 使用 copy 事件监听器 - 最可靠的方法
-                const copyHandler = (e) => {
-                    e.preventDefault();
-                    e.clipboardData.setData('text/html', content.innerHTML);
-                    e.clipboardData.setData('text/plain', content.innerText);
-                    document.removeEventListener('copy', copyHandler);
-                };
-
-                document.addEventListener('copy', copyHandler);
-
-                // 选中内容并触发复制
-                const range = document.createRange();
-                range.selectNodeContents(content);
-                const selection = window.getSelection();
-                selection.removeAllRanges();
-                selection.addRange(range);
-
-                const success = document.execCommand('copy');
-                selection.removeAllRanges();
-
-                if (success) {
-                    alert('图文内容已复制！现在可以粘贴到微信公众号、Word 等编辑器中。');
-                    return;
-                }
-            } catch (err) {
-                console.warn('Copy event method failed:', err);
-            }
-
-            // 方案2: 使用现代 Clipboard API
-            try {
-                if (navigator.clipboard && navigator.clipboard.write) {
-                    const htmlBlob = new Blob([content.innerHTML], { type: 'text/html' });
-                    const textBlob = new Blob([content.innerText], { type: 'text/plain' });
-
-                    const clipboardItem = new ClipboardItem({
-                        'text/html': htmlBlob,
-                        'text/plain': textBlob
-                    });
-
-                    await navigator.clipboard.write([clipboardItem]);
-                    alert('图文内容已复制！现在可以粘贴到编辑器中。');
-                    return;
-                }
-            } catch (err) {
-                console.warn('Clipboard API failed:', err);
-            }
-
-            // 方案3: 最后的兜底方案
-            try {
-                const range = document.createRange();
-                range.selectNodeContents(content);
-                window.getSelection().removeAllRanges();
-                window.getSelection().addRange(range);
-
-                document.execCommand('copy');
-                window.getSelection().removeAllRanges();
-                alert('内容已复制！如果图片未显示，请尝试在浏览器中手动选中内容后按 Ctrl+C (或 Cmd+C) 复制。');
-            } catch (err) {
-                console.error('All copy methods failed:', err);
-                alert('自动复制失败。请手动选中内容后按 Ctrl+C (或 Cmd+C) 复制。');
-            }
-        }
-
-        // --- Auth Logic (Copied from other tools) ---
-        async function loadAuthCodes() {
-            try {
-                const response = await fetch('auth-codes.json');
-                const data = await response.json();
-                AUTH_CODES = data.tools[TOOL_KEY]?.codes || {};
-            } catch (error) {
-                console.warn('Failed to load auth-codes.json, using fallback');
-                // Fallback for local testing without server
-                AUTH_CODES = { "WORD-2025-LOCAL": "Local Dev" };
-            }
-        }
-
-        function checkAuth() {
-            const storedCode = localStorage.getItem(`auth_code_${TOOL_KEY}`);
-            if (storedCode && validateCode(storedCode)) {
-                showContent();
-            } else {
-                document.getElementById('auth-overlay').style.display = 'flex';
-            }
-        }
-
-        function validateCode(code) {
-            return AUTH_CODES.hasOwnProperty(code);
-        }
-
-        function verifyAuth() {
-            const input = document.getElementById('auth-code-input');
-            const code = input.value.trim();
-            const errorMsg = document.getElementById('auth-error');
-
-            if (validateCode(code)) {
-                localStorage.setItem(`auth_code_${TOOL_KEY}`, code);
-                showContent();
-            } else {
-                errorMsg.style.display = 'flex';
-                input.classList.add('error');
-            }
-        }
-
-        function showContent() {
-            document.getElementById('auth-overlay').style.display = 'none';
-            document.getElementById('main-content').style.display = 'block';
-        }
-
-        async function uploadImageToCloud(base64Data) {
-            try {
-                const response = await fetch('/api/upload-image', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ image: base64Data })
+                    // Remove the empty wrapper
+                    wrapper.remove();
                 });
 
-                const data = await response.json();
-                if (data.url) {
-                    return data.url;
+                const content = contentClone;
+
+                // Note: Images are already handled (local base64 OR cloud url)
+                // If user clicked "Convert to Cloud", images are already URLs.
+                // If not, they are Base64.
+                // No auto-upload logic here anymore, explicit action only.
+
+                try {
+                    // 方案1: 使用 copy 事件监听器 - 最可靠的方法
+                    const copyHandler = (e) => {
+                        e.preventDefault();
+                        e.clipboardData.setData('text/html', content.innerHTML);
+                        e.clipboardData.setData('text/plain', content.innerText);
+                        document.removeEventListener('copy', copyHandler);
+                    };
+
+                    document.addEventListener('copy', copyHandler);
+
+                    // 选中内容并触发复制
+                    const range = document.createRange();
+                    range.selectNodeContents(content);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+
+                    const success = document.execCommand('copy');
+                    selection.removeAllRanges();
+
+                    if (success) {
+                        alert('图文内容已复制！现在可以粘贴到微信公众号、Word 等编辑器中。');
+                        return;
+                    }
+                } catch (err) {
+                    console.warn('Copy event method failed:', err);
+                }
+
+                // 方案2: 使用现代 Clipboard API
+                try {
+                    if (navigator.clipboard && navigator.clipboard.write) {
+                        const htmlBlob = new Blob([content.innerHTML], { type: 'text/html' });
+                        const textBlob = new Blob([content.innerText], { type: 'text/plain' });
+
+                        const clipboardItem = new ClipboardItem({
+                            'text/html': htmlBlob,
+                            'text/plain': textBlob
+                        });
+
+                        await navigator.clipboard.write([clipboardItem]);
+                        alert('图文内容已复制！现在可以粘贴到编辑器中。');
+                        return;
+                    }
+                } catch (err) {
+                    console.warn('Clipboard API failed:', err);
+                }
+
+                // 方案3: 最后的兜底方案
+                try {
+                    const range = document.createRange();
+                    range.selectNodeContents(content);
+                    window.getSelection().removeAllRanges();
+                    window.getSelection().addRange(range);
+
+                    document.execCommand('copy');
+                    window.getSelection().removeAllRanges();
+                    alert('内容已复制！如果图片未显示，请尝试在浏览器中手动选中内容后按 Ctrl+C (或 Cmd+C) 复制。');
+                } catch (err) {
+                    console.error('All copy methods failed:', err);
+                    alert('自动复制失败。请手动选中内容后按 Ctrl+C (或 Cmd+C) 复制。');
+                }
+            }
+
+            // --- Auth Logic (Copied from other tools) ---
+            async function loadAuthCodes() {
+                try {
+                    const response = await fetch('auth-codes.json');
+                    const data = await response.json();
+                    AUTH_CODES = data.tools[TOOL_KEY]?.codes || {};
+                } catch (error) {
+                    console.warn('Failed to load auth-codes.json, using fallback');
+                    // Fallback for local testing without server
+                    AUTH_CODES = { "WORD-2025-LOCAL": "Local Dev" };
+                }
+            }
+
+            function checkAuth() {
+                const storedCode = localStorage.getItem(`auth_code_${TOOL_KEY}`);
+                if (storedCode && validateCode(storedCode)) {
+                    showContent();
                 } else {
-                    console.warn('Upload API error:', data);
+                    document.getElementById('auth-overlay').style.display = 'flex';
+                }
+            }
+
+            function validateCode(code) {
+                return AUTH_CODES.hasOwnProperty(code);
+            }
+
+            function verifyAuth() {
+                const input = document.getElementById('auth-code-input');
+                const code = input.value.trim();
+                const errorMsg = document.getElementById('auth-error');
+
+                if (validateCode(code)) {
+                    localStorage.setItem(`auth_code_${TOOL_KEY}`, code);
+                    showContent();
+                } else {
+                    errorMsg.style.display = 'flex';
+                    input.classList.add('error');
+                }
+            }
+
+            function showContent() {
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+            }
+
+            // --- Cloud Bridge Actions ---
+            let uploadedImages = []; // Track explicitly uploaded images for deletion
+
+            async function uploadAllToCloud() {
+                const content = document.getElementById('preview-content');
+                const imagesToUpload = Array.from(content.querySelectorAll('img'))
+                    .filter(img => img.src.startsWith('data:image')); // Only upload local images
+
+                if (imagesToUpload.length === 0) {
+                    return alert('没有检测到需要上传的本地图片（或者图片已经上传过了）。');
+                }
+
+                const btn = document.getElementById('btn-cloud-upload');
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+
+                try {
+                    for (let i = 0; i < imagesToUpload.length; i++) {
+                        const img = imagesToUpload[i];
+                        btn.innerText = `正在上传 ${i + 1}/${imagesToUpload.length}...`;
+
+                        const cloudUrl = await uploadImageToCloud(img.src);
+                        if (cloudUrl) {
+                            img.src = cloudUrl;
+                            img.setAttribute('data-cloud-uploaded', 'true');
+                            uploadedImages.push(cloudUrl);
+                        }
+                    }
+
+                    // Show Success State
+                    btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right: 4px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> 已转为云端图`;
+                    btn.onclick = null; // Disable button effectively
+                    btn.style.background = '#4CAF50';
+
+                    // Show Delete Button
+                    const delBtn = document.getElementById('btn-cloud-delete');
+                    delBtn.style.display = 'flex';
+                    delBtn.style.display = 'inline-flex'; // Fix display
+
+                    alert('所有图片已成功转为云链接！\n\n现在您可以：\n1. 随意选中任意文字和图片进行复制。\n2. 粘贴到知乎等平台。\n3. 如果不需要了，点击红色按钮删除云端图片。');
+
+                } catch (e) {
+                    console.error(e);
+                    alert('上传过程中出现错误，请查看控制台。');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            }
+
+            async function deleteAllCloudImages() {
+                if (uploadedImages.length === 0) return alert('没有记录到本次上传的图片。');
+                if (!confirm(`确定要删除 ${uploadedImages.length} 张云端图片吗？\n删除后，外部链接将失效。`)) return;
+
+                const btn = document.getElementById('btn-cloud-delete');
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerText = '正在删除...';
+
+                let failCount = 0;
+                for (const url of uploadedImages) {
+                    try {
+                        const res = await fetch('/api/upload-image', {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url })
+                        });
+                        if (!res.ok) failCount++;
+                    } catch (e) {
+                        console.error('Delete failed for', url, e);
+                        failCount++;
+                    }
+                }
+
+                if (failCount > 0) {
+                    alert(`删除操作完成，但有 ${failCount} 张图片删除失败，请检查控制台。`);
+                } else {
+                    alert('所有图片已从云端删除。');
+                    // Reset UI
+                    location.reload(); // Simple reset
+                }
+            }
+
+            async function uploadImageToCloud(base64Data) {
+                try {
+                    const response = await fetch('/api/upload-image', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ image: base64Data })
+                    });
+
+                    const data = await response.json();
+                    if (data.url) {
+                        return data.url;
+                    } else {
+                        console.warn('Upload API error:', data);
+                        return null;
+                    }
+                } catch (e) {
+                    console.error('Upload network error:', e);
                     return null;
                 }
-            } catch (e) {
-                console.error('Upload network error:', e);
-                return null;
             }
-        }
-    </script>
+        </script>
 </body>
 
 </html>
