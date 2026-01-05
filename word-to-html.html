@@ -377,6 +377,7 @@
             const processedImages = [];
 
             for (let img of imgs) {
+                let src = img.getAttribute('src');
                 if (src) {
                     // 1. Handle External/Malformed URLs
                     if (!src.startsWith('data:image')) {
