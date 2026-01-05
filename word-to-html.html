@@ -111,6 +111,9 @@
             justify-content: space-between;
             align-items: center;
             background: #F8F9FA;
+            flex-wrap: wrap;
+            /* Allow wrapping on small screens */
+            gap: 12px;
         }
 
         .preview-content {
@@ -761,10 +764,15 @@
                         btn.innerText = `正在上传 ${i + 1}/${imagesToUpload.length}...`;
 
                         const cloudUrl = await uploadImageToCloud(img.src);
-                        if (cloudUrl) {
+                        console.log(`Image ${i} uploaded:`, cloudUrl); // Debug log
+
+                        if (cloudUrl && cloudUrl.startsWith('http')) {
                             img.src = cloudUrl;
                             img.setAttribute('data-cloud-uploaded', 'true');
                             uploadedImages.push(cloudUrl);
+                        } else {
+                            console.error('Invalid Cloud URL received:', cloudUrl);
+                            // Don't break loop, just warn
                         }
                     }
 

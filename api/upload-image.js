@@ -93,20 +93,43 @@ module.exports = (req, res) => {
                     // Let's try to parse as JSON, if fail, assume text.
 
                     const text = data.trim();
+                    let finalUrl = '';
+
                     if (text.startsWith('http')) {
-                        res.status(200).json({ url: text });
+                        finalUrl = text;
+                    } else if (text.startsWith('/')) {
+                        // If returns relative path like "/image/abc.jpg"
+                        finalUrl = 'https://i.111666.best' + text;
                     } else {
                         try {
                             const json = JSON.parse(text);
-                            // Adjust key based on actual API. Often 'url' or 'data.url'
-                            const finalUrl = json.url || json.data?.url || text;
-                            res.status(200).json({ url: finalUrl });
+                            // Try to find the URL in common fields
+                            // Some APIs return just the filename or ID in 'src', 'id', etc.
+                            const candidate = json.url || json.data?.url || json.src || json.message;
+
+                            if (candidate && candidate.startsWith('http')) {
+                                finalUrl = candidate;
+                            } else if (candidate && candidate.startsWith('/')) {
+                                finalUrl = 'https://i.111666.best' + candidate;
+                            } else {
+                                // Fallback: try to construct if it looks like a path/ID
+                                // But safest is to return what we found if we can't be sure
+                                finalUrl = candidate || text;
+                            }
                         } catch (e) {
-                            // If not JSON and not http, maybe error
-                            console.warn('Unknown response:', text);
-                            res.status(200).json({ url: text }); // Try returning raw anyway
+                            console.warn('Unknown response format:', text);
+                            finalUrl = text;
                         }
                     }
+
+                    // Final safety check
+                    if (finalUrl && !finalUrl.startsWith('http')) {
+                        // If we still don't have http, maybe it's just the ID/Path returned as text
+                        // E.g. "image/123.jpg"
+                        finalUrl = 'https://i.111666.best/' + finalUrl.replace(/^\/+/, '');
+                    }
+
+                    res.status(200).json({ url: finalUrl });
                 } catch (e) {
                     res.status(500).json({ error: e.message });
                 }
