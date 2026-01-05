@@ -591,13 +591,20 @@
             const contentClone = contentOriginal.cloneNode(true);
 
             // Remove all .img-controls and unwrap .img-wrapper
+            // Remove all .img-controls
             contentClone.querySelectorAll('.img-controls').forEach(el => el.remove());
 
-            // Unwrap innerHTML of wrappers (optional, but cleaner)
-            // Actually, keep wrapper div but with no styles is fine, 
-            // or just copy the simplified structure.
-            // Let's just remove the buttons is enough, the wrapper div is harmless if unstyled or simple relative.
-            // But to be safe for editors, let's keep it simple.
+            // Unwrap .img-wrapper to restore clean <img> tags
+            contentClone.querySelectorAll('.img-wrapper').forEach(wrapper => {
+                // Move all children (usually just the img) before the wrapper
+                while (wrapper.firstChild) {
+                    wrapper.parentNode.insertBefore(wrapper.firstChild, wrapper);
+                }
+                // Remove the empty wrapper
+                wrapper.remove();
+            });
+
+            const content = contentClone;
 
             const content = contentClone;
 
