@@ -303,6 +303,13 @@ a:hover {
   box-shadow: var(--gem-shadow-pressed);
 }
 
+.gem-btn-sm {
+  padding: 8px 20px;
+  font-size: 13px;
+  height: auto;
+  min-height: 36px;
+}
+
 /* ——— Floating Clay Navbar ——— */
 .gem-navbar {
   position: sticky;
