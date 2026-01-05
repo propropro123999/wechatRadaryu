@@ -18,35 +18,6 @@ module.exports = (req, res) => {
         return;
     }
 
-    // --- HANDLE DELETE ---
-    if (req.method === 'DELETE') {
-        const { url } = req.body; // Expect JSON body { "url": "..." }
-        if (!url) return res.status(400).json({ error: 'No URL provided' });
-
-        // Extract path from URL (e.g., https://i.111666.best/image/abc.jpg -> /image/abc.jpg)
-        // Adjust based on API docs: "curl -XDELETE https://i.111666.best/image/IMAGE-PATH"
-        // If the stored URL is full, we need to parse it.
-        let imagePath = url.replace('https://i.111666.best', '');
-
-        const options = {
-            hostname: 'i.111666.best',
-            path: imagePath,
-            method: 'DELETE',
-            headers: {
-                'Auth-Token': USER_TOKEN
-            }
-        };
-
-        const deleteReq = https.request(options, (upstreamRes) => {
-            // Just pass through status
-            res.status(upstreamRes.statusCode).json({ success: upstreamRes.statusCode < 300 });
-        });
-
-        deleteReq.on('error', (e) => res.status(500).json({ error: e.message }));
-        deleteReq.end();
-        return;
-    }
-
     // --- HANDLE UPLOAD (POST) ---
     if (req.method === 'POST') {
         const { image } = req.body;
@@ -57,9 +28,8 @@ module.exports = (req, res) => {
         const buffer = Buffer.from(base64Data, 'base64');
         const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
 
-        // Construct Multipart Body
-        // API expects field "image"
-        const preContent = `--${boundary}\r\nContent-Disposition: form-data; name="image"; filename="upload.jpg"\r\nContent-Type: image/jpeg\r\n\r\n`;
+        // Telegra.ph expects "file" field
+        const preContent = `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="upload.jpg"\r\nContent-Type: image/jpeg\r\n\r\n`;
         const postContent = `\r\n--${boundary}--\r\n`;
 
         const bodyBuffer = Buffer.concat([
@@ -69,13 +39,12 @@ module.exports = (req, res) => {
         ]);
 
         const options = {
-            hostname: 'i.111666.best',
-            path: '/image',
+            hostname: 'telegra.ph',
+            path: '/upload',
             method: 'POST',
             headers: {
                 'Content-Type': `multipart/form-data; boundary=${boundary}`,
-                'Content-Length': bodyBuffer.length,
-                'Auth-Token': USER_TOKEN
+                'Content-Length': bodyBuffer.length
             }
         };
 
@@ -84,60 +53,18 @@ module.exports = (req, res) => {
             upstreamRes.on('data', (chunk) => data += chunk);
             upstreamRes.on('end', () => {
                 try {
-                    // API returns: https://i.111666.best/image/xxxxx
-                    // Or JSON? The user example shows raw URL return or maybe text.
-                    // Assuming text body is the URL based on curl usage, but curl -F often implies JSON or text.
-                    // Let's assume the response body IS the URL or a JSON containing it.
-                    // Looking at common 111666 instances (often GoImg), it might return JSON.
-                    // But if curl output is simple, maybe it's just the URL string.
-                    // Let's try to parse as JSON, if fail, assume text.
+                    // Telegra.ph returns: [{"src":"/file/xxxx.jpg"}]
+                    const result = JSON.parse(data);
 
-                    const text = data.trim();
-                    if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) {
-                        res.status(502).json({ error: 'Upstream returned HTML (likely Cloudflare block)' });
-                        return;
-                    }
-
-                    let finalUrl = '';
-                    // ... rest of logic
-
-                    if (text.startsWith('http')) {
-                        finalUrl = text;
-                    } else if (text.startsWith('/')) {
-                        // If returns relative path like "/image/abc.jpg"
-                        finalUrl = 'https://i.111666.best' + text;
+                    if (Array.isArray(result) && result[0].src) {
+                        res.status(200).json({ url: 'https://telegra.ph' + result[0].src });
+                    } else if (result.error) {
+                        res.status(500).json({ error: result.error });
                     } else {
-                        try {
-                            const json = JSON.parse(text);
-                            // Try to find the URL in common fields
-                            // Some APIs return just the filename or ID in 'src', 'id', etc.
-                            const candidate = json.url || json.data?.url || json.src || json.message;
-
-                            if (candidate && candidate.startsWith('http')) {
-                                finalUrl = candidate;
-                            } else if (candidate && candidate.startsWith('/')) {
-                                finalUrl = 'https://i.111666.best' + candidate;
-                            } else {
-                                // Fallback: try to construct if it looks like a path/ID
-                                // But safest is to return what we found if we can't be sure
-                                finalUrl = candidate || text;
-                            }
-                        } catch (e) {
-                            console.warn('Unknown response format:', text);
-                            finalUrl = text;
-                        }
+                        res.status(500).json({ error: 'Unknown response from Telegra.ph', raw: data });
                     }
-
-                    // Final safety check
-                    if (finalUrl && !finalUrl.startsWith('http')) {
-                        // If we still don't have http, maybe it's just the ID/Path returned as text
-                        // E.g. "image/123.jpg"
-                        finalUrl = 'https://i.111666.best/' + finalUrl.replace(/^\/+/, '');
-                    }
-
-                    res.status(200).json({ url: finalUrl });
                 } catch (e) {
-                    res.status(500).json({ error: e.message });
+                    res.status(500).json({ error: e.message, raw: data });
                 }
             });
         });
