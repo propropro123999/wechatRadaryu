@@ -742,13 +742,34 @@
                 document.getElementById('main-content').style.display = 'block';
             }
 
+            // Helper to fetch external images and convert to base64
+            async function fetchExternalImage(url) {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const blob = await response.blob();
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+                } catch (error) {
+                    console.error('Error fetching external image:', url, error);
+                    return null;
+                }
+            }
+
             // --- Cloud Bridge Actions ---
             let uploadedImages = []; // Track explicitly uploaded images for deletion
 
             async function uploadAllToCloud() {
                 const content = document.getElementById('preview-content');
+                // Select ALL images that are not already on our cloud
                 const imagesToUpload = Array.from(content.querySelectorAll('img'))
-                    .filter(img => img.src.startsWith('data:image')); // Only upload local images
+                    .filter(img => !img.src.includes('i.111666.best'));
 
                 if (imagesToUpload.length === 0) {
                     return alert('没有检测到需要上传的本地图片（或者图片已经上传过了）。');
@@ -763,8 +784,29 @@
                         const img = imagesToUpload[i];
                         btn.innerText = `正在上传 ${i + 1}/${imagesToUpload.length}...`;
 
-                        const cloudUrl = await uploadImageToCloud(img.src);
-                        console.log(`Image ${i} uploaded:`, cloudUrl); // Debug log
+                        let base64Data = img.src;
+
+                        // If it's a stubborn external URL (not base64), we must fetch it first
+                        if (!base64Data.startsWith('data:image')) {
+                            console.log('Attempting to fix external URL:', base64Data);
+                            try {
+                                // clean again just in case
+                                let cleanSrc = base64Data.replace(/%22/g, '').replace(/"/g, '').split(' ')[0].trim();
+                                const fetched = await fetchExternalImage(cleanSrc);
+                                if (fetched) {
+                                    base64Data = fetched;
+                                } else {
+                                    console.warn('Could not fetch/convert external image:', cleanSrc);
+                                    continue; // Skip this one if we can't get data
+                                }
+                            } catch (err) {
+                                console.error('Error fixing image:', err);
+                                continue;
+                            }
+                        }
+
+                        const cloudUrl = await uploadImageToCloud(base64Data);
+                        console.log(`Image ${i} uploaded:`, cloudUrl);
 
                         if (cloudUrl && cloudUrl.startsWith('http')) {
                             img.src = cloudUrl;
@@ -772,7 +814,6 @@
                             uploadedImages.push(cloudUrl);
                         } else {
                             console.error('Invalid Cloud URL received:', cloudUrl);
-                            // Don't break loop, just warn
                         }
                     }
 
