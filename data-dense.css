@@ -1,0 +1,248 @@
+/* ================================================================================
+   DATA-DENSE DASHBOARD STYLE (Override Layer)
+   Based on UI/UX Pro Max Style #28
+   Focus: Information density, minimal padding, clean lines, high contrast
+   ================================================================================ */
+
+:root {
+    /* ——— Compact Sections & Spacing ——— */
+    --gem-radius-sm: 2px;
+    --gem-radius-md: 4px;
+    --gem-radius-lg: 6px;
+    /* Drastically reduced from 32px for professional look */
+    --gem-radius-xl: 8px;
+    --gem-radius-full: 9999px;
+
+    /* ——— Professional Neutral Palette ——— */
+    --gem-color-bg-body: #F9FAFB;
+    /* Cool Grey 50 */
+    --gem-color-bg-surface: #FFFFFF;
+    /* Pure White */
+
+    --gem-color-text-primary: #111827;
+    /* Cool Grey 900 - High Contrast */
+    --gem-color-text-secondary: #4B5563;
+    /* Cool Grey 600 */
+    --gem-color-text-tertiary: #9CA3AF;
+    /* Cool Grey 400 */
+
+    /* ——— Functional Accent Colors ——— */
+    --gem-color-accent: #2563EB;
+    /* Professional Blue (Inter) */
+    --gem-gradient-primary: none;
+    /* Remove playful gradients */
+
+    /* ——— Subtle/No Shadows (Flat Design) ——— */
+    --gem-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --gem-shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --gem-shadow-floating: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --gem-shadow-pressed: inset 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+
+    /* ——— Typography ——— */
+    --gem-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ——— Global Resets for Density ——— */
+body {
+    font-size: 13px;
+    /* Smaller base font for higher density */
+    color: var(--gem-color-text-primary);
+    background-color: var(--gem-color-bg-body);
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+    background: none;
+    -webkit-text-fill-color: initial;
+    color: #111827;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+h2 {
+    font-size: 18px;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+h3 {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6B7280;
+}
+
+p {
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.container {
+    max-width: 100%;
+    /* Utilize full width */
+    padding: 16px 24px;
+    /* Reduced padding */
+}
+
+/* ——— Component Overrides ——— */
+
+/* Card: Clean, Bordered, No heavy shadow */
+.gem-card {
+    padding: 16px;
+    /* Reduced from 32px */
+    border: 1px solid #E5E7EB;
+    border-radius: var(--gem-radius-lg);
+    box-shadow: var(--gem-shadow-sm);
+    background: white !important;
+    /* Force white, override any pastel nth-child rules */
+    margin-bottom: 0;
+}
+
+.gem-card:hover {
+    transform: none;
+    /* Disable "lift" effect */
+    box-shadow: var(--gem-shadow-card);
+    border-color: #D1D5DB;
+}
+
+/* Force specific pastel overrides from gemini-ui.css to reset */
+.gem-card:nth-child(n) {
+    background-color: white;
+}
+
+/* Buttons: Compact, Functional */
+.gem-btn {
+    padding: 6px 16px;
+    /* Compact padding */
+    font-size: 13px;
+    height: 32px;
+    border-radius: 4px;
+    /* Slightly rounded squares */
+    text-transform: none;
+    /* Normal case */
+    font-weight: 500;
+    letter-spacing: normal;
+    box-shadow: none;
+    border: 1px solid transparent;
+}
+
+.gem-btn-primary {
+    background: var(--gem-color-accent);
+    box-shadow: none;
+}
+
+.gem-btn-primary:hover {
+    background: #1D4ED8;
+    transform: none;
+    box-shadow: none;
+}
+
+.gem-btn-secondary {
+    background: white;
+    border: 1px solid #D1D5DB;
+    color: #374151;
+    box-shadow: none;
+}
+
+.gem-btn-secondary:hover {
+    background: #F3F4F6;
+    border-color: #9CA3AF;
+    transform: none;
+}
+
+/* Inputs: Standard & Clean */
+.gem-input {
+    padding: 8px 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+    box-shadow: none;
+    background: white;
+    font-size: 13px;
+    height: 36px;
+}
+
+.gem-input:focus {
+    border-color: var(--gem-color-accent);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    background: white;
+}
+
+/* Navbar: Full Width Bar */
+.gem-navbar {
+    position: sticky;
+    top: 0;
+    margin: 0;
+    width: 100%;
+    height: 56px;
+    border-radius: 0;
+    background: white;
+    border-bottom: 1px solid #E5E7EB;
+    box-shadow: none;
+    padding: 0 24px;
+    backdrop-filter: none;
+    z-index: 1000;
+}
+
+/* Chips/Badges: Small & Precise */
+.gem-chip {
+    padding: 2px 8px;
+    font-size: 11px;
+    border-radius: 4px;
+    box-shadow: none;
+    border: 1px solid #E5E7EB;
+    background: #F3F4F6;
+    color: #4B5563;
+    font-weight: 500;
+}
+
+.gem-chip-accent {
+    background: #EFF6FF;
+    color: #1D4ED8;
+    border-color: #BFDBFE;
+}
+
+/* Grid System: Tighter Gaps */
+.bento-grid {
+    gap: 16px;
+    /* Reduced gap */
+}
+
+.cards-grid,
+.grid {
+    gap: 16px !important;
+}
+
+/* Table: Dense Rows */
+.gem-table th {
+    padding: 8px 16px;
+    font-size: 11px;
+    background: #F9FAFB;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.gem-table td {
+    padding: 8px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+.gem-table tr:hover td {
+    transform: none;
+    background-color: #F8FAFC;
+}
+
+/* Utilities */
+.text-sm {
+    font-size: 12px !important;
+}
+
+.text-xs {
+    font-size: 11px !important;
+}
+
+.text-muted {
+    color: #6B7280 !important;
+}
