@@ -1,248 +1,254 @@
 /* ================================================================================
-   DATA-DENSE DASHBOARD STYLE (Override Layer)
+   DATA-DENSE DASHBOARD STYLE (Override Layer) v2
    Based on UI/UX Pro Max Style #28
-   Focus: Information density, minimal padding, clean lines, high contrast
+   Focus: Information density, minimal padding, clean lines, HIGH CONTRAST
    ================================================================================ */
 
 :root {
-    /* ——— Compact Sections & Spacing ——— */
+    /* ——— Universal Variable Overrides (Gemini + Design System Modern) ——— */
+
+    /* 1. Spacing & Radius: Compact & Sharp */
     --gem-radius-sm: 2px;
     --gem-radius-md: 4px;
     --gem-radius-lg: 6px;
-    /* Drastically reduced from 32px for professional look */
+    /* Drastically reduced from 32px */
     --gem-radius-xl: 8px;
     --gem-radius-full: 9999px;
 
-    /* ——— Professional Neutral Palette ——— */
-    --gem-color-bg-body: #F9FAFB;
-    /* Cool Grey 50 */
+    --radius-xs: 2px;
+    --radius-sm: 4px;
+    --radius-md: 4px;
+    --radius-lg: 6px;
+    --radius-xl: 8px;
+
+    --space-lg: 12px;
+    /* Reduced from 16px */
+    --space-xl: 16px;
+    /* Reduced from 20px */
+    --space-2xl: 20px;
+    /* Reduced from 24px */
+    --space-3xl: 24px;
+    /* Reduced from 32px */
+
+    /* 2. Colors: High Contrast Professional Palette */
+    /* Backgrounds */
+    --gem-color-bg-body: #F3F4F6;
+    /* Grey 100 - Distinct from white */
     --gem-color-bg-surface: #FFFFFF;
     /* Pure White */
 
+    --color-bg-primary: #FFFFFF;
+    --color-bg-secondary: #F3F4F6;
+    /* Page background */
+    --color-bg-tertiary: #E5E7EB;
+
+    /* Text - Darkened for Visibility */
     --gem-color-text-primary: #111827;
-    /* Cool Grey 900 - High Contrast */
-    --gem-color-text-secondary: #4B5563;
-    /* Cool Grey 600 */
-    --gem-color-text-tertiary: #9CA3AF;
-    /* Cool Grey 400 */
+    /* Grey 900 */
+    --gem-color-text-secondary: #374151;
+    /* Grey 700 - Much darker than before */
+    --gem-color-text-tertiary: #6B7280;
+    /* Grey 500 - Visible on white */
 
-    /* ——— Functional Accent Colors ——— */
+    --color-text-primary: #111827;
+    --color-text-secondary: #374151;
+    /* Fixes "unclear" text */
+    --color-text-tertiary: #6B7280;
+    --color-text-placeholder: #9CA3AF;
+
+    /* Borders - Visible & Defined */
+    --color-border-light: #D1D5DB;
+    /* Grey 300 - Visible border */
+    --color-border-medium: #9CA3AF;
+    /* Grey 400 */
+
+    /* 3. Functional Colors */
     --gem-color-accent: #2563EB;
-    /* Professional Blue (Inter) */
-    --gem-gradient-primary: none;
-    /* Remove playful gradients */
+    /* Blue 600 */
+    --gem-gradient-primary: none !important;
 
-    /* ——— Subtle/No Shadows (Flat Design) ——— */
-    --gem-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --gem-shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    --gem-shadow-floating: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --gem-shadow-pressed: inset 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --color-primary: #2563EB;
 
-    /* ——— Typography ——— */
+    /* 4. Shadows: Flat / Minimal */
+    --gem-shadow-sm: none;
+    --gem-shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --gem-shadow-floating: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --gem-shadow-pressed: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+
+    --shadow-sm: none;
+    --shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+    /* 5. Typography */
     --gem-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* ——— Global Resets for Density ——— */
+/* ——— Global Resets ——— */
 body {
     font-size: 13px;
-    /* Smaller base font for higher density */
     color: var(--gem-color-text-primary);
-    background-color: var(--gem-color-bg-body);
+    background-color: var(--color-bg-secondary);
+    /* Ensure page bg is grey */
 }
 
-h1 {
-    font-size: 24px;
-    margin-bottom: 16px;
-    background: none;
-    -webkit-text-fill-color: initial;
-    color: #111827;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-}
-
-h2 {
-    font-size: 18px;
-    margin-bottom: 12px;
-    font-weight: 600;
-}
-
-h3 {
-    font-size: 14px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #6B7280;
-}
-
-p {
-    margin-bottom: 8px;
-    font-size: 13px;
-    line-height: 1.5;
-}
-
-.container {
-    max-width: 100%;
-    /* Utilize full width */
-    padding: 16px 24px;
-    /* Reduced padding */
+h1,
+h2,
+h3,
+h4,
+h5 {
+    color: var(--gem-color-text-primary);
+    letter-spacing: -0.01em;
 }
 
 /* ——— Component Overrides ——— */
 
-/* Card: Clean, Bordered, No heavy shadow */
-.gem-card {
-    padding: 16px;
-    /* Reduced from 32px */
-    border: 1px solid #E5E7EB;
-    border-radius: var(--gem-radius-lg);
-    box-shadow: var(--gem-shadow-sm);
+/* Card: Distinct Border, White Surface */
+.gem-card,
+.card {
+    padding: 16px !important;
+    border: 1px solid #D1D5DB !important;
+    /* Force visible border */
+    border-radius: 6px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
     background: white !important;
-    /* Force white, override any pastel nth-child rules */
     margin-bottom: 0;
 }
 
-.gem-card:hover {
-    transform: none;
-    /* Disable "lift" effect */
-    box-shadow: var(--gem-shadow-card);
-    border-color: #D1D5DB;
+/* Disable Clay/Pastel Effects */
+.gem-card:nth-child(n),
+.card:nth-child(n) {
+    background-color: white !important;
+    background: white !important;
+    transform: none !important;
 }
 
-/* Force specific pastel overrides from gemini-ui.css to reset */
-.gem-card:nth-child(n) {
-    background-color: white;
+.gem-card:hover,
+.card:hover {
+    transform: none !important;
+    border-color: #9CA3AF !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
 }
 
-/* Buttons: Compact, Functional */
-.gem-btn {
-    padding: 6px 16px;
-    /* Compact padding */
-    font-size: 13px;
-    height: 32px;
-    border-radius: 4px;
-    /* Slightly rounded squares */
-    text-transform: none;
-    /* Normal case */
-    font-weight: 500;
-    letter-spacing: normal;
-    box-shadow: none;
-    border: 1px solid transparent;
+/* Navbar: White, Clean Border */
+.gem-navbar,
+.topbar {
+    background: white !important;
+    border-bottom: 1px solid #D1D5DB !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    top: 0 !important;
+    height: 56px !important;
+    backdrop-filter: none !important;
+    padding: 0 24px !important;
 }
 
-.gem-btn-primary {
-    background: var(--gem-color-accent);
-    box-shadow: none;
+/* Buttons: High Contrast & Standard */
+.gem-btn,
+.btn {
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    height: 32px !important;
+    padding: 0 16px !important;
+    font-size: 13px !important;
 }
 
-.gem-btn-primary:hover {
-    background: #1D4ED8;
-    transform: none;
-    box-shadow: none;
+.gem-btn-primary,
+.btn-primary {
+    background: #2563EB !important;
+    border: 1px solid transparent !important;
+    color: white !important;
 }
 
-.gem-btn-secondary {
-    background: white;
-    border: 1px solid #D1D5DB;
-    color: #374151;
-    box-shadow: none;
+.gem-btn-primary:hover,
+.btn-primary:hover {
+    background: #1D4ED8 !important;
+    transform: none !important;
 }
 
-.gem-btn-secondary:hover {
-    background: #F3F4F6;
-    border-color: #9CA3AF;
-    transform: none;
+.gem-btn-secondary,
+.btn-secondary {
+    background: white !important;
+    border: 1px solid #D1D5DB !important;
+    /* Visible border */
+    color: #374151 !important;
 }
 
-/* Inputs: Standard & Clean */
-.gem-input {
-    padding: 8px 12px;
-    border: 1px solid #D1D5DB;
-    border-radius: 4px;
-    box-shadow: none;
-    background: white;
-    font-size: 13px;
-    height: 36px;
+.gem-btn-secondary:hover,
+.btn-secondary:hover {
+    background: #F9FAFB !important;
+    border-color: #9CA3AF !important;
+    transform: none !important;
 }
 
-.gem-input:focus {
-    border-color: var(--gem-color-accent);
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-    background: white;
+/* Inputs: Defined Bounds */
+.gem-input,
+input[type="text"],
+input[type="number"],
+select {
+    border: 1px solid #D1D5DB !important;
+    border-radius: 4px !important;
+    background: white !important;
+    box-shadow: none !important;
+    color: #111827 !important;
+    height: 32px !important;
+    padding: 4px 8px !important;
+    font-size: 13px !important;
 }
 
-/* Navbar: Full Width Bar */
-.gem-navbar {
-    position: sticky;
-    top: 0;
-    margin: 0;
-    width: 100%;
-    height: 56px;
-    border-radius: 0;
-    background: white;
-    border-bottom: 1px solid #E5E7EB;
-    box-shadow: none;
-    padding: 0 24px;
-    backdrop-filter: none;
-    z-index: 1000;
+.gem-input:focus,
+input:focus,
+select:focus {
+    border-color: #2563EB !important;
+    box-shadow: 0 0 0 1px #2563EB !important;
 }
 
-/* Chips/Badges: Small & Precise */
-.gem-chip {
-    padding: 2px 8px;
-    font-size: 11px;
-    border-radius: 4px;
-    box-shadow: none;
-    border: 1px solid #E5E7EB;
-    background: #F3F4F6;
-    color: #4B5563;
-    font-weight: 500;
-}
-
-.gem-chip-accent {
-    background: #EFF6FF;
-    color: #1D4ED8;
-    border-color: #BFDBFE;
-}
-
-/* Grid System: Tighter Gaps */
-.bento-grid {
-    gap: 16px;
-    /* Reduced gap */
-}
-
-.cards-grid,
-.grid {
-    gap: 16px !important;
-}
-
-/* Table: Dense Rows */
-.gem-table th {
-    padding: 8px 16px;
-    font-size: 11px;
-    background: #F9FAFB;
-    border-bottom: 1px solid #E5E7EB;
-}
-
-.gem-table td {
-    padding: 8px 16px;
-    font-size: 13px;
-    border-bottom: 1px solid #F3F4F6;
-}
-
-.gem-table tr:hover td {
-    transform: none;
-    background-color: #F8FAFC;
-}
-
-/* Utilities */
-.text-sm {
+/* Tables: Dense & Readable */
+.gem-table th,
+.table th {
+    background: #F3F4F6 !important;
+    color: #374151 !important;
+    /* Darker header text */
+    font-weight: 600 !important;
+    border-bottom: 1px solid #D1D5DB !important;
+    padding: 8px 12px !important;
     font-size: 12px !important;
+    text-transform: none !important;
 }
 
-.text-xs {
-    font-size: 11px !important;
+.gem-table td,
+.table td {
+    padding: 8px 12px !important;
+    border-bottom: 1px solid #E5E7EB !important;
+    color: #111827 !important;
+    background: white !important;
+    font-size: 13px !important;
 }
 
+.gem-table tr:hover td,
+.table tr:hover td {
+    background: #F9FAFB !important;
+}
+
+/* Grid Spacing */
+.bento-grid,
+.grid,
+.grid-4,
+.grid-3,
+.grid-2 {
+    gap: 12px !important;
+}
+
+/* Text Utilities Overrides */
 .text-muted {
     color: #6B7280 !important;
+}
+
+.text-secondary {
+    color: #374151 !important;
 }
