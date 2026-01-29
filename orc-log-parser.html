@@ -180,7 +180,7 @@
             <div style="text-align:center;margin-bottom:32px;">
                 <h1>ORC 日志批量解析</h1>
                 <p></p>
-                <div class="gem-chip">⚠️ 实验性功能 (Powered by DuckDB-Wasm)</div>
+                <div class="gem-chip">⚠️ 实验性功能 (云端 PyORC 解析)</div>
             </div>
 
             <div class="gem-card">
@@ -379,18 +379,19 @@
             formData.append('file', file);
 
             try {
-                const resp = await fetch('/api/parse-orc', {
-                    method: 'POST',
-                    body: formData
-                });
+                const resp = await fetch('/api/parse-orc', { method: 'POST', body: formData });
+                const json = await resp.json().catch(() => ({}));
 
-                if (!resp.ok) throw new Error(`Server Error: ${resp.status}`);
-
-                const json = await resp.json();
+                if (!resp.ok) {
+                    var msg = json.error || ('Server Error: ' + resp.status);
+                    if (msg.indexOf('pyorc') !== -1) {
+                        msg = '当前环境不支持云端解析（pyorc 未安装）。请使用本地解析或自建带 pyorc 的后端。';
+                    }
+                    throw new Error(msg);
+                }
                 if (json.error) throw new Error(json.error);
 
                 window.generateExcel(json.data, file.name, fileId);
-
             } catch (err) {
                 window.updateFileStatus(fileId, '解析失败: ' + err.message, 'error');
                 var entry = (window.mergedFileNames || []).find(f => f.id === fileId);

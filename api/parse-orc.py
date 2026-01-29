@@ -1,8 +1,8 @@
 from http.server import BaseHTTPRequestHandler
-import cgi
 import json
 import tempfile
 import os
+import re
 
 # Try to import pyorc, if it fails, we can't parse.
 # Vercel requires a requirements.txt to install dependencies.
@@ -11,12 +11,55 @@ try:
 except ImportError:
     pyorc = None
 
+
+def parse_multipart(headers, body):
+    """Parse multipart/form-data without using deprecated cgi module."""
+    content_type = headers.get('content-type', '')
+    
+    # Extract boundary
+    match = re.search(r'boundary=([^\s;]+)', content_type)
+    if not match:
+        return None
+    
+    boundary = match.group(1).encode('utf-8')
+    if boundary.startswith(b'"') and boundary.endswith(b'"'):
+        boundary = boundary[1:-1]
+    
+    # Split by boundary
+    parts = body.split(b'--' + boundary)
+    
+    for part in parts:
+        if b'name="file"' in part or b"name='file'" in part:
+            # Find the file content (after double CRLF)
+            header_end = part.find(b'\r\n\r\n')
+            if header_end == -1:
+                header_end = part.find(b'\n\n')
+                if header_end == -1:
+                    continue
+                file_data = part[header_end + 2:]
+            else:
+                file_data = part[header_end + 4:]
+            
+            # Remove trailing boundary markers
+            if file_data.endswith(b'--\r\n'):
+                file_data = file_data[:-4]
+            elif file_data.endswith(b'--'):
+                file_data = file_data[:-2]
+            if file_data.endswith(b'\r\n'):
+                file_data = file_data[:-2]
+            
+            return file_data
+    
+    return None
+
+
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         # 1. Check if pyorc is available
         if not pyorc:
             self.send_response(500)
             self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(json.dumps({
                 "error": "Server configuration error: 'pyorc' not installed."
@@ -24,41 +67,34 @@ class handler(BaseHTTPRequestHandler):
             return
 
         # 2. Parse Multipart Form Data
-        ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
-        if ctype != 'multipart/form-data':
+        content_type = self.headers.get('content-type', '')
+        if 'multipart/form-data' not in content_type:
             self.send_response(400)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(json.dumps({"error": "Content-Type must be multipart/form-data"}).encode('utf-8'))
             return
 
-        pdict['boundary'] = bytes(pdict['boundary'], "utf-8")
-        
         try:
-            form = cgi.FieldStorage(
-                fp=self.rfile, 
-                headers=self.headers,
-                environ={'REQUEST_METHOD': 'POST',
-                         'CONTENT_TYPE': self.headers['Content-Type'],
-                         }
-            )
+            # Read the request body
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
             
-            if 'file' not in form:
+            # Parse multipart data
+            file_data = parse_multipart(self.headers, body)
+            
+            if not file_data:
                 self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
-                self.wfile.write(json.dumps({"error": "No file field found"}).encode('utf-8'))
-                return
-
-            file_item = form['file']
-            if not file_item.file:
-                self.send_response(400)
-                self.end_headers()
-                self.wfile.write(json.dumps({"error": "Empty file"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"error": "No file field found or empty file"}).encode('utf-8'))
                 return
 
             # 3. Save to temp file (pyorc needs a file-like object or path)
-            # We use a temp file to be safe with binary streams
-            with tempfile.NamedTemporaryFile(delete=False) as tmp:
-                tmp.write(file_item.file.read())
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.orc') as tmp:
+                tmp.write(file_data)
                 tmp_path = tmp.name
 
             # 4. Parse ORC
@@ -66,11 +102,6 @@ class handler(BaseHTTPRequestHandler):
             try:
                 with open(tmp_path, "rb") as f:
                     reader = pyorc.Reader(f)
-                    # Convert to list of dicts if schema allows, or list of lists
-                    # Reader iterates over rows.
-                    # We can try to get column names from schema
-                    schema = reader.schema
-                    # simple conversion
                     for row in reader:
                         data.append(row)
             finally:
@@ -79,13 +110,22 @@ class handler(BaseHTTPRequestHandler):
             # 5. Return JSON
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             
-            # If data is large, this might hit Vercel limits (4.5MB response body).
-            # We strictly limit rows for this demo tool or warn user.
             self.wfile.write(json.dumps({"data": data}, default=str).encode('utf-8'))
 
         except Exception as e:
             self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
+    
+    def do_OPTIONS(self):
+        """Handle CORS preflight requests."""
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
