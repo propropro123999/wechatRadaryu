@@ -4,12 +4,11 @@ import tempfile
 import os
 import re
 
-# Try to import pyorc, if it fails, we can't parse.
-# Vercel requires a requirements.txt to install dependencies.
+# Try to import pyarrow for ORC parsing (has prebuilt wheels for all Python versions)
 try:
-    import pyorc
+    import pyarrow.orc as orc
 except ImportError:
-    pyorc = None
+    orc = None
 
 
 def parse_multipart(headers, body):
@@ -55,14 +54,14 @@ def parse_multipart(headers, body):
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
-        # 1. Check if pyorc is available
-        if not pyorc:
+        # 1. Check if pyarrow.orc is available
+        if not orc:
             self.send_response(500)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(json.dumps({
-                "error": "Server configuration error: 'pyorc' not installed."
+                "error": "Server configuration error: 'pyarrow' not installed."
             }).encode('utf-8'))
             return
 
@@ -92,18 +91,18 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"error": "No file field found or empty file"}).encode('utf-8'))
                 return
 
-            # 3. Save to temp file (pyorc needs a file-like object or path)
+            # 3. Save to temp file
             with tempfile.NamedTemporaryFile(delete=False, suffix='.orc') as tmp:
                 tmp.write(file_data)
                 tmp_path = tmp.name
 
-            # 4. Parse ORC
+            # 4. Parse ORC using pyarrow
             data = []
             try:
-                with open(tmp_path, "rb") as f:
-                    reader = pyorc.Reader(f)
-                    for row in reader:
-                        data.append(row)
+                table = orc.read_table(tmp_path)
+                # Convert to list of tuples (similar to pyorc output)
+                df = table.to_pandas()
+                data = df.values.tolist()
             finally:
                 os.remove(tmp_path)
 
