@@ -100,9 +100,14 @@ class handler(BaseHTTPRequestHandler):
             data = []
             try:
                 table = orc.read_table(tmp_path)
-                # Convert to list of tuples (similar to pyorc output)
-                df = table.to_pandas()
-                data = df.values.tolist()
+                # Convert to list of lists without pandas
+                for batch in table.to_batches():
+                    for row_idx in range(batch.num_rows):
+                        row = []
+                        for col_idx in range(batch.num_columns):
+                            val = batch.column(col_idx)[row_idx].as_py()
+                            row.append(val)
+                        data.append(row)
             finally:
                 os.remove(tmp_path)
 
