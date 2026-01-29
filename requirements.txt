@@ -1,3 +1,3 @@
-pyorc==0.9.0
+# pyorc 含 C++ 编译，Vercel 构建环境无法安装，已移除；云端解析需自建带 pyorc 的后端
 pandas==2.1.4
 openpyxl==3.1.2
