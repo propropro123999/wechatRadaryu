@@ -1,4 +1,9 @@
 {
   "buildCommand": "echo 'No build required'",
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "functions": {
+    "api/parse-orc.py": {
+      "runtime": "python3.9"
+    }
+  }
 }
