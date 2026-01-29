@@ -5,9 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>内容运营数据 Dashboard（本地版）</title>
-  <link rel="stylesheet" href="gemini-ui.css" />
-  <link rel="stylesheet" href="design-system-modern.css" />
-  <link rel="stylesheet" href="tool-pages-interactions.css" />
+  <link rel="stylesheet" href="ui.css" />
   <!-- Plotly 用于画图 -->
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <!-- SheetJS 读取 Excel -->
@@ -215,118 +213,6 @@
       margin-top: 8px;
     }
 
-    /* ===== 授权层样式 ===== */
-    #auth-screen {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255, 255, 255, 0.92);
-      z-index: 9999;
-      backdrop-filter: blur(8px);
-    }
-
-    .auth-card {
-      width: 360px;
-      max-width: 90vw;
-      padding: 24px;
-      border-radius: 16px;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 16px 48px rgba(15, 23, 42, 0.16);
-    }
-
-    .auth-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 4px;
-      color: #0f172a;
-    }
-
-    .auth-subtitle {
-      font-size: 12px;
-      color: #475569;
-      margin-bottom: 16px;
-    }
-
-    .auth-label {
-      font-size: 12px;
-      color: #475569;
-      margin-bottom: 6px;
-      display: block;
-      font-weight: 600;
-    }
-
-    .auth-input {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #d1d5db;
-      background: #f8fafc;
-      color: #0f172a;
-      outline: none;
-      font-size: 13px;
-      margin-bottom: 14px;
-      box-sizing: border-box;
-      transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s ease;
-    }
-
-    .auth-input:focus {
-      border-color: #bfdbfe;
-      box-shadow: 0 0 0 3px rgba(191, 219, 254, 0.55);
-      transform: translateY(-1px);
-    }
-
-    .auth-btn {
-      width: 100%;
-      border: none;
-      border-radius: 10px;
-      padding: 11px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: white;
-      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
-      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
-    }
-
-    .auth-btn:hover {
-      transform: translateY(-2px);
-    }
-
-    .auth-error {
-      margin-top: 10px;
-      font-size: 11px;
-      color: #dc2626;
-      min-height: 16px;
-    }
-
-    .auth-card.shake {
-      animation: shake 0.3s ease-in-out;
-    }
-
-    @keyframes shake {
-
-      0%,
-      100% {
-        transform: translateX(0);
-      }
-
-      25% {
-        transform: translateX(-6px);
-      }
-
-      50% {
-        transform: translateX(6px);
-      }
-
-      75% {
-        transform: translateX(-3px);
-      }
-    }
-
     #app {
       display: none;
     }
@@ -337,82 +223,17 @@
   <!-- 授权层 -->
   <div id="auth-screen">
     <div class="auth-card" id="auth-card">
-      <div class="auth-title">🔐 专栏 / 帖子工具</div>
-      <div class="auth-subtitle">请输入密码访问本工具</div>
-
-      <label class="auth-label" for="auth-code">密码</label>
-      <input id="auth-code" class="auth-input" type="text" placeholder="请输入密码" autocomplete="off" />
-
-      <button class="gem-btn gem-btn-primary w-full" id="auth-btn" style="margin-top: 16px;">确认进入</button>
-
+      <h2>🔐 专栏 / 帖子工具</h2>
+      <p>请输入密码访问本工具</p>
+      <input id="auth-code" class="input w-full" type="text" placeholder="请输入密码" autocomplete="off" />
+      <button class="btn btn-primary w-full" id="auth-btn">确认进入</button>
       <div class="auth-error" id="auth-error"></div>
     </div>
   </div>
 
   <!-- 真正的应用 -->
   <div id="app">
-    <!-- Unified Navbar -->
-    <nav class="gem-navbar">
-      <a href="#" class="gem-navbar-brand">
-        <span class="gem-navbar-icon">🧭</span>
-        <span>半导纵横专栏/帖子分析</span>
-      </a>
-
-      <div class="gem-navbar-actions">
-        <label class="gem-btn gem-btn-primary gem-btn-sm">
-          📤 选择 CSV
-          <input type="file" id="fileInput" accept=".csv" style="display: none;" />
-        </label>
-
-        <!-- App Switcher -->
-        <div class="gem-app-switcher">
-          <button class="gem-app-switcher-btn" title="切换工具">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-              <path
-                d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" />
-            </svg>
-          </button>
-          <div class="gem-app-switcher-menu">
-            <a href="content-dashboard.html" class="gem-app-item">
-              <span class="gem-app-icon">📈</span>
-              <span>内容数据</span>
-            </a>
-            <a href="bandao-ops-dashboard.html" class="gem-app-item">
-              <span class="gem-app-icon">🧭</span>
-              <span>专栏/帖子</span>
-            </a>
-            <a href="page-traffic-dashboard.html" class="gem-app-item">
-              <span class="gem-app-icon">🌐</span>
-              <span>页面流量</span>
-            </a>
-            <a href="youmeng.html" class="gem-app-item">
-              <span class="gem-app-icon">📄</span>
-              <span>友盟多表</span>
-            </a>
-            <a href="image-compress.html" class="gem-app-item">
-              <span class="gem-app-icon">🗜️</span>
-              <span>图片压缩</span>
-            </a>
-            <a href="yiban-dashboard.html" class="gem-app-item">
-              <span class="gem-app-icon">📊</span>
-              <span>壹伴数据</span>
-            </a>
-            <a href="article-formatter.html" class="gem-app-item">
-              <span class="gem-app-icon">📝</span>
-              <span>文章排版</span>
-            </a>
-            <a href="image-stitch.html" class="gem-app-item">
-              <span class="gem-app-icon">🖼️</span>
-              <span>长图拼接</span>
-            </a>
-          </div>
-        </div>
-
-        <a href="index.html" class="gem-btn gem-btn-secondary gem-btn-sm">
-          🏠 首页
-        </a>
-      </div>
-    </nav>
+    <div id="nav-container"></div>
 
     <div class="container">
       <h1>专栏 / 帖子工具</h1>
@@ -1082,155 +903,22 @@
     </script>
   </div>
 
-  <!-- 授权层脚本 -->
+  <script src="js/utils.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/auth.js"></script>
   <script>
-    const TOOL_ID = "bandaoquantiezi";
-    const STORAGE_KEY = `wechat_dashboard_auth_${TOOL_ID}`;
-    // 内置授权码，file:// 模式或 fetch 失败时兜底
-    const INLINE_AUTH_CODES = {
-      tools: {
-        bandaoquantiezi: {
-          codes: {
-            "BDQ-2025-A1B2": "标准授权",
-            "BDQ-2025-C3D4": "标准授权",
-            "BDQ-2025-E5F6": "标准授权",
-            "BDQ-2025-G7H8": "标准授权",
-            "BDQ-2025-I9J0": "标准授权",
-            "BDQ-2025-K1L2": "标准授权",
-            "BDQ-2025-M3N4": "标准授权",
-            "BDQ-2025-O5P6": "标准授权",
-            "BDQ-2025-Q7R8": "标准授权",
-            "BDQ-2025-S9T0": "标准授权"
-          }
-        }
+    renderNav({
+      title: '专栏/帖子分析',
+      icon: '🧭',
+      showFileInput: true,
+      fileAccept: '.xlsx,.xls,.csv',
+      fileLabel: '📤 选择文件',
+      onFileChange: (e) => {
+        const file = e.target.files[0];
+        if (file) handleFile({ target: { files: [file] } });
       }
-    };
-
-    let AUTH_CODES = {};
-    let authLoaded = false;
-
-    function loadAuthCodes() {
-      if (location.protocol === "file:") {
-        AUTH_CODES = INLINE_AUTH_CODES.tools?.[TOOL_ID]?.codes || {};
-        authLoaded = true;
-        console.log("使用内置授权码（file:// 模式）");
-        return Promise.resolve();
-      }
-
-      const url = "./auth-codes.json?" + Date.now();
-      console.log("尝试加载授权码文件：", url);
-
-      return fetch(url)
-        .then(async (res) => {
-          if (!res.ok) {
-            throw new Error("HTTP " + res.status);
-          }
-          return res.json();
-        })
-        .then((data) => {
-          console.log("auth-codes.json 加载成功");
-          if (data.tools && data.tools[TOOL_ID]) {
-            AUTH_CODES = data.tools[TOOL_ID].codes || {};
-          }
-          authLoaded = true;
-        })
-        .catch((err) => {
-          console.error("授权码文件加载失败:", err);
-          // 兜底：使用内置授权码，避免阻断使用
-          AUTH_CODES = INLINE_AUTH_CODES.tools?.[TOOL_ID]?.codes || {};
-          authLoaded = true;
-          if (!Object.keys(AUTH_CODES).length) {
-            alert("授权码文件加载失败，请检查 auth-codes.json");
-          }
-        });
-    }
-
-    const authScreen = document.getElementById("auth-screen");
-    const appRoot = document.getElementById("app");
-    const input = document.getElementById("auth-code");
-    const btn = document.getElementById("auth-btn");
-    const errElAuth = document.getElementById("auth-error");
-    const cardEl = document.getElementById("auth-card");
-
-    function shakeCard() {
-      cardEl.classList.remove("shake");
-      void cardEl.offsetWidth;
-      cardEl.classList.add("shake");
-    }
-
-    async function handleAuth() {
-      const code = (input.value || "").trim();
-
-      if (!authLoaded) {
-        await loadAuthCodes();
-      }
-
-      if (!code) {
-        errElAuth.textContent = "请输入授权码。";
-        shakeCard();
-        return;
-      }
-
-      if (!Object.prototype.hasOwnProperty.call(AUTH_CODES, code) && code !== "dcone2025") {
-        errElAuth.textContent = "授权码无效，请确认后重新输入。";
-        shakeCard();
-        return;
-      }
-
-      errElAuth.textContent = "";
-      showApp(code);
-    }
-
-    function showApp(code) {
-      if (authScreen) authScreen.style.display = "none";
-      if (appRoot) appRoot.style.display = "block";
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ code, ts: Date.now() }));
-      } catch (e) { }
-    }
-
-    (async function bootstrapAuth() {
-      // 确保初始状态：显示授权层，隐藏应用
-      if (authScreen) authScreen.style.display = "flex";
-      if (appRoot) appRoot.style.display = "none";
-
-      await loadAuthCodes();
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          // 检查授权码是否仍然有效
-          if (parsed && parsed.code) {
-            // 如果授权码在 AUTH_CODES 中或是 dcone2025，则允许自动登录
-            if (AUTH_CODES[parsed.code] || parsed.code === "dcone2025") {
-              console.log("自动登录，授权码有效");
-              showApp(parsed.code);
-              return;
-            } else {
-              // 授权码无效，清除 localStorage
-              console.log("授权码无效，清除 localStorage");
-              localStorage.removeItem(STORAGE_KEY);
-            }
-          }
-        }
-      } catch (e) {
-        console.error("localStorage 读取错误:", e);
-        localStorage.removeItem(STORAGE_KEY);
-      }
-
-      // 如果没有有效授权，显示授权层（双重保障）
-      if (authScreen) authScreen.style.display = "flex";
-      if (appRoot) appRoot.style.display = "none";
-    })();
-
-    if (btn) btn.addEventListener("click", handleAuth);
-    if (input) input.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") handleAuth();
     });
-
-    window.addEventListener("load", function () {
-      if (input) setTimeout(() => input.focus(), 80);
-    });
+    initAuth('bandaoquantiezi');
   </script>
 </body>
 

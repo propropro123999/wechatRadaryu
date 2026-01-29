@@ -5,131 +5,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>壹伴数据分析工具（本地版）</title>
-  <link rel="stylesheet" href="gemini-ui.css" />
-  <link rel="stylesheet" href="design-system-modern.css" />
-  <link rel="stylesheet" href="tool-pages-interactions.css" />
-  <link rel="stylesheet" href="data-dense.css" />
+  <link rel="stylesheet" href="ui.css" />
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
-    /* ===== 授权层样式 ===== */
-    #auth-screen {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255, 255, 255, 0.92);
-      z-index: 9999;
-      backdrop-filter: blur(8px);
-    }
-
-    .auth-card {
-      width: 360px;
-      max-width: 90vw;
-      padding: 24px;
-      border-radius: 16px;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 16px 48px rgba(15, 23, 42, 0.12);
-    }
-
-    .auth-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 4px;
-      color: #0f172a;
-    }
-
-    .auth-subtitle {
-      font-size: 12px;
-      color: #475569;
-      margin-bottom: 16px;
-    }
-
-    .auth-label {
-      font-size: 12px;
-      color: #475569;
-      margin-bottom: 6px;
-      display: block;
-      font-weight: 600;
-    }
-
-    .auth-input {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #d1d5db;
-      background: #f8fafc;
-      color: #0f172a;
-      outline: none;
-      font-size: 13px;
-      margin-bottom: 14px;
-      box-sizing: border-box;
-      transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s ease;
-    }
-
-    .auth-input:focus {
-      border-color: #bfdbfe;
-      box-shadow: 0 0 0 3px rgba(191, 219, 254, 0.55);
-      transform: translateY(-1px);
-    }
-
-    .auth-btn {
-      width: 100%;
-      border: none;
-      border-radius: 10px;
-      padding: 11px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: white;
-      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
-      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
-    }
-
-    .auth-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 14px 36px rgba(37, 99, 235, 0.32);
-      filter: brightness(1.02);
-    }
-
-    .auth-error {
-      margin-top: 10px;
-      font-size: 11px;
-      color: #dc2626;
-      min-height: 16px;
-    }
-
-    .auth-card.shake {
-      animation: shake 0.3s ease-in-out;
-    }
-
-    @keyframes shake {
-
-      0%,
-      100% {
-        transform: translateX(0);
-      }
-
-      25% {
-        transform: translateX(-6px);
-      }
-
-      50% {
-        transform: translateX(6px);
-      }
-
-      75% {
-        transform: translateX(-3px);
-      }
-    }
-
-    /* ===== 页面布局样式 ===== */
+    /* ===== 页面特定样式 ===== */
     #app {
       display: none;
-      background-color: var(--color-bg-secondary);
       min-height: 100vh;
     }
 
@@ -137,116 +19,16 @@
       display: block;
     }
 
-    .topbar {
-      position: sticky;
-      top: 0;
-      background: var(--color-bg-primary);
-      border-bottom: 1px solid var(--color-border-light);
-      padding: var(--space-lg) var(--space-2xl);
-      z-index: 100;
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .topbar-title {
-      font-size: var(--text-2xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text-primary);
-      margin-bottom: var(--space-md);
-    }
-
-    .file-input {
-      display: inline-block;
-      padding: var(--space-md) var(--space-lg);
-      background: linear-gradient(135deg, var(--color-primary), #2563eb);
-      color: white;
-      border-radius: var(--radius-lg);
-      font-size: var(--text-sm);
-      font-weight: var(--font-weight-semibold);
-      cursor: pointer;
-      transition: transform var(--transition-base), box-shadow var(--transition-base);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-      margin-bottom: var(--space-md);
-    }
-
-    .file-input:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
-    }
-
-    .hint {
-      font-size: var(--text-xs);
-      color: var(--color-text-tertiary);
-      margin-top: var(--space-sm);
-    }
-
-    /* 返回首页按钮 */
-    .topbar-home {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-      padding: var(--space-sm) var(--space-lg);
-      background: var(--color-bg-secondary);
-      color: var(--color-text-primary);
-      border-radius: var(--radius-lg);
-      font-size: var(--text-sm);
-      font-weight: var(--font-weight-semibold);
-      cursor: pointer;
-      text-decoration: none;
-      transition: all var(--transition-base);
-      border: 1px solid var(--color-border-light);
-    }
-
-    .topbar-home:hover {
-      background: var(--color-primary);
-      color: white;
-      border-color: var(--color-primary);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: var(--space-3xl) var(--space-2xl);
-    }
-
-    .container h1 {
-      margin-bottom: var(--space-md);
-    }
-
-    .sub-title {
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      font-size: var(--text-sm);
-      color: var(--color-text-secondary);
-      margin-bottom: var(--space-3xl);
-    }
-
-    .tag {
-      display: inline-block;
-      background-color: var(--color-info-bg);
-      color: var(--color-info);
-      padding: var(--space-xs) var(--space-md);
-      border-radius: var(--radius-full);
-      font-size: var(--text-xs);
-      font-weight: var(--font-weight-semibold);
-    }
-
-    #loading,
-    #error {
-      padding: var(--space-lg) var(--space-2xl);
-      margin-bottom: var(--space-2xl);
-      border-radius: var(--radius-lg);
-      font-size: var(--text-sm);
+    #loading, #error {
+      padding: var(--space-4);
+      margin-bottom: var(--space-6);
+      border-radius: var(--radius-md);
+      font-size: 14px;
     }
 
     #loading {
-      background-color: var(--color-info-bg);
-      color: var(--color-info);
+      background: var(--color-primary-bg);
+      color: var(--color-primary);
     }
 
     #error {
@@ -254,162 +36,116 @@
       color: var(--color-error);
     }
 
-    /* 汇总卡片 */
+    /* 汇总卡片网格 */
     .cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: var(--space-lg);
-      margin-bottom: var(--space-3xl);
-    }
-
-    .card {
-      background: var(--color-bg-primary);
-      border: 1px solid var(--color-border-light);
-      border-radius: var(--radius-lg);
-      padding: var(--space-2xl);
-      transition: all var(--transition-base);
-      box-shadow: var(--shadow-xs);
-    }
-
-    .card:hover {
-      border-color: var(--color-primary-light);
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
     }
 
     .card-label {
-      font-size: var(--text-xs);
+      font-size: 12px;
       color: var(--color-text-tertiary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      margin-bottom: var(--space-sm);
-      font-weight: var(--font-weight-semibold);
+      margin-bottom: var(--space-1);
+      font-weight: 600;
     }
 
     .card-value {
-      font-size: var(--text-3xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text-primary);
-      margin-bottom: var(--space-sm);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-text);
       line-height: 1.2;
     }
 
     .card-desc {
-      font-size: var(--text-xs);
+      font-size: 12px;
       color: var(--color-text-secondary);
+      margin-top: var(--space-1);
     }
 
     /* 图表块 */
     .chart-block {
-      background: var(--color-bg-primary);
-      border: 1px solid var(--color-border-light);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
-      padding: var(--space-2xl);
-      margin-bottom: var(--space-2xl);
-      box-shadow: var(--shadow-xs);
-      transition: box-shadow var(--transition-base);
-    }
-
-    .chart-block:hover {
-      box-shadow: var(--shadow-sm);
+      padding: var(--space-6);
+      margin-bottom: var(--space-6);
     }
 
     .chart-title {
-      font-size: var(--text-lg);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-primary);
-      margin-bottom: var(--space-md);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-2);
     }
 
     .chart-subtitle {
-      font-size: var(--text-xs);
+      font-size: 13px;
       color: var(--color-text-secondary);
-      margin-bottom: var(--space-lg);
+      margin-bottom: var(--space-4);
     }
 
     .chart {
-      min-height: 350px;
+      min-height: 320px;
       width: 100%;
     }
 
     /* h2 样式 */
-    .container h2 {
-      font-size: var(--text-2xl);
-      margin-top: var(--space-3xl);
-      margin-bottom: var(--space-2xl);
-      padding-top: var(--space-2xl);
-      border-top: 2px solid var(--color-border-light);
-      color: var(--color-primary);
+    .section-title {
+      font-size: 18px;
+      margin-top: var(--space-8);
+      margin-bottom: var(--space-6);
+      padding-top: var(--space-6);
+      border-top: 1px solid var(--color-border);
+      color: var(--color-text);
     }
 
-    .container h2:first-of-type {
+    .section-title:first-of-type {
       border-top: none;
       margin-top: 0;
+      padding-top: 0;
     }
 
     .footer {
       text-align: center;
-      margin-top: var(--space-3xl);
-      padding-top: var(--space-2xl);
-      border-top: 1px solid var(--color-border-light);
-      font-size: var(--text-xs);
+      margin-top: var(--space-8);
+      padding-top: var(--space-6);
+      border-top: 1px solid var(--color-border);
+      font-size: 12px;
       color: var(--color-text-tertiary);
     }
 
-    /* 表格样式 */
-    table {
+    /* 数据表格样式 */
+    .data-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: var(--text-sm);
+      font-size: 13px;
     }
 
-    table th {
-      background-color: var(--color-bg-secondary);
-      padding: var(--space-md) var(--space-lg);
+    .data-table th {
+      background: var(--color-bg);
+      padding: var(--space-3) var(--space-4);
       text-align: left;
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-primary);
-      border-bottom: 1px solid var(--color-border-light);
-    }
-
-    table td {
-      padding: var(--space-md) var(--space-lg);
-      border-bottom: 1px solid var(--color-border-light);
+      font-weight: 600;
       color: var(--color-text-secondary);
+      border-bottom: 1px solid var(--color-border);
     }
 
-    table tr:hover {
-      background-color: var(--color-bg-secondary);
+    .data-table td {
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--color-border);
+      color: var(--color-text);
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--color-bg);
     }
 
     /* 响应式 */
-    @media (max-width: 1024px) {
-      .container {
-        padding: var(--space-2xl) var(--space-lg);
-      }
-
-      .cards {
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      }
-
-      .chart {
-        min-height: 280px;
-      }
-    }
-
     @media (max-width: 768px) {
-      .topbar {
-        padding: var(--space-md) var(--space-lg);
-      }
-
-      .topbar-title {
-        font-size: var(--text-xl);
-      }
-
-      .container {
-        padding: var(--space-2xl) var(--space-md);
-      }
-
       .cards {
         grid-template-columns: 1fr;
       }
@@ -419,11 +155,7 @@
       }
 
       .chart-block {
-        padding: var(--space-lg);
-      }
-
-      .container h2 {
-        font-size: var(--text-lg);
+        padding: var(--space-4);
       }
     }
   </style>
@@ -433,13 +165,15 @@
   <!-- 授权层 -->
   <div id="auth-screen">
     <div class="auth-card" id="auth-card">
-      <div class="auth-title">🔐 壹伴数据分析工具</div>
-      <div class="auth-subtitle">请输入授权码访问本工具</div>
+      <h2>🔐 壹伴数据分析</h2>
+      <p>请输入授权码访问本工具</p>
 
-      <label class="auth-label" for="auth-code">授权码</label>
-      <input id="auth-code" class="auth-input" type="text" placeholder="例如：YB-2025-A1B2" autocomplete="off" />
+      <div class="form-group">
+        <label class="form-label" for="auth-code">授权码</label>
+        <input id="auth-code" class="input" type="text" placeholder="例如：YB-2025-A1B2" autocomplete="off" />
+      </div>
 
-      <button class="auth-btn" id="auth-btn">确认进入</button>
+      <button class="btn btn-primary" id="auth-btn" style="width: 100%;">确认进入</button>
 
       <div class="auth-error" id="auth-error"></div>
     </div>
@@ -447,28 +181,17 @@
 
   <!-- 真正的应用 -->
   <div id="app">
-    <div class="topbar">
-      <div>
-        <div class="topbar-title">壹伴数据分析工具（本地版）</div>
-        <div class="hint">
-          支持壹伴插件导出的 Excel 表格，自动识别阅读、分享、互动等字段
-        </div>
-      </div>
-      <div style="display: flex; gap: var(--space-lg); align-items: center;">
-        <label class="file-input">
-          选择 Excel 文件
-          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" />
-        </label>
-        <a href="image-stitch.html" class="topbar-home" style="margin-right:8px;">🖼️ 长图拼接</a>
-        <a href="index.html" class="topbar-home">← 返回首页</a>
-      </div>
-    </div>
+    <!-- 导航栏容器 -->
+    <div id="nav-container"></div>
 
     <div class="container">
-      <h1>壹伴数据分析 Dashboard</h1>
-      <div class="sub-title" id="dateRange">
+      <div class="mb-6">
+        <h1>壹伴数据分析</h1>
+        <p class="text-muted">支持壹伴插件导出的 Excel 表格，自动识别阅读、分享、互动等字段</p>
+      </div>
+      <div id="dateRange" class="flex items-center gap-3 mb-6 text-sm text-muted">
         请先在上方选择壹伴导出的 Excel 文件
-        <span class="tag">离线本地分析，不会上传数据</span>
+        <span class="badge badge-primary">离线本地分析</span>
       </div>
 
       <div id="loading"></div>
@@ -1355,208 +1078,29 @@
       document.getElementById("detailTable").innerHTML = html;
     }
 
-    function escapeHtml(val) {
-      if (val === null || val === undefined) return "";
-      return String(val)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
   </script>
 
-  <!-- 授权层脚本 -->
+  <!-- 公共模块 -->
+  <script src="js/utils.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/auth.js"></script>
+  
   <script>
-    const TOOL_ID = "yiban-analysis";
-    const STORAGE_KEY = `wechat_dashboard_auth_${TOOL_ID}`;
-    const INLINE_AUTH_CODES = {
-      tools: {
-        "yiban-analysis": {
-          codes: {
-            "YB-2025-A1B2": "标准授权",
-            "YB-2025-C3D4": "标准授权",
-            "YB-2025-E5F6": "标准授权",
-            "YB-2025-G7H8": "标准授权",
-            "YB-2025-I9J0": "标准授权",
-            "YB-2025-K1L2": "标准授权",
-            "YB-2025-M3N4": "标准授权",
-            "YB-2025-O5P6": "标准授权",
-            "YB-2025-Q7R8": "标准授权",
-            "YB-2025-S9T0": "标准授权",
-          },
-        },
-      },
-    };
-
-    let AUTH_CODES = {};
-    let authLoaded = false;
-
-    function loadAuthCodes() {
-      if (location.protocol === "file:") {
-        AUTH_CODES = INLINE_AUTH_CODES.tools?.[TOOL_ID]?.codes || {};
-        authLoaded = true;
-        console.log("使用内置授权码（file:// 模式）");
-        return Promise.resolve();
+    // 初始化导航
+    renderNav({
+      title: '壹伴数据分析',
+      icon: '📊',
+      showFileInput: true,
+      fileAccept: '.xlsx,.xls,.csv',
+      fileLabel: '📤 选择 Excel',
+      onFileChange: (e) => {
+        const file = e.target.files[0];
+        if (file) handleFile(file);
       }
+    });
 
-      const url = "./auth-codes.json?" + Date.now();
-      console.log("尝试加载授权码文件：", url);
-
-      return fetch(url)
-        .then(async (res) => {
-          if (!res.ok) {
-            const text = await res.text().catch(() => "");
-            console.error("auth-codes.json 响应异常：", res.status, res.statusText, text);
-            throw new Error("HTTP " + res.status);
-          }
-          return res.json();
-        })
-        .then((data) => {
-          console.log("auth-codes.json 加载成功：", data);
-          // 提取当前工具的授权码
-          if (data.tools && data.tools[TOOL_ID]) {
-            AUTH_CODES = data.tools[TOOL_ID].codes || {};
-          } else if (typeof data === 'object') {
-            // 兼容旧格式
-            AUTH_CODES = data;
-          }
-          authLoaded = true;
-          console.log("授权码加载完成，可用数量:", Object.keys(AUTH_CODES).length);
-        })
-        .catch((err) => {
-          console.error("授权码文件加载失败:", err);
-          // 兜底：如果有内置授权码则继续使用，避免阻断使用
-          AUTH_CODES = INLINE_AUTH_CODES.tools?.[TOOL_ID]?.codes || {};
-          authLoaded = true;
-          console.log("使用内置授权码兜底，可用数量:", Object.keys(AUTH_CODES).length);
-          if (!Object.keys(AUTH_CODES).length) {
-            alert("授权码文件加载失败：\n" +
-              "1）确认根目录存在 auth-codes.json\n" +
-              "2）确认部署后可以直接访问 /auth-codes.json\n" +
-              "3）确认文件内容是合法 JSON（无多余逗号/注释）");
-          }
-        });
-    }
-
-    let authScreen, appRoot, input, btn, errElAuth, cardEl;
-
-    function initAuthElements() {
-      authScreen = document.getElementById("auth-screen");
-      appRoot = document.getElementById("app");
-      input = document.getElementById("auth-code");
-      btn = document.getElementById("auth-btn");
-      errElAuth = document.getElementById("auth-error");
-      cardEl = document.getElementById("auth-card");
-
-      if (!authScreen || !appRoot || !input || !btn || !errElAuth || !cardEl) {
-        console.error("授权元素未找到，请检查 DOM");
-        return false;
-      }
-      return true;
-    }
-
-    function shakeCard() {
-      if (!cardEl) return;
-      cardEl.classList.remove("shake");
-      void cardEl.offsetWidth;
-      cardEl.classList.add("shake");
-    }
-
-    async function handleAuth() {
-      console.log("handleAuth 被调用");
-      if (!input || !errElAuth) {
-        console.error("授权元素未初始化", { input, errElAuth });
-        return;
-      }
-
-      const code = (input.value || "").trim();
-      console.log("输入的授权码:", code);
-
-      if (!authLoaded) {
-        console.log("授权码未加载，开始加载...");
-        await loadAuthCodes();
-      }
-
-      if (!code) {
-        errElAuth.textContent = "请输入授权码。";
-        shakeCard();
-        return;
-      }
-
-      console.log("验证授权码:", code);
-      console.log("可用授权码列表:", Object.keys(AUTH_CODES));
-      console.log("授权码对象:", AUTH_CODES);
-
-      // 检查是否是有效的授权码或默认密码
-      const isValidCode = Object.prototype.hasOwnProperty.call(AUTH_CODES, code);
-      const isDefaultPassword = code === "dcone123";
-
-      if (!isValidCode && !isDefaultPassword) {
-        console.log("授权码验证失败:", code, "不在列表中，也不是默认密码");
-        errElAuth.textContent = "授权码无效，请确认后重新输入。";
-        shakeCard();
-        return;
-      }
-
-      console.log("授权码验证成功，显示应用");
-      errElAuth.textContent = "";
-      showApp(code);
-    }
-
-    function showApp(code) {
-      if (!authScreen || !appRoot) {
-        console.error("无法显示应用：元素未找到");
-        return;
-      }
-      authScreen.style.display = "none";
-      appRoot.classList.add("visible");
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ code, ts: Date.now() }));
-      } catch (e) {
-        console.warn("localStorage 保存失败:", e);
-      }
-    }
-
-    (async function bootstrapAuth() {
-      console.log("开始初始化授权系统");
-      // 等待 DOM 加载完成
-      if (document.readyState === "loading") {
-        await new Promise((resolve) => {
-          document.addEventListener("DOMContentLoaded", resolve);
-        });
-      }
-
-      if (!initAuthElements()) {
-        console.error("初始化授权元素失败");
-        return;
-      }
-
-      console.log("授权元素初始化成功");
-
-      // 加载授权码
-      await loadAuthCodes();
-
-      // 检查 localStorage 中是否有保存的授权码
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed && parsed.code && (AUTH_CODES[parsed.code] || parsed.code === "dcone123")) {
-            console.log("发现已保存的授权码，自动登录");
-            showApp(parsed.code);
-            return;
-          }
-        }
-      } catch (e) {
-        console.warn("localStorage 读取失败:", e);
-      }
-
-      // 绑定按钮事件
-      btn.addEventListener("click", handleAuth);
-      input.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") handleAuth();
-      });
-    })();
+    // 初始化授权
+    initAuth('yiban-analysis');
   </script>
 </body>
 

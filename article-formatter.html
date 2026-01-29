@@ -6,16 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="no-referrer" />
     <title>文章一键排版 - ICviews Tools</title>
-    <link rel="stylesheet" href="gemini-ui.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="ui.css" />
     <!-- jQuery -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
 
     <style>
         body {
-            background-color: var(--gem-color-background);
-            color: var(--gem-color-text-primary);
-            font-family: 'Google Sans', 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            font-family: var(--font-sans);
             height: 100vh;
             overflow: hidden;
             display: flex;
@@ -51,7 +50,7 @@
         }
 
         .back-link:hover {
-            color: var(--gem-color-accent);
+            color: var(--color-primary);
         }
 
         /* Editor Card & Layout */
@@ -119,19 +118,19 @@
             cursor: pointer;
             user-select: none;
             font-size: 13px;
-            color: var(--gem-color-text-secondary);
+            color: var(--color-text-muted);
             font-weight: 500;
         }
 
         .checkbox-item input {
             margin-right: 6px;
-            accent-color: var(--gem-color-accent);
+            accent-color: var(--color-primary);
             width: 14px;
             height: 14px;
         }
 
         .action-btn {
-            background-color: var(--gem-color-accent);
+            background-color: var(--color-primary);
             color: white;
             border: none;
             padding: 8px 20px;
@@ -199,91 +198,9 @@
 </head>
 
 <body>
+    <div id="nav-container"></div>
 
-    <!-- Unified Navbar -->
-    <nav class="gem-navbar">
-        <a href="#" class="gem-navbar-brand">
-            <span class="gem-navbar-icon">📝</span>
-            <span>文章排版工具</span>
-        </a>
-
-        <div class="gem-navbar-actions">
-            <!-- App Switcher -->
-            <div class="gem-app-switcher">
-                <button class="gem-app-switcher-btn" title="切换工具">
-                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                        <path
-                            d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" />
-                    </svg>
-                </button>
-                <div class="gem-app-switcher-menu">
-                    <a href="content-dashboard.html" class="gem-app-item">
-                        <span class="gem-app-icon">📈</span>
-                        <span>内容数据</span>
-                    </a>
-                    <a href="bandao-ops-dashboard.html" class="gem-app-item">
-                        <span class="gem-app-icon">🧭</span>
-                        <span>专栏/帖子</span>
-                    </a>
-                    <a href="page-traffic-dashboard.html" class="gem-app-item">
-                        <span class="gem-app-icon">🌐</span>
-                        <span>页面流量</span>
-                    </a>
-                    <a href="youmeng.html" class="gem-app-item">
-                        <span class="gem-app-icon">📄</span>
-                        <span>友盟多表</span>
-                    </a>
-                    <a href="image-compress.html" class="gem-app-item">
-                        <span class="gem-app-icon">🗜️</span>
-                        <span>图片压缩</span>
-                    </a>
-                    <a href="yiban-dashboard.html" class="gem-app-item">
-                        <span class="gem-app-icon">📊</span>
-                        <span>壹伴数据</span>
-                    </a>
-                    <a href="article-formatter.html" class="gem-app-item">
-                        <span class="gem-app-icon">📝</span>
-                        <span>文章排版</span>
-                    </a>
-                    <a href="image-stitch.html" class="gem-app-item">
-                        <span class="gem-app-icon">🖼️</span>
-                        <span>长图拼接</span>
-                    </a>
-                </div>
-            </div>
-
-            <a href="index.html" class="gem-btn gem-btn-secondary"
-                style="border-radius: 8px; padding: 6px 16px; font-size: 13px;">
-                🏠 首页
-            </a>
-        </div>
-    </nav>
-
-    <div class="main-container animate-fade-in">
-        <!-- Header -->
-        <div class="header-section">
-            <div>
-                <a href="./index.html" class="back-link">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        style="margin-right: 6px;">
-                        <path d="M19 12H5M12 19l-7-7 7-7" />
-                    </svg>
-                    返回工具箱
-                </a>
-                <h1 style="font-size: 24px; margin-top: 12px; display:flex; align-items:center; gap:8px;">
-                    文章一键排版
-                    <span class="gem-chip gem-chip-accent"
-                        style="font-size: 11px; vertical-align: middle;">Native</span>
-                </h1>
-                <p style="color: var(--gem-color-text-secondary); font-size: 14px;">自动清理格式、规范标点、中英文加空格 (支持富文本编辑)。</p>
-            </div>
-        </div>
-
-        <!-- Diagnostics Panel (Moved to Top) -->
-
-
-
-
+    <div class="main-container">
         <!-- Editor Card -->
         <div class="editor-card">
 
@@ -523,6 +440,15 @@
             setTimeout(() => $toast.removeClass('show'), 2000);
         }
 
+    </script>
+
+    <script src="js/utils.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+      renderNav({
+        title: '文章排版',
+        icon: '📝'
+      });
     </script>
 </body>
 

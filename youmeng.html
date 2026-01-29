@@ -5,29 +5,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>页面访问数据分析 Dashboard</title>
-  <link rel="stylesheet" href="gemini-ui.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="ui.css" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 
   <style>
-    /* Specific Layout Overrides */
-    #auth-screen {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255, 255, 255, 0.6);
-      backdrop-filter: blur(20px);
-      z-index: 9999;
-    }
-
-    .auth-card-custom {
-      width: 360px;
-      max-width: 90vw;
-    }
-
     #app {
       display: none;
     }
@@ -54,19 +36,19 @@
 
     .metric-label {
       font-size: 13px;
-      color: var(--gem-color-text-secondary);
+      color: var(--color-text-secondary);
       margin-bottom: 4px;
     }
 
     .metric-value {
       font-size: 24px;
       font-weight: 700;
-      color: var(--gem-color-text-primary);
+      color: var(--color-text);
     }
 
     .metric-desc {
       font-size: 12px;
-      color: var(--gem-color-text-tertiary);
+      color: var(--color-text-tertiary);
       margin-top: 4px;
     }
 
@@ -96,91 +78,23 @@
 <body>
   <!-- 授权层 -->
   <div id="auth-screen">
-    <div class="gem-card auth-card-custom animate-fade-in" id="auth-card">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <h2 style="font-size: 20px; margin-bottom: 8px;">🔐 友盟多表流量工具</h2>
-        <p style="font-size: 13px; color: var(--gem-color-text-secondary);">请输入密码访问本工具</p>
+    <div class="auth-card fade-in" id="auth-card">
+      <h2 class="text-center">🔐 友盟多表流量工具</h2>
+      <p class="text-center text-muted">请输入密码访问本工具</p>
+
+      <div class="form-group">
+        <label class="form-label">密码</label>
+        <input id="auth-code" class="input" type="password" placeholder="请输入密码" autocomplete="off" />
       </div>
 
-      <div style="margin-bottom: 20px;">
-        <label
-          style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px; color: var(--gem-color-text-secondary);">密码</label>
-        <input id="auth-code" class="gem-input" type="password" placeholder="请输入密码" autocomplete="off" />
-      </div>
-
-      <button class="gem-btn gem-btn-primary w-full" id="auth-btn">确认进入</button>
-
-      <div class="auth-error" id="auth-error"
-        style="color: #D93025; font-size: 12px; margin-top: 12px; min-height: 16px; text-align: center;"></div>
+      <button class="btn btn-primary w-full" id="auth-btn">确认进入</button>
+      <div class="auth-error text-center" id="auth-error"></div>
     </div>
   </div>
 
   <!-- 真正的应用 -->
-  <div id="app" class="animate-fade-in">
-
-    <!-- Unified Navbar -->
-    <nav class="gem-navbar">
-      <a href="#" class="gem-navbar-brand">
-        <span class="gem-navbar-icon">📄</span>
-        <span>友盟多表合并分析</span>
-      </a>
-
-      <div class="gem-navbar-actions">
-        <label class="gem-btn gem-btn-primary" style="padding: 8px 20px; font-size: 13px;">
-          📤 选择 XLSX
-          <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;" />
-        </label>
-
-        <!-- App Switcher -->
-        <div class="gem-app-switcher">
-          <button class="gem-app-switcher-btn" title="切换工具">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-              <path
-                d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" />
-            </svg>
-          </button>
-          <div class="gem-app-switcher-menu">
-            <a href="content-dashboard.html" class="gem-app-item">
-              <span class="gem-app-icon">📈</span>
-              <span>内容数据</span>
-            </a>
-            <a href="bandao-ops-dashboard.html" class="gem-app-item">
-              <span class="gem-app-icon">🧭</span>
-              <span>专栏/帖子</span>
-            </a>
-            <a href="page-traffic-dashboard.html" class="gem-app-item">
-              <span class="gem-app-icon">🌐</span>
-              <span>页面流量</span>
-            </a>
-            <a href="youmeng.html" class="gem-app-item">
-              <span class="gem-app-icon">📄</span>
-              <span>友盟多表</span>
-            </a>
-            <a href="image-compress.html" class="gem-app-item">
-              <span class="gem-app-icon">🗜️</span>
-              <span>图片压缩</span>
-            </a>
-            <a href="yiban-dashboard.html" class="gem-app-item">
-              <span class="gem-app-icon">📊</span>
-              <span>壹伴数据</span>
-            </a>
-            <a href="article-formatter.html" class="gem-app-item">
-              <span class="gem-app-icon">📝</span>
-              <span>文章排版</span>
-            </a>
-            <a href="image-stitch.html" class="gem-app-item">
-              <span class="gem-app-icon">🖼️</span>
-              <span>长图拼接</span>
-            </a>
-          </div>
-        </div>
-
-        <a href="index.html" class="gem-btn gem-btn-secondary"
-          style="border-radius: 8px; padding: 6px 16px; font-size: 13px;">
-          🏠 首页
-        </a>
-      </div>
-    </nav>
+  <div id="app" class="fade-in">
+    <div id="nav-container"></div>
 
     <div class="container">
 
@@ -191,7 +105,7 @@
 
         <!-- 状态提示（JS用于显示解析进度） -->
         <div id="status" style="margin-top: 12px; font-size: 13px;"></div>
-        <div id="summary" style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-top: 4px;"></div>
+        <div id="summary" style="font-size: 12px; color: var(--color-text-tertiary); margin-top: 4px;"></div>
 
 
       </div>
@@ -231,7 +145,7 @@
       <!-- 二、类型分布 -->
       <div class="section" id="section-type" style="display:none; margin-bottom: 32px;">
         <h2 style="margin-bottom: 16px;">二、按页面类型分布</h2>
-        <div class="gem-card">
+        <div class="card">
           <h3 style="margin-bottom: 16px;">页面类型 PV / UV 分布</h3>
           <div id="typeChart" class="chart"></div>
           <div style="margin-top: 24px; overflow-x: auto;">
@@ -244,23 +158,23 @@
       <div class="section" id="section-top" style="display:none; margin-bottom: 32px;">
         <h2 style="margin-bottom: 16px;">三、热门页面 Top 榜</h2>
 
-        <div class="gem-card" style="margin-bottom: 24px;">
+        <div class="card" style="margin-bottom: 24px;">
           <div class="flex justify-between items-center mb-4" style="margin-bottom: 16px;">
             <h3>热门页面 TOP 20（按 PV）</h3>
             <div class="flex gap-2">
-              <button class="gem-btn gem-btn-secondary" id="btnExportTopPV"
+              <button class="btn btn-secondary" id="btnExportTopPV"
                 style="font-size: 12px; padding: 6px 12px;">导出 TOP500</button>
-              <button class="gem-btn gem-btn-secondary" id="btnExportAllAgg"
+              <button class="btn btn-secondary" id="btnExportAllAgg"
                 style="font-size: 12px; padding: 6px 12px;">导出全部数据</button>
             </div>
           </div>
           <div id="topPvTable" style="overflow-x: auto;"></div>
         </div>
 
-        <div class="gem-card">
+        <div class="card">
           <div class="flex justify-between items-center mb-4" style="margin-bottom: 16px;">
             <h3>高粘性页面 TOP 20（按停留时间）</h3>
-            <button class="gem-btn gem-btn-secondary" id="btnExportTopDur"
+            <button class="btn btn-secondary" id="btnExportTopDur"
               style="font-size: 12px; padding: 6px 12px;">导出 TOP500</button>
           </div>
           <div id="topDurationTable" style="overflow-x: auto;"></div>
@@ -270,7 +184,7 @@
       <!-- 四、按 Sheet 对比 -->
       <div class="section" id="section-sheet" style="display:none; margin-bottom: 32px;">
         <h2 style="margin-bottom: 16px;">四、按 Sheet（季度）对比</h2>
-        <div class="gem-card">
+        <div class="card">
           <h3 style="margin-bottom: 16px;">各 Sheet 访问表现</h3>
           <div id="sheetTable" style="margin-bottom: 24px; overflow-x: auto;"></div>
           <div id="sheetChart" class="chart"></div>
@@ -282,14 +196,14 @@
         <h2 style="margin-bottom: 16px;">五、解析数据预览 <span
             style="font-size: 14px; opacity: 0.6; font-weight: normal;">（调试用）</span></h2>
 
-        <div class="gem-card" style="margin-bottom: 24px;">
+        <div class="card" style="margin-bottom: 24px;">
           <h3 style="margin-bottom: 12px;">前 50 行预览</h3>
           <div class="preview-box">
             <div id="preview"></div>
           </div>
         </div>
 
-        <div class="gem-card">
+        <div class="card">
           <h3 style="margin-bottom: 12px;">URL 类型调试</h3>
           <div id="urlTypeDebug" style="font-size: 12px;"></div>
         </div>
@@ -553,7 +467,7 @@
           return;
         }
         const cols = Object.keys(data[0]);
-        let html = "<table class='gem-table'><thead><tr>";
+        let html = "<table class='table'><thead><tr>";
         cols.forEach(c => html += `<th class="${c.includes("URL") ? "url" : ""}">${c}</th>`);
         html += "</tr></thead><tbody>";
         data.slice(0, 50).forEach(row => {
@@ -576,7 +490,7 @@
           el.innerHTML = "<div class='small'>无数据</div>";
           return;
         }
-        let html = "<table class='gem-table'><thead><tr>"
+        let html = "<table class='table'><thead><tr>"
           + "<th>#</th><th class='url'>页面URL</th><th>页面类型</th><th>页面ID</th>"
           + "</tr></thead><tbody>";
         data.slice(0, 20).forEach((r, i) => {
@@ -796,7 +710,7 @@
           legend: { orientation: "h", y: -0.2 }
         });
 
-        let html = "<table class='gem-table'><thead><tr><th>页面类型</th><th>PV</th><th>UV</th><th>记录数</th><th>平均停留秒</th></tr></thead><tbody>";
+        let html = "<table class='table'><thead><tr><th>页面类型</th><th>PV</th><th>UV</th><th>记录数</th><th>平均停留秒</th></tr></thead><tbody>";
         types.forEach(t => {
           const a = agg[t];
           const avgDur = a.durCnt ? (a.durSum / a.durCnt).toFixed(2) : "-";
@@ -818,7 +732,7 @@
         const topDurShow = durSorted.slice(0, DISPLAY_TOP_N);
 
         // TOP PV
-        let htmlPv = "<table class='gem-table'><thead><tr>"
+        let htmlPv = "<table class='table'><thead><tr>"
           + "<th>#</th><th>类型</th><th>ID</th><th class='url'>URL</th>"
           + "<th>PV</th><th>UV</th><th>IP</th><th>输出PV</th>"
           + "<th>平均停留秒</th><th>平均人均浏览</th><th>覆盖Sheet数</th><th>PV占比</th><th>UV占比</th>"
@@ -845,7 +759,7 @@
         document.getElementById("topPvTable").innerHTML = `<div class="table-wrap">${htmlPv}</div>`;
 
         // TOP 停留
-        let htmlDur = "<table class='gem-table'><thead><tr>"
+        let htmlDur = "<table class='table'><thead><tr>"
           + "<th>#</th><th>类型</th><th>ID</th><th class='url'>URL</th>"
           + "<th>平均停留秒</th><th>PV</th><th>UV</th><th>IP</th><th>输出PV</th>"
           + "<th>平均人均浏览</th><th>覆盖Sheet数</th>"
@@ -949,7 +863,7 @@
           });
         }
 
-        let html = "<table class='gem-table'><thead><tr><th>Sheet</th><th>记录数</th><th>PV</th><th>UV</th><th>平均停留秒</th></tr></thead><tbody>";
+        let html = "<table class='table'><thead><tr><th>Sheet</th><th>记录数</th><th>PV</th><th>UV</th><th>平均停留秒</th></tr></thead><tbody>";
         rows.forEach(r => {
           html += `<tr>
       <td>${r.sheet}</td>
@@ -973,129 +887,22 @@
       }
     </script>
 
-    <!-- 授权码验证脚本 -->
+    <script src="js/utils.js"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/auth.js"></script>
     <script>
-      const TOOL_ID = 'youmeng-traffic';
-      const AUTH_STORAGE_KEY = `auth_${TOOL_ID}`;
-
-      // 声明变量，但延迟赋值
-      let authScreen, authCard, authInput, authBtn, authError, app;
-
-      // 从 auth-codes.json 加载授权码
-      let validCodes = [];
-      async function loadAuthCodes() {
-        try {
-          const response = await fetch('auth-codes.json');
-          if (response.ok) {
-            const data = await response.json();
-            if (data.tools && data.tools[TOOL_ID] && data.tools[TOOL_ID].codes) {
-              validCodes = Object.keys(data.tools[TOOL_ID].codes);
-            }
-          }
-        } catch (e) {
-          // 如果无法加载，使用内置授权码
-          console.warn('无法加载 auth-codes.json，使用内置授权码');
-          validCodes = [
-            'YMT-2025-A1B2', 'YMT-2025-C3D4', 'YMT-2025-E5F6', 'YMT-2025-G7H8',
-            'YMT-2025-I9J0', 'YMT-2025-K1L2', 'YMT-2025-M3N4', 'YMT-2025-O5P6',
-            'YMT-2025-Q7R8', 'YMT-2025-S9T0', 'dcone2025'
-          ];
+      renderNav({
+        title: '友盟多表分析',
+        icon: '📄',
+        showFileInput: true,
+        fileAccept: '.xlsx,.xls',
+        fileLabel: '📤 选择 XLSX',
+        onFileChange: (e) => {
+          const file = e.target.files[0];
+          if (file) handleFile({ target: { files: [file] } });
         }
-      }
-
-      function shakeCard() {
-        if (!authCard) return;
-        authCard.classList.remove('shake');
-        void authCard.offsetWidth;
-        authCard.classList.add('shake');
-      }
-
-      function handleAuth() {
-        if (!authInput) return;
-        const code = (authInput.value || '').trim();
-
-        if (!code) {
-          if (authError) authError.textContent = '请输入授权码。';
-          shakeCard();
-          return;
-        }
-
-        if (!validCodes.includes(code)) {
-          if (authError) authError.textContent = '授权码无效，请检查后重试。';
-          shakeCard();
-          authInput.value = '';
-          return;
-        }
-
-        if (authError) authError.textContent = '';
-        showApp(code);
-      }
-
-      function showApp(code) {
-        if (authScreen) authScreen.style.display = 'none';
-        if (app) app.style.display = 'block';
-
-        try {
-          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
-            code: code,
-            ts: Date.now()
-          }));
-        } catch (e) { }
-      }
-
-      function checkAuthStatus() {
-        try {
-          const saved = localStorage.getItem(AUTH_STORAGE_KEY);
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            // 检查授权码是否仍然有效
-            if (parsed && parsed.code) {
-              if (validCodes.includes(parsed.code)) {
-                console.log("自动登录，授权码有效");
-                showApp(parsed.code);
-                return;
-              } else {
-                // 授权码无效，清除 localStorage
-                console.log("授权码无效，清除 localStorage");
-                localStorage.removeItem(AUTH_STORAGE_KEY);
-              }
-            }
-          }
-        } catch (e) {
-          console.error("localStorage 读取错误:", e);
-          localStorage.removeItem(AUTH_STORAGE_KEY);
-        }
-
-        // 如果没有有效授权，显示授权层（双重保障）
-        if (authScreen) authScreen.style.display = 'flex';
-        if (app) app.style.display = 'none';
-      }
-
-      // 初始化
-      document.addEventListener('DOMContentLoaded', async function () {
-        // 初始化 DOM 元素引用
-        authScreen = document.getElementById('auth-screen');
-        authCard = document.getElementById('auth-card');
-        authInput = document.getElementById('auth-code');
-        authBtn = document.getElementById('auth-btn');
-        authError = document.getElementById('auth-error');
-        app = document.getElementById('app');
-
-        // 确保初始状态：显示授权层，隐藏应用
-        if (authScreen) authScreen.style.display = 'flex';
-        if (app) app.style.display = 'none';
-
-        await loadAuthCodes();
-        checkAuthStatus();
-
-        // 事件绑定
-        if (authBtn) authBtn.addEventListener('click', handleAuth);
-        if (authInput) authInput.addEventListener('keydown', function (e) {
-          if (e.key === 'Enter') handleAuth();
-        });
-
-        if (authInput) setTimeout(() => authInput.focus(), 100);
       });
+      initAuth('youmeng-traffic');
     </script>
 </body>
 

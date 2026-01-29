@@ -5,238 +5,218 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ICviews Tools Collection</title>
-  <link rel="stylesheet" href="gemini-ui.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="ui.css" />
   <style>
-    /* Page specific adjustments */
-    body {
-      /* Claymorphism Background */
-      background-color: #F0F4F8;
-      background-image: none;
-    }
-
+    /* 首页样式 */
     .hero-section {
       text-align: center;
-      margin-bottom: 56px;
-      position: relative;
+      padding: var(--space-8) 0;
     }
 
-    .tool-icon-wrapper {
-      width: 64px;
-      height: 64px;
-      border-radius: 20px;
-      background: #F0F4F8;
-      /* Same as body for clay depression or extrusion */
+    .hero-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: var(--space-3);
+    }
+
+    .hero-desc {
+      font-size: 16px;
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-6);
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--space-4);
+    }
+
+    .tool-card {
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-5);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      transition: all var(--transition-fast);
+    }
+
+    .tool-card:hover {
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .tool-icon {
+      width: 48px;
+      height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 32px;
-      /* Clay Extrusion */
-      box-shadow: 8px 8px 16px #D1D9E6, -8px -8px 16px #FFFFFF;
+      font-size: 24px;
+      background: var(--color-bg);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-4);
+    }
+
+    .tool-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-2);
+    }
+
+    .tool-card p {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      margin: 0;
+      flex-grow: 1;
+    }
+
+    .tool-card-featured {
+      grid-column: span 2;
+      background: linear-gradient(135deg, var(--color-primary) 0%, #1d4ed8 100%);
       border: none;
-      margin-bottom: 20px;
-      transition: all 0.3s ease;
     }
 
-    .gem-card:hover .tool-icon-wrapper {
-      transform: scale(1.1);
-      box-shadow: 12px 12px 24px #D1D9E6, -12px -12px 24px #FFFFFF;
+    .tool-card-featured .tool-icon {
+      background: rgba(255,255,255,0.2);
     }
 
-    .tool-link {
-      display: inline-flex;
-      align-items: center;
-      margin-top: auto;
-      font-weight: 500;
-      color: var(--gem-color-accent);
-      font-size: 14px;
+    .tool-card-featured h3,
+    .tool-card-featured p {
+      color: white;
     }
 
-    .tool-link svg {
-      width: 18px;
-      height: 18px;
-      margin-left: 4px;
-      transition: transform 0.2s;
-    }
-
-    .gem-card:hover .tool-link svg {
-      transform: translateX(4px);
+    .tool-card-featured:hover {
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
     }
 
     .footer-links {
       display: flex;
       justify-content: center;
-      gap: 24px;
-      margin-top: 40px;
-      margin-bottom: 24px;
+      gap: var(--space-6);
+      margin-top: var(--space-8);
       flex-wrap: wrap;
     }
 
     .footer-link {
-      color: var(--gem-color-text-secondary);
+      color: var(--color-text-secondary);
       font-size: 13px;
       font-weight: 500;
-      transition: color 0.2s;
-      text-decoration: none;
+      transition: color var(--transition-fast);
     }
 
     .footer-link:hover {
-      color: var(--gem-color-accent);
+      color: var(--color-primary);
+    }
+
+    @media (max-width: 640px) {
+      .tool-card-featured {
+        grid-column: span 1;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <div class="container animate-fade-in">
+  <div class="container fade-in">
 
     <!-- Hero Header -->
     <div class="hero-section">
-      <h1 class="animate-fade-in delay-1">ICviews Tools</h1>
-      <p style="font-size: 18px; max-width: 600px; margin: 16px auto;" class="animate-fade-in delay-2">
-        提效工具合集
-        <br>
-        <span style="font-size: 14px; opacity: 0.8;">本地解析 · 数据隐私安全 · 即拖即用</span>
+      <h1 class="hero-title">ICviews Tools</h1>
+      <p class="hero-desc">
+        提效工具合集 · 本地解析 · 数据隐私安全 · 即拖即用
       </p>
-
-      <div class="flex items-center justify-center gap-2 animate-fade-in delay-3" style="margin-top: 24px;">
-        <span class="gem-chip gem-chip-accent">10 套工具</span>
-        <span class="gem-chip">CSV / XLSX / PDF</span>
-        <span class="gem-chip">Browser Only</span>
-      </div>
-
-      <div style="margin-top: 24px; max-width: 600px; margin-left: auto; margin-right: auto;"
-        class="animate-fade-in delay-3">
-        <div
-          style="background: rgba(255, 255, 255, 0.6); padding: 12px; border-radius: 8px; border: 1px dashed #E0E3E7; font-size: 13px; color: var(--gem-color-text-secondary); display: flex; align-items: center; justify-content: center; gap: 8px;">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="opacity: 0.7;">
-            <path
-              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
-          </svg>
-          <span>提示：服务器暂无法支持多需求并发，本工具仅限内部访问使用。</span>
-        </div>
+      <div class="flex items-center justify-center gap-2">
+        <span class="badge badge-primary">11 套工具</span>
+        <span class="badge">CSV / XLSX / PDF</span>
+        <span class="badge">Browser Only</span>
       </div>
     </div>
 
     <!-- Tools Grid -->
-    <!-- Tools Grid (Bento Style) -->
-    <div class="bento-grid animate-fade-in delay-3">
+    <div class="tool-grid">
 
-      <!-- Card 1: Content Dashboard (Hero - 2x2 or wide) -->
-      <a href="./content-dashboard.html" class="gem-card col-span-2 row-span-2"
-        style="background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(232,240,254,0.4));">
-        <div class="flex justify-between items-start w-full">
-          <div class="tool-icon-wrapper" style="width: 72px; height: 72px; font-size: 36px;">📈</div>
-          <div class="gem-chip gem-chip-accent">Core Tool</div>
-        </div>
-        <h3 style="font-size: 24px; margin-top: 12px;">内容数据分析</h3>
-        <p style="font-size: 16px; opacity: 0.8; max-width: 80%;">读取公众号导出表，自动匹配阅读/分享/完读字段，生成 Top 榜单与四象限洞察。运营复盘必备神器。</p>
-
-        <div class="flex gap-2" style="margin-top: auto; flex-wrap: wrap;">
-          <span class="gem-chip">四象限分析</span>
-          <span class="gem-chip">Top榜单</span>
-          <span class="gem-chip">自动洞察</span>
-        </div>
-        <div class="tool-link" style="margin-top: 24px;">
-          立即使用 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14m-7-7 7 7-7 7" />
-          </svg>
-        </div>
+      <!-- 内容数据分析 (Featured) -->
+      <a href="./content-dashboard.html" class="tool-card tool-card-featured">
+        <div class="tool-icon">📈</div>
+        <h3>内容数据分析</h3>
+        <p>读取公众号导出表，自动匹配阅读/分享/完读字段，生成 Top 榜单与四象限洞察。</p>
       </a>
 
-      <!-- Word to HTML Tool (Featured - Wide) -->
-      <a href="./word-to-html.html" class="gem-card col-span-2">
-        <div class="flex justify-between items-start">
-          <div class="tool-icon-wrapper">📝</div>
-          <div class="gem-chip" style="background: rgba(16, 185, 129, 0.1); color: #059669;">New</div>
+      <!-- Word 转 HTML -->
+      <a href="./word-to-html.html" class="tool-card">
+        <div class="flex justify-between items-start" style="width:100%">
+          <div class="tool-icon">📝</div>
+          <span class="badge badge-success" style="background:#d1fae5;color:#059669;">New</span>
         </div>
         <h3>Word 转 HTML</h3>
         <p>文档一键转网页，图床自动桥接，完美适配知乎/公众号。</p>
-        <div class="flex gap-2" style="margin-top: auto;">
-          <span class="gem-chip">Catbox图床</span>
-          <span class="gem-chip">格式还原</span>
-        </div>
       </a>
 
-      <!-- Card 2: Ops Dashboard -->
-      <a href="./bandao-ops-dashboard.html" class="gem-card">
-        <div class="tool-icon-wrapper">🧭</div>
+      <!-- 专栏/帖子工具 -->
+      <a href="./bandao-ops-dashboard.html" class="tool-card">
+        <div class="tool-icon">🧭</div>
         <h3>专栏 / 帖子工具</h3>
         <p>拆解发布频次、作者分层与内容高频词。</p>
-        <div class="tool-link">
-          进入工具 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14m-7-7 7 7-7 7" />
-          </svg>
-        </div>
       </a>
 
-      <!-- Card 3: Page Traffic -->
-      <a href="./page-traffic-dashboard.html" class="gem-card">
-        <div class="tool-icon-wrapper">🌐</div>
+      <!-- 页面流量分析 -->
+      <a href="./page-traffic-dashboard.html" class="tool-card">
+        <div class="tool-icon">🌐</div>
         <h3>页面流量分析</h3>
         <p>解析页面标题与流量指标，查看流量漏斗。</p>
-        <div class="tool-link">
-          进入工具 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14m-7-7 7 7-7 7" />
-          </svg>
-        </div>
       </a>
 
-      <!-- Card 6: Yiban Analysis -->
-      <a href="./yiban-dashboard.html" class="gem-card">
-        <div class="tool-icon-wrapper">📊</div>
+      <!-- 壹伴数据分析 -->
+      <a href="./yiban-dashboard.html" class="tool-card">
+        <div class="tool-icon">📊</div>
         <h3>壹伴数据分析</h3>
         <p>解析壹伴数据，深度分析互动与转化率。</p>
-        <div class="tool-link">
-          进入工具 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14m-7-7 7 7-7 7" />
-          </svg>
-        </div>
       </a>
 
-      <!-- Card 4: Youmeng -->
-      <a href="./youmeng.html" class="gem-card">
-        <div class="tool-icon-wrapper">📄</div>
+      <!-- 友盟多表流量 -->
+      <a href="./youmeng.html" class="tool-card">
+        <div class="tool-icon">📄</div>
         <h3>友盟多表流量</h3>
         <p>多Sheet报表合并，趋势对比与汇总。</p>
-        <div class="tool-link">
-          进入工具 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14m-7-7 7 7-7 7" />
-          </svg>
-        </div>
       </a>
 
-      <!-- Card 5: Image Compress -->
-      <a href="./image-compress.html" class="gem-card">
-        <div class="tool-icon-wrapper">🗜️</div>
+      <!-- 图片压缩 -->
+      <a href="./image-compress.html" class="tool-card">
+        <div class="tool-icon">🗜️</div>
         <h3>图片压缩</h3>
         <p>本地批量压缩，隐私安全，一键打包。</p>
       </a>
 
-      <!-- PDF Compress -->
-      <a href="./pdf-compress.html" class="gem-card">
-        <div class="tool-icon-wrapper">📄</div>
+      <!-- PDF 压缩 -->
+      <a href="./pdf-compress.html" class="tool-card">
+        <div class="tool-icon">📄</div>
         <h3>PDF 压缩</h3>
         <p>智能压缩 PDF 体积，支持质量调节。</p>
       </a>
 
-      <!-- Image Stitching -->
-      <a href="./image-stitch.html" class="gem-card">
-        <div class="tool-icon-wrapper">🖼️</div>
+      <!-- 长图拼接 -->
+      <a href="./image-stitch.html" class="tool-card">
+        <div class="tool-icon">🖼️</div>
         <h3>长图拼接</h3>
         <p>多图无缝拼接，支持拖拽排序。</p>
       </a>
 
-      <!-- Article Formatter -->
-      <a href="./article-formatter.html" class="gem-card">
-        <div class="tool-icon-wrapper">📝</div>
+      <!-- 文章排版 -->
+      <a href="./article-formatter.html" class="tool-card">
+        <div class="tool-icon">📝</div>
         <h3>文章排版</h3>
         <p>一键清洗 HTML，规范标点与空格。</p>
       </a>
 
-      <!-- ORC Log Parser -->
-      <a href="./orc-log-parser.html" class="gem-card">
-        <div class="tool-icon-wrapper">🪵</div>
+      <!-- ORC 解析 -->
+      <a href="./orc-log-parser.html" class="tool-card">
+        <div class="tool-icon">🪵</div>
         <h3>ORC 解析</h3>
         <p>大数据日志文件转 Excel。</p>
       </a>
@@ -244,7 +224,7 @@
     </div>
 
     <!-- Footer Links -->
-    <div class="footer-links animate-fade-in delay-3">
+    <div class="footer-links">
       <a href="https://www.icviews.cn/" target="_blank" class="footer-link">半导纵横首页</a>
       <a href="https://www.icviews.cn/news/recommend" target="_blank" class="footer-link">资讯池</a>
       <a href="https://www.icviews.cn/semiCommunity/latest" target="_blank" class="footer-link">半导圈</a>
@@ -253,8 +233,7 @@
     </div>
 
     <!-- Footer -->
-    <div
-      style="text-align: center; margin-top: 24px; color: var(--gem-color-text-tertiary); font-size: 12px; opacity: 0.8;">
+    <div class="text-center mt-6 text-xs text-tertiary">
       <p>💡 Processing locally in your browser.</p>
     </div>
 

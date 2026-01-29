@@ -5,28 +5,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>内容数据函数分析工具（函数运行在浏览器）</title>
-  <link rel="stylesheet" href="gemini-ui.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="ui.css" />
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
-    /* Specific Layout Overrides */
-    #auth-screen {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255, 255, 255, 0.6);
-      backdrop-filter: blur(20px);
-      z-index: 9999;
-    }
-
-    .auth-card-custom {
-      width: 400px;
-      max-width: 90vw;
-    }
-
     #app {
       display: none;
     }
@@ -106,30 +88,30 @@
 <body>
   <!-- 授权层 -->
   <div id="auth-screen">
-    <div class="gem-card auth-card-custom animate-fade-in" id="auth-card">
+    <div class="auth-card" id="auth-card">
       <div style="margin-bottom: 24px;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
           <h2 style="font-size: 20px; margin: 0;">🔐 内部数据访问</h2>
-          <span class="gem-chip gem-chip-accent" style="font-size: 11px;">Auth Required</span>
+          <span class="chip chip-accent" style="font-size: 11px;">Auth Required</span>
         </div>
         <p style="font-size: 13px;">请输入授权码访问「内容表现 Dashboard」。<br>本页仅供经授权的内部成员 / 合作方使用。</p>
       </div>
 
       <div style="margin-bottom: 20px;">
         <label
-          style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px; color: var(--gem-color-text-secondary);">授权码</label>
-        <input id="auth-code" class="gem-input" type="text" placeholder="例如：ICV-2025-7QAF" autocomplete="off" />
+          style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px; color: var(--color-text-secondary);">授权码</label>
+        <input id="auth-code" class="input" type="text" placeholder="例如：ICV-2025-7QAF" autocomplete="off" />
       </div>
 
       <div class="flex items-center justify-between gap-4">
-        <span style="font-size: 12px; color: var(--gem-color-text-tertiary);">按需分发，一次一码</span>
-        <button class="gem-btn gem-btn-primary" id="auth-btn">确认进入</button>
+        <span style="font-size: 12px; color: var(--color-text-tertiary);">按需分发，一次一码</span>
+        <button class="btn btn-primary" id="auth-btn">确认进入</button>
       </div>
 
       <div id="auth-error" style="color: #D93025; font-size: 12px; margin-top: 12px; min-height: 16px;"></div>
 
       <div
-        style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #F0F4F9; font-size: 11px; color: var(--gem-color-text-tertiary); display: flex; justify-content: space-between;">
+        style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #F0F4F9; font-size: 11px; color: var(--color-text-tertiary); display: flex; justify-content: space-between;">
         <span>WeChat 内容 Dashboard</span>
         <span id="auth-info-tag">未授权</span>
       </div>
@@ -138,69 +120,7 @@
 
   <!-- 真正的 Dashboard 根节点：授权后显示 -->
   <div id="app" class="animate-fade-in">
-    <!-- Unified Navbar -->
-    <nav class="gem-navbar">
-      <a href="#" class="gem-navbar-brand">
-        <span class="gem-navbar-icon">📈</span>
-        <span>内容数据函数分析</span>
-      </a>
-
-      <div class="gem-navbar-actions">
-        <!-- Specific Action for this tool -->
-        <label class="gem-btn gem-btn-primary gem-btn-sm">
-          📤 选择 CSV / XLSX
-          <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;" />
-        </label>
-
-        <!-- App Switcher -->
-        <div class="gem-app-switcher">
-          <button class="gem-app-switcher-btn" title="切换工具">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-              <path
-                d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" />
-            </svg>
-          </button>
-          <div class="gem-app-switcher-menu">
-            <a href="content-dashboard.html" class="gem-app-item">
-              <span class="gem-app-icon">📈</span>
-              <span>内容数据</span>
-            </a>
-            <a href="bandao-ops-dashboard.html" class="gem-app-item">
-              <span class="gem-app-icon">🧭</span>
-              <span>专栏/帖子</span>
-            </a>
-            <a href="page-traffic-dashboard.html" class="gem-app-item">
-              <span class="gem-app-icon">🌐</span>
-              <span>页面流量</span>
-            </a>
-            <a href="youmeng.html" class="gem-app-item">
-              <span class="gem-app-icon">📄</span>
-              <span>友盟多表</span>
-            </a>
-            <a href="image-compress.html" class="gem-app-item">
-              <span class="gem-app-icon">🗜️</span>
-              <span>图片压缩</span>
-            </a>
-            <a href="yiban-dashboard.html" class="gem-app-item">
-              <span class="gem-app-icon">📊</span>
-              <span>壹伴数据</span>
-            </a>
-            <a href="article-formatter.html" class="gem-app-item">
-              <span class="gem-app-icon">📝</span>
-              <span>文章排版</span>
-            </a>
-            <a href="image-stitch.html" class="gem-app-item">
-              <span class="gem-app-icon">🖼️</span>
-              <span>长图拼接</span>
-            </a>
-          </div>
-        </div>
-
-        <a href="index.html" class="gem-btn gem-btn-secondary gem-btn-sm">
-          🏠 首页
-        </a>
-      </div>
-    </nav>
+    <div id="nav-container"></div>
 
     <!-- 顶部提示条 -->
     <div class="upload-hint-bar">
@@ -237,7 +157,7 @@
               📘</div>
             <div>
               <div style="font-weight: 600; font-size: 16px; margin-bottom: 2px;">Dashboard 使用指南</div>
-              <div style="font-size: 12px; color: var(--gem-color-text-tertiary);">支持 CSV / XLSX，本地解析公众号内容维度数据</div>
+              <div style="font-size: 12px; color: var(--color-text-tertiary);">支持 CSV / XLSX，本地解析公众号内容维度数据</div>
             </div>
           </div>
           <div id="usageChevron" style="transition: transform 0.2s;">▼</div>
@@ -254,7 +174,7 @@
             </div>
             <div>
               <h4 style="font-size: 14px; margin-bottom: 8px;">2. 功能概览</h4>
-              <ul style="font-size: 13px; color: var(--gem-color-text-secondary); padding-left: 20px;">
+              <ul style="font-size: 13px; color: var(--color-text-secondary); padding-left: 20px;">
                 <li>Summary: 核心指标概览</li>
                 <li>Top Chart: 阅读与分享分布</li>
                 <li>Quad Chart: 四象限内容诊断</li>
@@ -265,38 +185,38 @@
         </div>
       </div>
 
-      <div id="loading" style="text-align: center; color: var(--gem-color-accent); font-weight: 500; margin: 20px 0;">
+      <div id="loading" style="text-align: center; color: var(--color-accent); font-weight: 500; margin: 20px 0;">
       </div>
       <div id="error" style="text-align: center; color: #D93025; margin: 20px 0;"></div>
 
       <!-- Summary 卡片 -->
       <div class="cards-grid" id="summaryCards" style="display:none;">
         <div class="gem-card flex flex-col items-center text-center">
-          <div style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-bottom: 4px;">文章总数</div>
+          <div style="font-size: 12px; color: var(--color-text-tertiary); margin-bottom: 4px;">文章总数</div>
           <div style="font-size: 24px; font-weight: 700;" id="totalArticles">-</div>
         </div>
         <div class="gem-card flex flex-col items-center text-center">
-          <div style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-bottom: 4px;">总阅读次数</div>
+          <div style="font-size: 12px; color: var(--color-text-tertiary); margin-bottom: 4px;">总阅读次数</div>
           <div style="font-size: 24px; font-weight: 700;" id="totalReadCount">-</div>
         </div>
         <div class="gem-card flex flex-col items-center text-center">
-          <div style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-bottom: 4px;">总阅读人数</div>
+          <div style="font-size: 12px; color: var(--color-text-tertiary); margin-bottom: 4px;">总阅读人数</div>
           <div style="font-size: 24px; font-weight: 700;" id="totalReaders">-</div>
         </div>
         <div class="gem-card flex flex-col items-center text-center">
-          <div style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-bottom: 4px;">总分享次数</div>
+          <div style="font-size: 12px; color: var(--color-text-tertiary); margin-bottom: 4px;">总分享次数</div>
           <div style="font-size: 24px; font-weight: 700;" id="totalShareCount">-</div>
         </div>
         <div class="gem-card flex flex-col items-center text-center">
-          <div style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-bottom: 4px;">总送达人数</div>
+          <div style="font-size: 12px; color: var(--color-text-tertiary); margin-bottom: 4px;">总送达人数</div>
           <div style="font-size: 24px; font-weight: 700;" id="totalDelivered">-</div>
         </div>
         <div class="gem-card flex flex-col items-center text-center">
-          <div style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-bottom: 4px;">平均送达阅读率</div>
+          <div style="font-size: 12px; color: var(--color-text-tertiary); margin-bottom: 4px;">平均送达阅读率</div>
           <div style="font-size: 24px; font-weight: 700;" id="avgDeliverReadRate">-</div>
         </div>
         <div class="gem-card flex flex-col items-center text-center">
-          <div style="font-size: 12px; color: var(--gem-color-text-tertiary); margin-bottom: 4px;">平均阅读完成率</div>
+          <div style="font-size: 12px; color: var(--color-text-tertiary); margin-bottom: 4px;">平均阅读完成率</div>
           <div style="font-size: 24px; font-weight: 700;" id="avgFinishRate">-</div>
         </div>
       </div>
@@ -351,11 +271,8 @@
 
   <!-- ===== Dashboard 脚本 ===== -->
   <script>
-    const fileInput = document.getElementById("fileInput");
     const loadingEl = document.getElementById("loading");
     const errorEl = document.getElementById("error");
-
-    fileInput.addEventListener("change", handleFile);
 
     function handleFile(e) {
       const file = e.target.files[0];
@@ -804,214 +721,19 @@
     }
   </script>
 
-  <!-- ===== 授权逻辑脚本 + 使用说明交互 ===== -->
+  <script src="js/utils.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/auth.js"></script>
   <script>
-    const TOOL_ID = "content-analysis";
-    const STORAGE_KEY = `wechat_dashboard_auth_${TOOL_ID}`;
-    const USAGE_INTRO_KEY = `wechat_dashboard_intro_seen_${TOOL_ID}`;
-    // 本地文件模式下（file://）无法 fetch，本地内置授权码兜底
-    const INLINE_AUTH_CODES = {
-      tools: {
-        "content-analysis": {
-          codes: {
-            "ICV-2025-7QAF": "标准授权",
-            "ICV-2025-P3ZD": "标准授权",
-            "ICV-2025-L8XK": "标准授权",
-            "ICV-2025-G2MW": "标准授权",
-            "ICV-2025-R9CE": "标准授权",
-            "ICV-2025-H4VU": "标准授权",
-            "ICV-2025-Y1SN": "标准授权",
-            "ICV-2025-K5BJ": "标准授权",
-            "ICV-2025-X7TP": "标准授权",
-            "ICV-2025-W6QD": "标准授权"
-          }
-        }
-      }
-    };
-
-    // 动态加载授权码
-    let AUTH_CODES = {};
-    let authLoaded = false;
-
-    function loadAuthCodes() {
-      // file:// 下直接用内置授权码，避免 fetch 被浏览器拦截
-      if (location.protocol === "file:") {
-        AUTH_CODES = INLINE_AUTH_CODES.tools?.[TOOL_ID]?.codes || {};
-        authLoaded = true;
-        console.log("使用内置授权码（file:// 模式）");
-        return Promise.resolve();
-      }
-      const url = "./auth-codes.json?" + Date.now();
-      console.log("尝试加载授权码文件：", url);
-
-      return fetch(url)
-        .then(async (res) => {
-          if (!res.ok) {
-            const text = await res.text().catch(() => "");
-            console.error("auth-codes.json 响应异常：", res.status, res.statusText, text);
-            throw new Error("HTTP " + res.status);
-          }
-          return res.json();
-        })
-        .then((data) => {
-          console.log("auth-codes.json 加载成功：", data);
-          // 提取当前工具的授权码
-          if (data.tools && data.tools[TOOL_ID]) {
-            AUTH_CODES = data.tools[TOOL_ID].codes || {};
-          } else if (typeof data === 'object') {
-            // 兼容旧格式
-            AUTH_CODES = data;
-          }
-          authLoaded = true;
-        })
-        .catch((err) => {
-          console.error("授权码文件加载失败:", err);
-          // 兜底：如果有内置授权码则继续使用，避免阻断使用
-          AUTH_CODES = INLINE_AUTH_CODES.tools?.[TOOL_ID]?.codes || {};
-          authLoaded = true;
-          if (!Object.keys(AUTH_CODES).length) {
-            alert("授权码文件加载失败：\n" +
-              "1）确认根目录存在 auth-codes.json\n" +
-              "2）确认部署后可以直接访问 /auth-codes.json\n" +
-              "3）确认文件内容是合法 JSON（无多余逗号/注释）");
-          }
-        });
-    }
-
-    const authScreen = document.getElementById("auth-screen");
-    const appRoot = document.getElementById("app");
-    const input = document.getElementById("auth-code");
-    const btn = document.getElementById("auth-btn");
-    const errElAuth = document.getElementById("auth-error");
-    const cardEl = document.getElementById("auth-card");
-    const infoTag = document.getElementById("auth-info-tag");
-
-    function initUsageGuide() {
-      const card = document.getElementById("usageCard");
-      const body = document.getElementById("usageBody");
-      const chevron = document.getElementById("usageChevron");
-      const toggle = document.getElementById("usageToggle");
-      const modal = document.getElementById("usageModal");
-      const modalBtn = document.getElementById("usageModalBtn");
-      const modalSkip = document.getElementById("usageModalSkip");
-
-      if (!card || !body || !chevron || !toggle) return;
-
-      let expanded = true;
-      function setExpanded(state) {
-        expanded = state;
-        body.style.display = state ? "block" : "none";
-        if (state) {
-          chevron.classList.add("expanded");
-        } else {
-          chevron.classList.remove("expanded");
-        }
-      }
-
-      setExpanded(true);
-
-      toggle.addEventListener("click", function () {
-        setExpanded(!expanded);
-      });
-
-      const seen = (function () {
-        try {
-          return localStorage.getItem(USAGE_INTRO_KEY);
-        } catch (e) {
-          return null;
-        }
-      })();
-
-      if (!seen && modal) {
-        modal.style.display = "flex";
-      }
-
-      function closeModalAndRemember() {
-        if (modal) modal.style.display = "none";
-        try {
-          localStorage.setItem(USAGE_INTRO_KEY, "1");
-        } catch (e) { }
-      }
-
-      if (modalBtn) {
-        modalBtn.addEventListener("click", closeModalAndRemember);
-      }
-      if (modalSkip) {
-        modalSkip.addEventListener("click", closeModalAndRemember);
-      }
-    }
-
-    function showApp(code) {
-      const label = AUTH_CODES[code] || "已授权访问";
-      infoTag.textContent = label;
-      authScreen.style.display = "none";
-      appRoot.style.display = "block";
-      try {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify({ code, label, ts: Date.now() })
-        );
-      } catch (e) { }
-      try {
-        initUsageGuide();
-      } catch (e) {
-        console.warn("initUsageGuide error:", e);
-      }
-    }
-
-    function shakeCard() {
-      cardEl.classList.remove("shake");
-      void cardEl.offsetWidth;
-      cardEl.classList.add("shake");
-    }
-
-    async function handleAuth() {
-      const code = (input.value || "").trim();
-
-      if (!authLoaded) {
-        await loadAuthCodes();
-      }
-
-      if (!code) {
-        errElAuth.textContent = "请输入授权码。";
-        shakeCard();
-        return;
-      }
-      if (!Object.prototype.hasOwnProperty.call(AUTH_CODES, code)) {
-        errElAuth.textContent = "授权码无效，请确认后重新输入。";
-        shakeCard();
-        return;
-      }
-      errElAuth.textContent = "";
-      showApp(code);
-    }
-
-    (async function bootstrapAuth() {
-      await loadAuthCodes();
-
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) return;
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.code && AUTH_CODES[parsed.code]) {
-          showApp(parsed.code);
-        }
-      } catch (e) {
-        // ignore
-      }
-    })();
-
-    btn.addEventListener("click", function () {
-      handleAuth();
+    renderNav({
+      title: '内容数据分析',
+      icon: '📈',
+      showFileInput: true,
+      fileAccept: '.csv,.xlsx,.xls',
+      fileLabel: '📤 选择 CSV / XLSX',
+      onFileChange: handleFile
     });
-
-    input.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") handleAuth();
-    });
-
-    window.addEventListener("load", function () {
-      setTimeout(() => input.focus(), 80);
-    });
+    initAuth('content-analysis');
   </script>
 </body>
 
