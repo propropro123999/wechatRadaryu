@@ -219,6 +219,12 @@
 
     <!-- Auth & UI Logic (Standard Script) -->
     <script>
+        // --- API Configuration ---
+        // Railway API endpoint (update this after deploying to Railway)
+        const ORC_API_URL = 'https://wechatradaryu-production.up.railway.app/api/parse-orc';
+        // Fallback to local API if Railway is not configured
+        // const ORC_API_URL = '/api/parse-orc';
+
         // --- Auth Logic ---
         document.addEventListener('DOMContentLoaded', () => {
             initAuth();
@@ -379,7 +385,7 @@
             formData.append('file', file);
 
             try {
-                const resp = await fetch('/api/parse-orc', { method: 'POST', body: formData });
+                const resp = await fetch(ORC_API_URL, { method: 'POST', body: formData });
                 const json = await resp.json().catch(() => ({}));
 
                 if (!resp.ok) {

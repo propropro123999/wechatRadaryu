@@ -1,1 +1,3 @@
 pyorc==0.9.0
+flask>=2.0.0
+gunicorn>=20.0.0
