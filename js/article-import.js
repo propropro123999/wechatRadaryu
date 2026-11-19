@@ -256,7 +256,16 @@
             }
             ['data-src', 'data-original', 'loading', 'hidden'].forEach(attr => img.removeAttribute(attr));
         });
-        if (!content.textContent.trim() && !content.querySelector('img, svg')) throw new Error('微信文章正文为空');
+        function hasVisibleContent(node, inherited = 'visible') {
+            if (node.nodeType === 3) return !['hidden', 'collapse'].includes(inherited) && !!node.nodeValue.trim();
+            if (node.nodeType !== 1 || node.matches(resources) || node.hasAttribute('hidden') || node.style?.display === 'none' ||
+                ((node.style?.opacity || node.getAttribute('opacity')) && Number(node.style?.opacity || node.getAttribute('opacity')) === 0)) return false;
+            const declared = node.style?.visibility || node.getAttribute('visibility');
+            const visibility = !declared || declared === 'inherit' ? inherited : declared;
+            if (!['hidden', 'collapse'].includes(visibility) && node.matches('img, image, path, rect, circle, ellipse, line, polygon, polyline, use')) return true;
+            return [...node.childNodes].some(child => hasVisibleContent(child, visibility));
+        }
+        if (!hasVisibleContent(content)) throw new Error('微信文章正文为空');
 
         const wrapper = doc.createElement('section');
         wrapper.className = 'wechat-article';
