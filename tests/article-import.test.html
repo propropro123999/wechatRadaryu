@@ -86,9 +86,33 @@ try {
     assert(diagramRoot.querySelectorAll('tspan').length === 4, 'multiline labels preserved');
     const diagramCopy = WeChatArticle.clipboardContent(diagramRoot).html;
     assert(diagramCopy.includes('DEAD') && diagramCopy.includes('ppp_connect()') && !diagramCopy.includes('foreignObject'), 'clipboard diagram uses portable SVG labels');
+    const edgeCases = WeChatArticle.extract(`<div id="js_content"><svg viewBox="0 0 400 200" style="font-size:20px;font-family:Arial">
+      <g style="font-size:1.5em"><foreignObject transform="rotate(15) scale(2)" x="25%" y="10%" width="50%" height="80"><div style="font-size:1.25em">A long label that must wrap within its available width</div></foreignObject></g>
+      <foreignObject width="100" height="40"><div style="font-size:1.25rem">root font</div></foreignObject>
+      <foreignObject width="100" height="40"><div>visible<span style="display:none">DISPLAY_SECRET</span><span style="visibility:hidden">VISIBILITY_SECRET</span><span style="opacity:0">OPACITY_SECRET</span><span hidden>HIDDEN_SECRET</span></div><iframe src="https://example.com"></iframe></foreignObject>
+      <foreignObject width="100" height="40"><iframe src="https://example.com"></iframe></foreignObject>
+      <foreignObject width="100" height="40" style="visibility:hidden">WHOLE_SECRET</foreignObject>
+      <foreignObject width="100" height="40"><section>abcdefghijklmnopqrstuvwxyz</section></foreignObject>
+    </svg></div>`, url);
+    const edgeRoot = new DOMParser().parseFromString(edgeCases.html, 'text/html').body;
+    const converted = edgeRoot.querySelectorAll('[data-wechat-svg-label]');
+    const wrapped = converted[0].querySelector('text');
+    assert(wrapped.getAttribute('font-size') === '37.5', 'em font sizes chain through SVG, g and HTML ancestors');
+    assert(converted[1].querySelector('text').getAttribute('font-size') === String(1.25 * parseFloat(getComputedStyle(document.documentElement).fontSize)), 'rem font size resolves against root');
+    assert(converted[0].getAttribute('transform') === 'rotate(15) scale(2)' && converted[0].firstElementChild.getAttribute('transform') === 'translate(100,20)', 'own transform is outside viewBox-relative translation');
+    const measure = document.createElement('canvas').getContext('2d');
+    measure.font = '37.5px Arial';
+    assert(wrapped.querySelectorAll('tspan').length > 1 && [...wrapped.querySelectorAll('tspan')].every(span => measure.measureText(span.textContent).width <= 200), 'long label wraps within percentage width');
+    assert([...wrapped.querySelectorAll('tspan')].map(span => span.textContent).join(' ').replace(/\s+/g, ' ') === 'A long label that must wrap within its available width', 'word wrapping retains text');
+    assert(converted[3].querySelectorAll('tspan').length > 1, 'unbroken labels also wrap');
+    assert(!edgeRoot.textContent.includes('SECRET') && edgeRoot.textContent.includes('visible'), 'hidden subtrees removed before sanitization reveals them');
+    assert(converted.length === 4 && !edgeRoot.textContent.includes('视频') && !edgeRoot.querySelector('iframe'), 'embedded media never becomes an SVG placeholder label');
+    const edgeCopy = WeChatArticle.clipboardContent(edgeRoot).html;
+    assert(!edgeCopy.includes('SECRET') && !edgeCopy.includes('视频') && edgeCopy.includes('rotate(15) scale(2)'), 'clipboard preserves fixes without hidden text or media warnings');
     document.querySelector('#result').textContent = 'PASS: extraction preserves metadata, sections, SVG and image proportions; proxies lazy images; sanitizes content; handles placeholders, empty content, invalid links and verification';
     document.querySelector('#result').textContent += '\nPASS: clipboard preserves inline typography and width, exports original WeChat CDN sources, retains other proxies, and handles empty/malformed image content';
     document.querySelector('#result').textContent += '\nPASS: SVG foreignObject labels become safe SVG text with original edge backgrounds, transforms, multiline positioning and clipboard preservation';
+    document.querySelector('#result').textContent += '\nPASS: SVG labels wrap to width, retain transforms and percentage coordinates, resolve inherited em/rem fonts, and omit media placeholders and hidden subtrees';
     window.testResult = {passed: true};
 } catch (error) {
     document.querySelector('#result').textContent = 'FAIL: ' + error.stack;

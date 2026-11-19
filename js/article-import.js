@@ -24,6 +24,30 @@
 
     function svgLabels(content) {
         const ns = 'http://www.w3.org/2000/svg';
+        const rootSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        const canvas = document.createElement('canvas').getContext('2d');
+        function length(value, reference, fontSize) {
+            const number = parseFloat(value);
+            if (!Number.isFinite(number)) return null;
+            if (value.endsWith('%')) return number * reference / 100;
+            if (value.endsWith('rem')) return number * rootSize;
+            if (value.endsWith('em')) return number * fontSize;
+            if (value.endsWith('pt')) return number * 4 / 3;
+            return number;
+        }
+        function fontSizeOf(node) {
+            if (!node) return rootSize;
+            const parentSize = fontSizeOf(node.parentElement);
+            return length(node.style?.fontSize || node.getAttribute('font-size') || '', parentSize, parentSize) ?? parentSize;
+        }
+        function viewport(svg) {
+            if (!svg) return {width: 578, height: 150};
+            const box = (svg.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
+            if (box.length === 4 && box.every(Number.isFinite)) return {width: box[2], height: box[3]};
+            const parent = viewport(svg.parentElement?.closest('svg'));
+            return {width: length(svg.getAttribute('width') || '', parent.width, fontSizeOf(svg)) ?? parent.width,
+                height: length(svg.getAttribute('height') || '', parent.height, fontSizeOf(svg)) ?? parent.height};
+        }
         content.querySelectorAll('foreignObject').forEach(foreign => {
             let label = '';
             function collect(node) {
@@ -35,7 +59,7 @@
                 if (block) label += '\n';
             }
             collect(foreign);
-            const lines = label.split('\n').map(line => line.replace(/\s+/g, ' ').trim()).filter(Boolean);
+            let lines = label.split('\n').map(line => line.replace(/\s+/g, ' ').trim()).filter(Boolean);
             if (!lines.length) { foreign.remove(); return; }
             const descendants = [foreign, ...foreign.querySelectorAll('*')];
             function styleValue(property) {
@@ -48,12 +72,40 @@
                 }
                 return '';
             }
-            const fontSize = parseFloat(styleValue('font-size')) || 16;
-            const width = parseFloat(foreign.getAttribute('width')) || 200;
-            const height = parseFloat(foreign.getAttribute('height')) || fontSize * 1.5 * lines.length;
+            const textNode = descendants.find(node => [...node.childNodes].some(child => child.nodeType === 3 && child.nodeValue.trim())) || foreign;
+            const fontSize = fontSizeOf(textNode);
+            const view = viewport(foreign.closest('svg'));
+            const width = length(foreign.getAttribute('width') || '', view.width, fontSize) ?? 200;
+            const height = length(foreign.getAttribute('height') || '', view.height, fontSize) ?? fontSize * 1.5 * lines.length;
+            canvas.font = `${styleValue('font-style') || 'normal'} ${styleValue('font-weight') || 'normal'} ${fontSize}px ${styleValue('font-family') || 'sans-serif'}`;
+            if (width > 0) {
+                lines = lines.flatMap(line => {
+                    const wrapped = [];
+                    let current = '';
+                    for (const token of line.match(/\S+\s*|\s+/g) || []) {
+                        if (current && canvas.measureText((current + token).trim()).width > width) {
+                            wrapped.push(current.trim());
+                            current = '';
+                        }
+                        for (const character of token) {
+                            if (current && canvas.measureText((current + character).trim()).width > width) {
+                                wrapped.push(current.trim());
+                                current = '';
+                            }
+                            current += character;
+                        }
+                    }
+                    if (current.trim()) wrapped.push(current.trim());
+                    return wrapped;
+                });
+            }
             const group = foreign.ownerDocument.createElementNS(ns, 'g');
             group.setAttribute('data-wechat-svg-label', '');
-            group.setAttribute('transform', `translate(${parseFloat(foreign.getAttribute('x')) || 0},${parseFloat(foreign.getAttribute('y')) || 0})`);
+            if (foreign.hasAttribute('transform')) group.setAttribute('transform', foreign.getAttribute('transform'));
+            if (foreign.style.transform) group.style.transform = foreign.style.transform;
+            const positioned = foreign.ownerDocument.createElementNS(ns, 'g');
+            positioned.setAttribute('transform', `translate(${length(foreign.getAttribute('x') || '', view.width, fontSize) ?? 0},${length(foreign.getAttribute('y') || '', view.height, fontSize) ?? 0})`);
+            group.append(positioned);
             const background = styleValue('background-color');
             if (background && background !== 'transparent' && !/rgba\([^)]*,\s*0\)$/.test(background)) {
                 const rect = foreign.ownerDocument.createElementNS(ns, 'rect');
@@ -61,7 +113,7 @@
                 rect.setAttribute('height', height);
                 rect.setAttribute('fill', background);
                 rect.setAttribute('stroke', 'none');
-                group.append(rect);
+                positioned.append(rect);
             }
             const align = styleValue('text-align');
             const text = foreign.ownerDocument.createElementNS(ns, 'text');
@@ -81,7 +133,7 @@
                 span.textContent = line;
                 text.append(span);
             });
-            group.append(text);
+            positioned.append(text);
             foreign.replaceWith(group);
         });
     }
@@ -97,7 +149,13 @@
             throw new Error('未找到微信文章正文，文章可能已删除、不可访问或不支持导入');
         }
         content.querySelectorAll('script, style, link, meta, base, object, embed, form, input, button, textarea, select').forEach(el => el.remove());
+        content.querySelectorAll('svg *').forEach(el => {
+            if (el.hasAttribute('hidden') || el.style?.display === 'none' || ['hidden', 'collapse'].includes(el.style?.visibility) ||
+                (el.style?.opacity && Number(el.style.opacity) === 0) ||
+                el.getAttribute('display') === 'none' || ['hidden', 'collapse'].includes(el.getAttribute('visibility'))) el.remove();
+        });
         content.querySelectorAll('iframe, video, audio, mp-video, mpvoice, qqmusic, mp-common-video').forEach(el => {
+            if (el.closest('svg')) { el.remove(); return; }
             const placeholder = doc.createElement('p');
             placeholder.textContent = '【视频 / 音频内容，请在微信原文中查看】';
             placeholder.style.cssText = 'padding:12px;border:1px solid #ddd;color:#666;font-size:14px;';
