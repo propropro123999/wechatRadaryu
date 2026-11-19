@@ -214,22 +214,14 @@
     }
 
     #app {
-      display: none;
+      display: block;
     }
   </style>
 </head>
 
 <body>
   <!-- 授权层 -->
-  <div id="auth-screen">
-    <div class="auth-card" id="auth-card">
-      <h2>🔐 专栏 / 帖子工具</h2>
-      <p>请输入密码访问本工具</p>
-      <input id="auth-code" class="input w-full" type="text" placeholder="请输入密码" autocomplete="off" />
-      <button class="btn btn-primary w-full" id="auth-btn">确认进入</button>
-      <div class="auth-error" id="auth-error"></div>
-    </div>
-  </div>
+
 
   <!-- 真正的应用 -->
   <div id="app">
@@ -905,7 +897,6 @@
 
   <script src="js/utils.js"></script>
   <script src="js/nav.js"></script>
-  <script src="js/auth.js"></script>
   <script>
     renderNav({
       title: '专栏/帖子分析',
@@ -918,8 +909,8 @@
         if (file) handleFile({ target: { files: [file] } });
       }
     });
-    initAuth('bandaoquantiezi');
   </script>
+<script src="js/logout.js"></script>
 </body>
 
 </html>

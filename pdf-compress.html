@@ -565,22 +565,10 @@
 
 <body>
   <!-- 认证屏幕 -->
-  <div id="auth-screen">
-    <div class="auth-card">
-      <h2 class="auth-title">🔐 授权验证</h2>
-      <p style="text-align: center; color: var(--color-text-secondary); margin-bottom: var(--space-lg);">
-        请输入工具授权码
-      </p>
-      <input type="password" id="auth-code" class="auth-input" placeholder="输入授权码" />
-      <button class="auth-btn" onclick="verifyAuth()">确认</button>
-      <p style="text-align: center; font-size: var(--text-xs); color: var(--color-text-tertiary); margin-top: var(--space-lg);">
-        💡 授权码已通过邮件发送
-      </p>
-    </div>
-  </div>
+
 
   <!-- 主应用 -->
-  <div id="app" class="auth-hidden">
+  <div id="app">
     <div id="nav-container"></div>
 
     <!-- 主容器 -->
@@ -763,43 +751,6 @@
 
   <!-- 工具脚本 -->
   <script>
-    // ===== 授权系统 =====
-    const AUTH_CODES = {
-      'pdf-compress': {
-        'PDF-2025-A1B2': true,
-        'PDF-2025-C3D4': true,
-        'PDF-2025-E5F6': true,
-        'PDF-2025-G7H8': true,
-        'dcone2025': true  // 主密码
-      }
-    };
-
-    let isAuthenticated = false;
-
-    function verifyAuth() {
-      const code = document.getElementById('auth-code').value.trim();
-      if (AUTH_CODES['pdf-compress'][code]) {
-        isAuthenticated = true;
-        localStorage.setItem('pdf-compress-auth', code);
-        document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('app').classList.remove('auth-hidden');
-      } else {
-        alert('❌ 授权码错误，请重试');
-        document.getElementById('auth-code').value = '';
-      }
-    }
-
-    function checkAuth() {
-      const savedCode = localStorage.getItem('pdf-compress-auth');
-      if (savedCode && AUTH_CODES['pdf-compress'][savedCode]) {
-        isAuthenticated = true;
-        document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('app').classList.remove('auth-hidden');
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', checkAuth);
-
     // ===== 全局变量 =====
     let currentPDF = null;
     let currentPDFPages = [];
@@ -1101,6 +1052,7 @@
       icon: '📄'
     });
   </script>
+<script src="js/logout.js"></script>
 </body>
 
 </html>

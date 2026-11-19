@@ -109,18 +109,9 @@
 <body>
 
     <!-- Access Control Overlay -->
-    <div id="auth-screen"
-        style="position:fixed;inset:0;background:rgba(255,255,255,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px);">
-        <div class="gem-card" style="width:360px;padding:32px;">
-            <h2 style="font-size:20px;margin-bottom:8px;">🔐 ORC 日志解析</h2>
-            <p style="font-size:13px;color:#64748B;margin-bottom:24px;">请输入授权码访问本工具</p>
-            <input type="text" id="auth-code" class="gem-input" placeholder="请输入授权码" style="margin-bottom:16px;">
-            <button id="auth-btn" class="gem-btn gem-btn-primary w-full">确认进入</button>
-            <div id="auth-error" style="color:#EF4444;font-size:12px;margin-top:12px;min-height:20px;"></div>
-        </div>
-    </div>
 
-    <div id="app" style="display:none;">
+
+    <div id="app">
         <nav class="gem-navbar">
             <a href="#" class="gem-navbar-brand">
                 <span class="gem-navbar-icon">🪵</span>
@@ -222,52 +213,12 @@
         // --- API Configuration ---
         // Railway API endpoint (update this after deploying to Railway)
         const ORC_API_URL = 'https://wechatradaryu-production.up.railway.app/api/parse-orc';
-        // Fallback to local API if Railway is not configured
-        // const ORC_API_URL = '/api/parse-orc';
 
-        // --- Auth Logic ---
         document.addEventListener('DOMContentLoaded', () => {
-            initAuth();
             initDropzone();
+            if (window.initDuckDB) window.initDuckDB();
+            else window.appReady = true;
         });
-
-        function initAuth() {
-            const savedCode = localStorage.getItem('orc_auth_code');
-            if (verifyCode(savedCode)) {
-                showApp();
-            }
-
-            const btn = document.getElementById('auth-btn');
-            if (btn) {
-                btn.onclick = () => {
-                    const code = document.getElementById('auth-code').value.trim();
-                    if (verifyCode(code)) {
-                        localStorage.setItem('orc_auth_code', code);
-                        showApp();
-                    } else {
-                        document.getElementById('auth-error').textContent = '授权码无效';
-                    }
-                };
-            }
-        }
-
-        function verifyCode(code) {
-            const validCodes = ['dcone2025', 'ORC-2025-A1B2', 'ORC-2025-C3D4'];
-            return validCodes.includes(code);
-        }
-
-        function showApp() {
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-
-            // Trigger DuckDB init if available
-            if (window.initDuckDB) {
-                window.initDuckDB();
-            } else {
-                // If module hasn't loaded yet, set a flag
-                window.appReady = true;
-            }
-        }
 
         // --- 表头显示名称（按列顺序，与 ORC 列一一对应）---
         const HEADER_NAMES = [
@@ -385,7 +336,15 @@
             formData.append('file', file);
 
             try {
-                const resp = await fetch(ORC_API_URL, { method: 'POST', body: formData });
+                let resp;
+                try {
+                    resp = await fetch('/api/parse-orc', { method: 'POST', body: formData });
+                } catch {
+                    resp = await fetch(ORC_API_URL, { method: 'POST', body: formData });
+                }
+                if (resp.status >= 500 && new URL(resp.url || location.href).origin === location.origin) {
+                    resp = await fetch(ORC_API_URL, { method: 'POST', body: formData });
+                }
                 const json = await resp.json().catch(() => ({}));
 
                 if (!resp.ok) {
@@ -688,6 +647,7 @@
 
 
     </script>
+<script src="js/logout.js"></script>
 </body>
 
 </html>

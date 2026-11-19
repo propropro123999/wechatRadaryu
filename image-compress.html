@@ -487,21 +487,13 @@
     }
 
     #app {
-      display: none;
+      display: block;
     }
   </style>
 </head>
 
 <body>
-  <div id="auth-screen">
-    <div class="auth-card" id="auth-card">
-      <div class="auth-title">🔐 访问授权</div>
-      <div class="auth-subtitle">请输入密码访问本工具</div>
-      <input id="auth-code" class="input" type="password" placeholder="请输入密码" autocomplete="off" />
-      <button class="btn btn-primary" id="auth-btn">确认进入</button>
-      <div class="auth-error" id="auth-error"></div>
-    </div>
-  </div>
+
 
   <div id="app">
     <div id="nav-container"></div>
@@ -881,14 +873,13 @@
 
   <script src="js/utils.js"></script>
   <script src="js/nav.js"></script>
-  <script src="js/auth.js"></script>
   <script>
     renderNav({
       title: '图片压缩',
       icon: '🗜️'
     });
-    initAuth('image-compress');
   </script>
+<script src="js/logout.js"></script>
 </body>
 
 </html>

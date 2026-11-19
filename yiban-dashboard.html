@@ -11,7 +11,7 @@
   <style>
     /* ===== 页面特定样式 ===== */
     #app {
-      display: none;
+      display: block;
       min-height: 100vh;
     }
 
@@ -163,21 +163,7 @@
 
 <body>
   <!-- 授权层 -->
-  <div id="auth-screen">
-    <div class="auth-card" id="auth-card">
-      <h2>🔐 壹伴数据分析</h2>
-      <p>请输入授权码访问本工具</p>
 
-      <div class="form-group">
-        <label class="form-label" for="auth-code">授权码</label>
-        <input id="auth-code" class="input" type="text" placeholder="例如：YB-2025-A1B2" autocomplete="off" />
-      </div>
-
-      <button class="btn btn-primary" id="auth-btn" style="width: 100%;">确认进入</button>
-
-      <div class="auth-error" id="auth-error"></div>
-    </div>
-  </div>
 
   <!-- 真正的应用 -->
   <div id="app">
@@ -1083,7 +1069,6 @@
   <!-- 公共模块 -->
   <script src="js/utils.js"></script>
   <script src="js/nav.js"></script>
-  <script src="js/auth.js"></script>
   
   <script>
     // 初始化导航
@@ -1100,8 +1085,8 @@
     });
 
     // 初始化授权
-    initAuth('yiban-analysis');
   </script>
+<script src="js/logout.js"></script>
 </body>
 
 </html>

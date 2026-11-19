@@ -1,11 +1,13 @@
 {
   "name": "wechat-radar-tools",
   "version": "1.0.0",
+  "type": "module",
   "description": "WeChat data analysis tools",
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'No build required'"
   },
+  "dependencies": {"@vercel/functions": "^3.0.0"},
   "devDependencies": {},
   "engines": {
     "node": "24.x"

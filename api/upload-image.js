@@ -1,9 +1,6 @@
-const https = require('https');
+import https from 'node:https';
 
-// HARDCODED TOKEN as requested
-const USER_TOKEN = 'dcone2025';
-
-module.exports = (req, res) => {
+export default function handler(req, res) {
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');

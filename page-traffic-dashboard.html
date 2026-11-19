@@ -213,26 +213,14 @@
     }
 
     #app {
-      display: none;
+      display: block;
     }
   </style>
 </head>
 
 <body>
   <!-- 授权层 -->
-  <div id="auth-screen" class="auth-overlay">
-    <div class="auth-card" id="auth-card">
-      <div class="auth-title">🔐 页面流量分析</div>
-      <div class="auth-subtitle">请输入密码访问本工具</div>
 
-      <label class="auth-label" for="auth-code">密码</label>
-      <input id="auth-code" class="auth-input" type="text" placeholder="请输入密码" autocomplete="off" />
-
-      <button class="auth-btn" id="auth-btn">确认进入</button>
-
-      <div class="auth-error" id="auth-error"></div>
-    </div>
-  </div>
 
   <!-- 真正的应用 -->
   <div id="app">
@@ -664,7 +652,6 @@
 
     <script src="js/utils.js"></script>
     <script src="js/nav.js"></script>
-    <script src="js/auth.js"></script>
     <script>
       renderNav({
         title: '页面流量分析',
@@ -677,8 +664,8 @@
           if (file) handleFile({ target: { files: [file] } });
         }
       });
-      initAuth('page-traffic');
     </script>
+<script src="js/logout.js"></script>
 </body>
 
 </html>

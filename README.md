@@ -1,392 +1,68 @@
 # ICviews tools
 
-一站式内容、流量与运营数据工具集，全部在本地浏览器运行，数据不上传，随取随用。
+内容、流量与运营数据工具集。静态页面位于仓库根目录，后端为 Vercel `api/` Functions，无前端编译步骤。
 
-## 📋 目录
+## 工具
 
-- [快速开始](#快速开始)
-- [工具列表](#工具列表)
-- [授权说明](#授权说明)
-- [部署指南](#部署指南)
-- [技术栈](#技术栈)
+首页、文章排版和长图拼接公开访问。以下工具由服务器授权：
 
-## 🚀 快速开始
+| 页面 | tool id |
+| --- | --- |
+| content-dashboard.html | content-analysis |
+| bandao-ops-dashboard.html | bandaoquantiezi |
+| page-traffic-dashboard.html | page-traffic |
+| youmeng.html | youmeng-traffic |
+| yiban-dashboard.html | yiban-analysis |
+| image-compress.html | image-compress |
+| orc-log-parser.html | orc-parser |
+| pdf-compress.html | pdf-compress |
+| word-to-html.html | word-parser |
 
-### 访问入口
+## 授权与环境变量
 
-1. 打开 `index.html` 作为主入口页面
-2. 输入主访问密码：`dcone2025`
-3. 选择需要使用的工具
+在 Vercel 项目 Settings → Environment Variables 配置（分别选择 Production / Preview / Development）：
 
-### 使用流程
+- `AUTH_SECRET`：使用 `openssl rand -hex 32` 生成独立随机签名密钥。
+- `AUTH_CODES`：JSON 对象，结构为 `{"tools":{"<toolId>":{"codes":{"<private-code>":"label"}}}}`。为每个需授权的工具配置独立随机码；不要把真实值提交到仓库。
+- `AUTH_MASTER_PASSWORD`：可选，独立随机主密码，授予全部工具权限。不要与授权码或签名密钥复用。
 
-1. **授权验证**：首次使用需要输入对应工具的授权码
-2. **上传数据**：选择 Excel/CSV 文件（根据工具要求）
-3. **查看分析**：自动解析并生成可视化图表和统计表格
-4. **导出结果**：部分工具支持导出 CSV 数据
+缺少签名密钥或授权配置时，受保护页面/API 返回中文 503 错误，不会放行。
+访问受保护页面会转到 `/login.html`。登录由 `/api/login` 在服务器验证，签发 30 天 HMAC-SHA256 Cookie（HttpOnly、Secure、SameSite=Lax、Path=/）。再次登录其他工具会合并已有权限。退出按钮调用 `/api/logout` 清除 Cookie。
+浏览器不保存授权码，localStorage 不参与授权。更换 `AUTH_SECRET` 可立即使所有已有 Cookie 失效；修改授权码不会提前撤销已经签发的 30 天 Cookie。
 
-## 🛠️ 工具列表
+仓库是公开的：不要提交 `.env`、授权配置、密码或密钥。历史上公开过的值应视为已泄露，部署前请轮换。删除当前文件不会清除 Git 历史。
 
-### 1. 内容数据分析 (`content-dashboard.html`)
+## 纯 Vercel 部署
 
-**功能**：分析公众号导出的内容维度数据
+1. 导入仓库，Framework Preset 选 Other，项目根目录为仓库根目录。
+2. 配置上述环境变量。保留 `vercel.json` 中的无操作构建与 `.` 输出目录。
+3. 使用 Node.js 24；`.python-version` 固定 Python 3.12，`requirements.txt` 仅安装 pyorc（二进制 wheel）。
+4. 部署并验证未登录访问工具时跳转登录，授权后仅对应工具可用。
 
-**支持字段**：
-- 内容标题、发表时间
-- 总阅读人数、总阅读次数
-- 总分享次数、首次分享次数
-- 阅读完成率、送达阅读率
-- 阅读后关注人数等
+根目录 `middleware.js` 是非 Next.js 项目支持的 Routing Middleware 入口，使用 Edge runtime、Web Crypto 和 `@vercel/functions` 的 `next()`。
+`/api/upload-image` 需 Word 权限；`/api/parse-orc` 需 ORC 权限。公开文章抓取和图片代理仅允许同源请求。图片代理拒绝私有地址和重定向，限制 8 MB / 10 秒，并验证图片 Content-Type。
 
-**分析模块**：
-- 📊 汇总指标卡片（文章数、阅读、分享、完读率等）
-- 📈 Top10 阅读柱状图 & 阅读 × 分享散点图
-- 📉 完读率/送达阅读率排行榜（Top50）
-- 📋 内容明细表（按阅读次数 Top100）
-- 🏆 11 组关键指标 TOP 榜单
-- 📐 阅读 × 总分享次数四象限分析（附自动生成洞察说明）
+## 本地开发
 
-**数据来源**：公众号后台 → 数据分析 → 内容分析 → 已通知内容 → 下载数据明细
-
----
-
-### 2. 专栏/帖子工具 (`bandao-ops-dashboard.html`)
-
-**功能**：分析专栏、帖子等内容的运营数据
-
-**支持字段**：
-- 动态ID、动态标题、发布者/作者
-- 点赞数、评论数
-- 创建时间、发布时间
-
-**分析模块**：
-- 📊 整体趋势：每日/按月发布趋势、按小时分布
-- 👥 发布者表现：不同发布者的内容产出与互动
-- 🔥 Top 内容：爆款内容 Top10（按点赞/评论）
-- 📝 高频词：标题高频词 Top30
-- 🎯 主题聚类：AI/模型/创业/硬件/政策等主题分析
-- 📊 作者分层：头部/腰部/长尾作者结构分析
-
-**适用场景**：年终复盘、内容运营分析、作者贡献度评估
-
----
-
-### 3. 页面流量分析 (`page-traffic-dashboard.html`)
-
-**功能**：分析网站页面的访问流量数据
-
-**支持字段**：
-- 受访页面、浏览次数（PV）、独立访客（UV）
-- IP数、人均浏览页数、输出PV
-- 平均页面停留时间
-
-**分析模块**：
-- 📊 汇总指标：总PV/UV/IP、平均停留时间等
-- 📈 Top 页面：按PV/UV排序的Top页面
-- 📉 PV/UV 对比：页面访问深度与吸引力对比
-- ⏱️ 停留时间分布（Top20）
-- 📋 页面访问明细（Top50，自动解析页面标题）
-
-**特色功能**：自动尝试抓取 Top 页面的网页标题（受跨域限制影响）
-
----
-
-### 4. 友盟多表流量 (`youmeng.html`)
-
-**功能**：解析包含多个 Sheet（季度等）的受访页面报表
-
-**支持格式**：多 Sheet Excel 文件（如 Q1/Q2/Q3/Q4）
-
-**分析模块**：
-- 📊 整体概况：合并所有 Sheet 的 PV/UV/停留时间等
-- 🏷️ 类型分布：按页面类型（半导圈、资讯、活动等）的 PV/UV 分布
-- 🏆 热门页面 Top 榜：跨 Sheet 汇总，支持导出 TOP500 CSV
-- 📊 按 Sheet 对比：各季度/时期的访问表现对比
-- 🔍 数据预览：前50行预览 & URL 类型调试
-
-**特色功能**：
-- 自动识别页面类型（半导圈、资讯、活动等）
-- 支持导出 TOP500 数据为 CSV
-- 跨 Sheet 自动聚合相同 URL 的数据
-
----
-
-### 5. 图片压缩 (`image-compress.html`)
-
-**功能**：浏览器端批量压缩图片
-
-**支持格式**：JPG、PNG、WebP
-
-**功能特性**：
-- 🗜️ 批量处理：支持多图同时压缩
-- ⚙️ 参数控制：质量（0.1-1）、最大宽度/高度
-- 📦 格式转换：支持保持原格式或转换为 JPEG/WebP/PNG
-- 📥 ZIP 下载：一键打包下载所有压缩后的图片
-
-**使用场景**：批量压缩图片、格式转换、尺寸调整
-
----
-
-### 5.5. PDF 压缩 (`pdf-compress.html`) ⭐ 新增
-
-**功能**：浏览器端实时压缩 PDF 文件
-
-**支持特性**：
-- 📄 文件预览：分页显示，支持前后翻页
-- 🎛️ 灵活参数：
-  - 图片质量滑块（10%-100%）
-  - 最大宽度设置（600-2560px）
-  - 三档压缩强度（快速/均衡/最小）
-- 🚀 后台处理：使用 Web Worker 压缩，不卡 UI
-- 📥 即时下载：压缩完成后一键下载
-- ⚡ 无需上传：所有处理完全本地进行
-
-**压缩原理**：
-- 智能降低图片分辨率与 JPEG 质量
-- 移除 PDF 元数据（可选）
-- 保留文本和矢量内容的清晰度
-- 通常能达到 40-70% 的压缩率
-
-**数据来源**：本地上传 PDF 文件
-
-**适用场景**：减小 PDF 文件体积、邮件附件优化、存储空间优化
-
----
-
-### 6. 壹伴数据分析 (`yiban-dashboard.html`) ⭐ 新增
-
-**功能**：分析壹伴插件导出的 Excel 表格数据
-
-**支持字段**：
-- 标题、日期、小时
-- 阅读量、阅读人数、送达人数
-- 公众号、朋友圈、看一看、搜一搜等阅读来源
-- 分享量、分享人数、点赞数、留言数
-- 打开率、分享率、朋友圈打开率、留言率
-- 新增关注等
-
-**分析模块**：
-- 📊 汇总指标卡片（文章总数、总阅读量、总分享量、平均打开率等）
-- 📈 Top 内容表现：按阅读人数、分享量、点赞数排序
-- 📉 转化率分析：打开率、分享率分布
-- 🏆 **核心指标 TOP 5 分析**：
-  - 阅读量 TOP 5 - 反映整体的内容阅读结果数据
-  - 搜一搜 TOP 5 - 反映这些内容的搜索喜好程度
-  - 看一看精选 TOP 5 - 反映内容在推荐系统中的受喜好程度
-  - 分享量 TOP 5 - 反映用户对内容的分享动力
-  - 打开率 TOP 5 - 综合反映粉丝的活跃度、标题的吸引力、推送的时间节点是否恰当
-  - 朋友圈打开率 TOP 5 - 反映分享后的二次传播能力
-  - 留言率 TOP 5 - 反映用户对内容产生的互动程度
-  - 阅读后关注 TOP 5 - 反映用户对当前阅读内容的持续关注度
-- 📋 内容明细表（Top50 按阅读人数）
-
-**数据来源**：壹伴插件导出的 Excel 表格
-
-**特色功能**：
-- 自动识别壹伴表格字段（支持多种字段名变体）
-- 自动计算朋友圈打开率、留言率（如果表头没有现成字段）
-- 智能字段匹配（忽略空格、大小写）
-
-### 7. Word 转 HTML 工具 (`word-to-html.html`) ⭐ 新增
-
-**功能**：专为公众号/知乎等富文本编辑器打造的 Word 转换工具
-
-**核心特性**：
-- 📝 **格式完美还原**：利用 Mammoth.js 高保真还原 Word 文档的段落、加粗、引用等格式。
-- 🖼️ **Cloud Bridge 图床桥接**：
-  - **自动上传**：一键将文档中的图片（及外部链接图片）上传至高速稳定图床 (**Catbox.moe**)。
-  - **跨平台复制**：生成的 HTML 包含永久在线图片链接，直接复制粘贴到知乎、微信后台等即可显示，告别"图片裂开"。
-  - **智能清洗**：自动修复 Substack 等平台复杂的防盗链图片链接。
-- 🧹 **纯净输出**：自动清除无效空行、冗余代码，生成适合粘贴的干净 HTML。
-
-**数据来源**：本地 .docx 文件
-
-**适用场景**：将写好的 Word 稿件快速发布到知乎、微信公众号、Ghost 博客等平台。
-
----
-
-## 🔐 授权说明
-
-### 主入口授权
-
-- **主密码**：`dcone2025`
-- 授权信息保存在浏览器 localStorage 中，下次访问自动登录
-
-### 工具独立授权
-
-每个工具拥有独立的授权码系统，授权码配置在 `auth-codes.json` 中：
-
-```json
-{
-  "tools": {
-    "content-analysis": { "codes": { "ICV-2025-7QAF": "标准授权", ... } },
-    "bandaoquantiezi": { "codes": { "BDQ-2025-A1B2": "标准授权", ... } },
-    "page-traffic": { "codes": { "PTD-2025-1A2B": "标准授权", ... } },
-    "yiban-analysis": { "codes": { "YB-2025-A1B2": "标准授权", ... } }
-  }
-}
+```sh
+npm install
+npx vercel login
+npx vercel link
+npx vercel env pull .env.local
+npx vercel dev
 ```
 
-### 内置授权码
+`.env*` 文件不可提交。Cookie 使用 Secure 标志；请使用支持 localhost 安全 Cookie 的浏览器或 HTTPS 开发环境。仅运行静态 HTTP 服务不能测试服务器授权，切勿将静态服务器直接公开为生产服务。
 
-如果无法访问 `auth-codes.json`（如本地 file:// 模式），各工具内置了授权码作为兜底。
+## ORC 解析
 
-### 授权码管理
+DuckDB-Wasm 本地路径保持不变。云端优先调用同源 `/api/parse-orc`；网络错误或 5xx 时回退现有 Railway 服务。401/4xx 不触发回退。Vercel 接口限制上传及 JSON 结果各 4 MB；大文件请优先使用本地解析。时间/日期用 ISO 字符串，Decimal 用字符串，二进制用 Base64 表示。
 
-- 授权码保存在浏览器 localStorage 中
-- 每个工具的授权码独立管理
-- 支持通过 `auth-codes.json` 统一管理所有工具的授权码
+Railway 仅作为兼容后备：`Dockerfile` 使用独立的 Flask/Gunicorn 安装和 `app.py`，`railway.json` 指定 Docker 构建。后备服务保持原有公开行为，不受 Vercel Cookie 保护。云端解析会上传文件；Word 图片上传会发送到 Catbox。
 
----
+## 检查
 
-## 📦 部署指南
-
-### 本地使用
-
-1. 直接打开 `index.html` 即可使用
-2. 所有工具均为纯前端，无需服务器
-
-### 静态托管部署
-
-#### Vercel 部署
-
-1. 将项目推送到 GitHub
-2. 在 Vercel 中导入项目
-3. 确保 `auth-codes.json` 在根目录
-4. 部署完成后即可访问
-
-#### 其他静态托管
-
-- GitHub Pages
-- Netlify
-- 任何支持静态文件的 Web 服务器
-
-### 配置文件
-
-**`auth-codes.json`**：
-- 位置：项目根目录
-- 格式：JSON 格式，包含各工具的授权码配置
-- 访问：部署后可通过 `/auth-codes.json` 直接访问
-
-**建议**：在 Vercel 等平台可为 `auth-codes.json` 设置 `Cache-Control: no-store` 以便随时更新。
-
----
-
-## 🛠️ 技术栈
-
-- **前端框架**：纯 HTML/CSS/JavaScript（无框架依赖）
-- **图表库**：Plotly.js
-- **Excel 解析**：SheetJS (xlsx.js)
-- **PDF 处理**：pdf-lib（读写 PDF）、PDF.js（预览）
-- **图片处理**：Canvas API
-- **压缩工具**：JSZip
-- **并发处理**：Web Workers（后台压缩）
-
----
-
-## 💡 核心技术架构 (Core Architecture)
-
-为了方便后续维护，这里简要说明项目的核心技术决策：
-
-### 1. 混合解析策略 (Hybrid Parsing) - ORC 工具
-- **首选 (Client-Side)**：使用 `DuckDB-Wasm` 在浏览器端直接解析 ORC 文件，速度快且保护隐私。
-- **兜底 (Server-Fallback)**：若客户端 DuckDB 初始化失败（如 CDN 被墙），自动降级调用 `/api/parse-orc` (Python Serverless Function) 进行解析。
-- **强制模式**：提供“强制云端解析”按钮，允许用户跳过本地加载等待。
-
-### 2. 纯前端架构 (Client-First)
-- **无构建工具**：所有页面均为原生 HTML/ES6 模块，无需 Webpack/Vite 打包，修改即生效。
-- **内存处理**：所有数据的筛选、搜索（如 `window.filterPreview`）均在浏览器内存中完成，保证极速响应。
-
-### 3. 设计系统 (Gemini UI)
-- 使用 `gemini-ui.css` 统一风格，基于 CSS Variables (`var(--gem-color-primary)`) 管理主题。
-- 关键组件（卡片、表格、按钮）实现了响应式和深色模式兼容（预留）。
-
-### 4. 模块实现概览 (Modules Summary)
-
-| 工具文件 | 核心库/技术 | 关键逻辑/算法 |
-| :--- | :--- | :--- |
-| `content-dashboard.html` | Plotly.js, XLSX | 基础数据聚合，Canvas 四象限绘图 |
-| `bandao-ops-dashboard.html` | Plotly.js | 时间序列聚合 (Time-Series Aggregation) |
-| `page-traffic-dashboard.html` | URL Parsing | 跨域处理 (Title Fetching), URL 归一化 |
-| `youmeng.html` | XLSX | 跨 Sheet 数据合并 (Reduce), 自动类型推断 |
-| `orc-log-parser.html` | DuckDB-Wasm, PyORC | 客户端 SQL 查询, Python Serverless Fallback |
-| `yiban-dashboard.html` | Fuzzy Search | 模糊字段匹配 (Fuzzy Matching), 转化率计算 |
-| `image-compress.html` | Canvas API, JSZip | 浏览器端图像压缩 (Blob Conversion) |
-| `pdf-compress.html` | pdf-lib, PDF.js, Web Worker | PDF 读写，分页预览，后台压缩处理 |
-
----
-
-## 📝 使用注意事项
-
-### 数据安全
-
-- ✅ 所有数据处理在本地浏览器完成
-- ✅ 数据不会上传到任何服务器
-- ✅ 支持离线使用（file:// 协议）
-
-### 浏览器兼容性
-
-- 推荐使用 Chrome、Edge、Firefox 等现代浏览器
-- 需要支持 ES6+ 语法
-- 需要支持 FileReader API
-
-### 文件格式要求
-
-- **Excel**：支持 .xlsx、.xls 格式
-- **CSV**：建议使用 UTF-8 编码
-- **图片**：支持 JPG、PNG、WebP 格式
-
-### 字段匹配
-
-- 工具会自动识别常见字段名
-- 如果字段名不匹配，控制台会输出调试信息
-- 部分工具支持自动查找包含关键词的字段
-
----
-
-## 🔧 开发说明
-
-### 项目结构
-
+```sh
+node tests/auth.test.js
+uv run --python 3.12 --with pyorc==0.11.0 python tests/orc_smoke.py
 ```
-wechatRadaryu/
-├── index.html                    # 主入口页面
-├── auth-codes.json              # 授权码配置文件
-├── content-dashboard.html       # 内容数据分析工具
-├── bandao-ops-dashboard.html    # 专栏/帖子工具
-├── page-traffic-dashboard.html  # 页面流量分析工具
-├── youmeng.html                 # 友盟多表流量工具
-├── yiban-dashboard.html         # 壹伴数据分析工具
-├── image-compress.html          # 图片压缩工具
-├── pdf-compress.html            # PDF 压缩工具
-├── article-formatter.html       # 文章排版工具
-├── orc-log-parser.html          # ORC 日志解析
-├── image-stitch.html            # 长图拼接工具
-├── js/
-│   └── pdf-compress-worker.js   # PDF 压缩 Web Worker
-├── wechat-export-location.png   # 使用说明图片
-└── README.md                    # 本文件
-```
-
-### 添加新工具
-
-1. 创建新的 HTML 文件
-2. 在 `index.html` 中添加工具卡片
-3. 在 `auth-codes.json` 中添加授权码配置
-4. 更新工具数量统计
-
----
-
-## 📞 支持与反馈
-
-如有问题或建议，请联系项目维护者。
-
----
-
-## 📄 许可证
-
-本项目仅供内部使用。
-
----
-
-**最后更新**：2025-12-24

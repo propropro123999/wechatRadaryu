@@ -11,7 +11,7 @@
 
   <style>
     #app {
-      display: none;
+      display: block;
     }
 
     .chart {
@@ -77,20 +77,7 @@
 
 <body>
   <!-- 授权层 -->
-  <div id="auth-screen">
-    <div class="auth-card fade-in" id="auth-card">
-      <h2 class="text-center">🔐 友盟多表流量工具</h2>
-      <p class="text-center text-muted">请输入密码访问本工具</p>
 
-      <div class="form-group">
-        <label class="form-label">密码</label>
-        <input id="auth-code" class="input" type="password" placeholder="请输入密码" autocomplete="off" />
-      </div>
-
-      <button class="btn btn-primary w-full" id="auth-btn">确认进入</button>
-      <div class="auth-error text-center" id="auth-error"></div>
-    </div>
-  </div>
 
   <!-- 真正的应用 -->
   <div id="app" class="fade-in">
@@ -889,7 +876,6 @@
 
     <script src="js/utils.js"></script>
     <script src="js/nav.js"></script>
-    <script src="js/auth.js"></script>
     <script>
       renderNav({
         title: '友盟多表分析',
@@ -902,8 +888,8 @@
           if (file) handleFile({ target: { files: [file] } });
         }
       });
-      initAuth('youmeng-traffic');
     </script>
+<script src="js/logout.js"></script>
 </body>
 
 </html>
