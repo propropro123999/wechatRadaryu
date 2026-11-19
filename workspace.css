@@ -204,6 +204,7 @@ svg { flex-shrink: 0; vertical-align: middle; }
 .tool-processing-note { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; color: #819482; margin-top: 10px; }
 .tool-processing-note svg { width: 13px; height: 13px; }
 .workspace-tool .actions-bar { gap: 12px; padding: 18px; border-bottom: 1px solid #e6ece4; flex-wrap: wrap; }
+.workspace-tool .toolbar-divider { width: 1px; height: 24px; background: #e6ece4; margin: 0 8px; }
 .workspace-tool .actions-bar #articleUrl { font-size: 14px !important; min-height: 38px; min-width: 0; }
 .workspace-tool [data-icon] { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; flex-shrink: 0; }
 .workspace-tool [data-icon] > svg { width: 1.1em; height: 1.1em; }
@@ -283,6 +284,7 @@ svg { flex-shrink: 0; vertical-align: middle; }
   .workspace-tool .nav-btn { font-size: 10px; padding: 0 9px; }
   .workspace-tool :is(.grid-2, .content-grid) { grid-template-columns: 1fr; }
   .workspace-tool .actions-bar { align-items: stretch; }
+  .workspace-tool .toolbar-divider { display: none; }
   .workspace-tool .actions-bar > div:first-child { flex-basis: 100% !important; max-width: 100% !important; }
   .workspace-tool .native-editor { padding: 20px; }
 }
