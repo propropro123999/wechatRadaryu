@@ -14,11 +14,6 @@ export function privateAddress(address) {
     (a === 198 && (b === 18 || b === 19));
 }
 export default async function handler(req, res) {
-  const origin = `https://${req.headers.host}`;
-  const sameSite = req.headers['sec-fetch-site'] === 'same-origin' || ['origin', 'referer'].some(name => {
-    try { return new URL(req.headers[name]).origin === origin; } catch { return false; }
-  });
-  if (!sameSite) return res.status(403).json({error: '仅允许同源请求'});
   let url, addresses;
   try {
     url = new URL(req.query.url);

@@ -8,7 +8,7 @@ export default async function middleware(request) {
   const tool = pages[path.slice(1).replace(/\.html$/, '')];
   const apiPath = path.replace(/\.(js|py)$/, '');
   const apiTool = {'/api/upload-image': 'word-parser', '/api/parse-orc': 'orc-parser'}[apiPath];
-  const publicApi = ['/api/fetch-article', '/api/proxy-image'].includes(apiPath);
+  const publicApi = apiPath === '/api/fetch-article';
   if (publicApi && !sameOrigin(request)) return json({error: '仅允许同源请求'}, 403);
   if (!tool && !apiTool) return next();
   let auth;

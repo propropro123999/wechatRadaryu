@@ -40,7 +40,7 @@
 4. 部署并验证未登录访问工具时跳转登录，授权后仅对应工具可用。
 
 根目录 `middleware.js` 是非 Next.js 项目支持的 Routing Middleware 入口，使用 Edge runtime、Web Crypto 和 `@vercel/functions` 的 `next()`。
-`/api/upload-image` 需 Word 权限；`/api/parse-orc` 需 ORC 权限。公开文章抓取和图片代理仅允许同源请求。图片代理拒绝私有地址和重定向，限制 8 MB / 10 秒，并验证图片 Content-Type。
+`/api/upload-image` 需 Word 权限；`/api/parse-orc` 需 ORC 权限。公开文章抓取仅允许同源请求；图片代理允许外部编辑器跨源加载复制的文章图片。图片代理拒绝私有地址和重定向，限制 8 MB / 10 秒，并验证图片 Content-Type。
 
 ## 本地开发
 

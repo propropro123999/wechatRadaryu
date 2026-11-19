@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import https from 'node:https';
+import { EventEmitter } from 'node:events';
 import middleware from '../middleware.js';
 import login from '../api/login.js';
 import logout from '../api/logout.js';
@@ -55,18 +57,38 @@ for (const key of ['AUTH_SECRET', 'AUTH_CODES']) {
 const saved = process.env.AUTH_CODES; process.env.AUTH_CODES = '{';
 assert.equal((await middleware(request('/word-to-html'))).status, 503); process.env.AUTH_CODES = saved;
 console.log('PASS: missing/invalid configuration fails closed');
-for (const path of ['/api/proxy-image', '/api/fetch-article']) {
+for (const path of ['/api/fetch-article']) {
   assert.equal((await middleware(request(path, '', {origin: 'https://attacker.example'}))).status, 403);
   assert.equal((await middleware(request(path, '', {origin: 'https://tools.example'}))).headers.get('x-middleware-next'), '1');
 }
+assert.equal((await middleware(request('/api/proxy-image', '', {origin: 'https://editor.example'}))).headers.get('x-middleware-next'), '1');
 const proxyResult = async (url, headers) => {
-  const res = {code: 200, status(code) { this.code = code; return this; }, json(data) { this.data = data; return this; }};
+  const res = {code: 200, headers: {}, status(code) { this.code = code; return this; }, json(data) { this.data = data; return this; }, setHeader(name, value) { this.headers[name] = value; }, send(data) { this.data = data; return this; }};
   await proxy({query: {url}, headers}, res);
   return res;
 };
 for (const url of ['http://127.0.0.1/x', 'http://[::1]/', 'http://169.254.169.254/', 'http://localhost/', 'file:///etc/passwd', 'http://10.0.0.1/', 'http://2130706433/']) {
-  assert.equal((await proxyResult(url, {host: 'tools.example', 'sec-fetch-site': 'same-origin'})).code, 400);
+  assert.equal((await proxyResult(url, {host: 'tools.example', origin: 'https://editor.example'})).code, 400);
 }
-assert.equal((await proxyResult('https://example.com/image.png', {host: 'tools.example', origin: 'https://attacker.example'})).code, 403);
+const originalGet = https.get;
+try {
+  https.get = (_url, _options, callback) => {
+    const upstream = new EventEmitter();
+    queueMicrotask(() => {
+      const response = new EventEmitter();
+      response.statusCode = 200;
+      response.headers = {'content-type': 'image/png'};
+      callback(response);
+      response.emit('data', Buffer.from('test-image'));
+      response.emit('end');
+      upstream.emit('close');
+    });
+    return upstream;
+  };
+  const result = await proxyResult('https://8.8.8.8/image.png', {host: 'tools.example', origin: 'https://editor.example'});
+  assert.equal(result.code, 200);
+  assert.equal(result.data.toString(), 'test-image');
+  assert.equal(result.headers['Content-Type'], 'image/png');
+} finally { https.get = originalGet; }
 assert.equal((await proxyResult('', {host: 'tools.example', 'sec-fetch-site': 'same-origin'})).code, 400);
-console.log('PASS: same-origin API enforcement; proxy private/loopback/link-local/scheme/cross-origin rejection');
+console.log('PASS: article fetch same-origin enforcement; cross-origin image proxy allowed; private/loopback/link-local/scheme targets rejected');
