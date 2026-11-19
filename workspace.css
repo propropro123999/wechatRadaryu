@@ -253,7 +253,7 @@ svg { flex-shrink: 0; vertical-align: middle; }
 .workspace-tool :is(.grid-2, .content-grid) > * { min-width: 0; }
 .workspace-tool .tool-intro { display: flex; justify-content: space-between; align-items: center; gap: 24px; width: 100%; max-width: 1280px; padding: 36px 32px 0; text-align: left; }
 .workspace-tool .tool-intro .eyebrow { color: #698574; font-size: 10px; letter-spacing: 1.6px; }
-.workspace-tool .tool-intro h1 { font-size: 28px; line-height: 1.35; margin: 0; color: #234636; }
+.workspace-tool .tool-intro h1 { font-size: 28px; line-height: 1.35; margin: 0; color: #234636; background: none; -webkit-text-fill-color: currentColor; }
 .workspace-tool .tool-intro p { max-width: 760px; font-size: 13px; line-height: 1.8; margin: 10px 0 0; }
 .tool-format-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #dde7dc; border-radius: 6px; background: #fff; color: #67816a; font-size: 11px; white-space: nowrap; }
 .workspace-tool .container, .workspace-tool .main-container { max-width: 1280px; padding: 28px 32px 48px; }
