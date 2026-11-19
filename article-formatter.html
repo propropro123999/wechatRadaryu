@@ -108,6 +108,23 @@
 
         .native-editor svg { max-width: 100%; }
 
+        #article-metadata {
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 642px;
+            margin: 0 auto;
+            padding: 16px 32px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .article-metadata-row { display: flex; align-items: center; gap: 16px; }
+        .article-metadata-row[hidden] { display: none; }
+        .article-metadata-row + .article-metadata-row { margin-top: 12px; }
+        .article-metadata-row > div { flex: 1; min-width: 0; }
+        .article-metadata-row > div > span { color: var(--color-text-secondary); font-size: 12px; }
+        .article-metadata-row p { margin: 4px 0 0; color: var(--color-text); overflow-wrap: anywhere; }
+        .article-metadata-row button { flex-shrink: 0; }
+
         .native-editor p {
             margin-bottom: 1em;
             min-height: 1em;
@@ -243,6 +260,16 @@
             </div>
 
             <!-- Native Editor Content -->
+            <section id="article-metadata" hidden aria-label="导入文章信息">
+                <div class="article-metadata-row" id="article-title-row">
+                    <div><span>文章标题</span><p id="article-title"></p></div>
+                    <button type="button" class="action-btn" onclick="copyArticleMetadata('title')"><span data-icon="copy"></span>复制标题</button>
+                </div>
+                <div class="article-metadata-row" id="article-author-row">
+                    <div><span>作者</span><p id="article-author"></p></div>
+                    <button type="button" class="action-btn" onclick="copyArticleMetadata('author')"><span data-icon="copy"></span>复制作者</button>
+                </div>
+            </section>
             <div id="editor-content" class="native-editor" contenteditable="true" data-placeholder="粘贴文章内容，或使用上方导入链接…" aria-label="文章编辑区"></div>
 
         </div>
@@ -260,7 +287,29 @@
 
         // --- Core Functions ---
 
+        function setArticleMetadata(article = {}) {
+            for (const key of ['title', 'author']) {
+                document.getElementById('article-' + key).textContent = article[key] || '';
+                document.getElementById('article-' + key + '-row').hidden = !article[key];
+            }
+            document.getElementById('article-metadata').hidden = !article.title && !article.author;
+        }
+
+        async function copyArticleMetadata(key) {
+            const value = document.getElementById('article-' + key)?.textContent;
+            if (!value) return showToast('没有可复制的内容');
+            try {
+                await navigator.clipboard.writeText(value);
+                showToast(key === 'title' ? '标题已复制' : '作者已复制');
+            } catch {
+                showToast('复制失败，请允许浏览器访问剪贴板后重试');
+            }
+        }
+
+        document.getElementById('editor-content').addEventListener('paste', () => setArticleMetadata());
+
         async function importArticle() {
+            setArticleMetadata();
             let url;
             try { url = WeChatArticle.articleUrl($('#articleUrl').val().trim()); }
             catch (err) { return showToast(err.message); }
@@ -279,6 +328,7 @@
 
                 const article = WeChatArticle.extract(json.html, url);
                 $('#editor-content').html(article.html).scrollTop(0);
+                setArticleMetadata(article);
                 showToast(`导入成功 (代理 ${article.images} 张图片)`);
 
             } catch (err) {

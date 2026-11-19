@@ -26,6 +26,7 @@ try {
     const article = WeChatArticle.extract(fixture, url);
     const root = new DOMParser().parseFromString(article.html, 'text/html').body;
     assert(article.title === '测试标题 & 标题' && article.author === '作者', 'metadata');
+    assert(!article.html.includes('测试标题') && !article.html.includes('作者'), 'metadata excluded from editor body');
     assert(article.images === 4, 'all safe lazy, regular and SVG images retained');
     assert(root.querySelector('section section').style.padding === '12px', 'nested section styling');
     assert(!root.querySelector('[onerror], [onclick], script, iframe, video, foreignObject'), 'active content removed');

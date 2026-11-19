@@ -221,18 +221,6 @@
         wrapper.style.cssText = 'max-width:578px;margin:0 auto;overflow-wrap:break-word;font-size:16px;line-height:1.6;color:#333;';
         const title = doc.querySelector('#activity-name')?.textContent.trim() || doc.querySelector('meta[property="og:title"]')?.content || '';
         const author = doc.querySelector('#js_name')?.textContent.trim() || doc.querySelector('#meta_content .rich_media_meta_text')?.textContent.trim() || '';
-        if (title) {
-            const heading = doc.createElement('h1');
-            heading.textContent = title;
-            heading.style.cssText = 'font-size:22px;line-height:1.4;font-weight:600;margin:0 0 14px;';
-            wrapper.append(heading);
-        }
-        if (author) {
-            const byline = doc.createElement('p');
-            byline.textContent = author;
-            byline.style.cssText = 'font-size:14px;color:#777;margin:0 0 24px;';
-            wrapper.append(byline);
-        }
         content.removeAttribute('id');
         wrapper.append(content);
         return {html: wrapper.outerHTML, title, author, images: wrapper.querySelectorAll('img, image').length};

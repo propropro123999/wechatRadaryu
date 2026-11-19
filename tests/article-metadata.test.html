@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Article metadata tests</title>
+<pre id="result">Running…</pre>
+<iframe id="formatter" src="../article-formatter.html" title="Formatter under test"></iframe>
+<script>
+document.querySelector('#formatter').addEventListener('load', async function () {
+    try {
+        const w = this.contentWindow;
+        const d = w.document;
+        const assert = (condition, message) => { if (!condition) throw new Error(message); };
+        const metadata = d.querySelector('#article-metadata');
+        const editor = d.querySelector('#editor-content');
+        assert(metadata.hidden && !editor.textContent, 'initial metadata hidden and editor empty');
+        const fixture = '<h1 id="activity-name">独立标题 &amp; 标题</h1><span id="js_name">独立作者</span><div id="js_content"><p>正文内容</p></div>';
+        d.querySelector('#articleUrl').value = 'https://mp.weixin.qq.com/s/test';
+        w.fetch = async () => new w.Response(JSON.stringify({html: fixture}), {headers: {'Content-Type': 'application/json'}});
+        await w.importArticle();
+        assert(!metadata.hidden && d.querySelector('#article-title').textContent === '独立标题 & 标题' && d.querySelector('#article-author').textContent === '独立作者', 'metadata shown separately');
+        assert(editor.textContent === '正文内容' && !w.WeChatArticle.clipboardContent(editor).html.includes('独立'), 'editor and body clipboard exclude title and author');
+        let copied = '';
+        Object.defineProperty(w.navigator, 'clipboard', {configurable: true, value: {writeText: async text => { copied = text; }}});
+        await w.copyArticleMetadata('title');
+        assert(copied === '独立标题 & 标题' && d.querySelector('#global-toast').textContent === '标题已复制', 'title copied as plain text with shared toast');
+        await w.copyArticleMetadata('author');
+        assert(copied === '独立作者' && d.querySelector('#global-toast').textContent === '作者已复制', 'author copied as plain text with shared toast');
+        w.navigator.clipboard.writeText = async () => { throw new Error('permission denied'); };
+        await w.copyArticleMetadata('title');
+        assert(d.querySelector('#global-toast').textContent.includes('复制失败'), 'clipboard error reported');
+        editor.dispatchEvent(new w.Event('paste', {bubbles: true}));
+        assert(metadata.hidden && !d.querySelector('#article-title').textContent && !d.querySelector('#article-author').textContent, 'paste clears stale metadata');
+        await w.importArticle();
+        let finish;
+        w.fetch = () => new Promise(resolve => { finish = resolve; });
+        const importing = w.importArticle();
+        assert(metadata.hidden && !d.querySelector('#article-title').textContent, 'new import clears metadata before response');
+        finish(new w.Response(JSON.stringify({error: '获取失败'}), {status: 502}));
+        await importing;
+        assert(metadata.hidden && !d.querySelector('button[onclick="importArticle()"]').disabled, 'failed import leaves metadata hidden and restores button');
+        w.setArticleMetadata({title: '标题'});
+        assert(!metadata.hidden && d.querySelector('#article-author-row').hidden, 'missing author has no empty block');
+        d.querySelector('#articleUrl').value = 'invalid';
+        await w.importArticle();
+        assert(metadata.hidden, 'invalid new import clears old metadata');
+        w.fetch = async () => new w.Response(JSON.stringify({html: '<div id="js_content">无元数据正文</div>'}));
+        d.querySelector('#articleUrl').value = 'https://mp.weixin.qq.com/s/test';
+        await w.importArticle();
+        assert(metadata.hidden && editor.textContent === '无元数据正文', 'article without metadata imports body only');
+        document.querySelector('#result').textContent = 'PASS: metadata stays separate from body/copy; title and author copy plain text with shared toasts; paste/new/invalid/failed imports clear it; missing metadata and clipboard errors handled';
+        window.testResult = {passed: true};
+    } catch (error) {
+        document.querySelector('#result').textContent = 'FAIL: ' + error.stack;
+        window.testResult = {passed: false, error: error.stack};
+    }
+});
+</script>
