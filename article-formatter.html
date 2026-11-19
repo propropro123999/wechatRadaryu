@@ -306,10 +306,25 @@
             }
         }
 
-        document.getElementById('editor-content').addEventListener('paste', () => setArticleMetadata());
+        const articleEditor = document.getElementById('editor-content');
+        function clearReplacedArticleMetadata() {
+            const selection = window.getSelection();
+            if (!selection.rangeCount || selection.isCollapsed) return;
+            const range = selection.getRangeAt(0);
+            if (!range.intersectsNode(articleEditor)) return;
+            const selected = range.cloneContents();
+            if (selected.textContent.trim() === articleEditor.textContent.trim() &&
+                selected.querySelectorAll('img, svg').length === articleEditor.querySelectorAll('img, svg').length) {
+                setArticleMetadata();
+            }
+        }
+        articleEditor.addEventListener('paste', clearReplacedArticleMetadata);
+        articleEditor.addEventListener('beforeinput', clearReplacedArticleMetadata);
+        articleEditor.addEventListener('input', () => {
+            if (!articleEditor.textContent.trim() && !articleEditor.querySelector('img, svg')) setArticleMetadata();
+        });
 
         async function importArticle() {
-            setArticleMetadata();
             let url;
             try { url = WeChatArticle.articleUrl($('#articleUrl').val().trim()); }
             catch (err) { return showToast(err.message); }
