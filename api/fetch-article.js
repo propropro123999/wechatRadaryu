@@ -3,6 +3,12 @@
 // Endpoint: /api/fetch-article?url=...
 
 export default async function handler(request, response) {
+  const protocol = request.headers['x-forwarded-proto'] || 'https';
+  const origin = `${protocol}://${request.headers.host}`;
+  const sameOrigin = request.headers['sec-fetch-site'] === 'same-origin' || ['origin', 'referer'].some(name => {
+    try { return new URL(request.headers[name]).origin === origin; } catch { return false; }
+  });
+  if (!sameOrigin) return response.status(403).json({error: '仅允许同源请求'});
   const { url } = request.query;
 
   // 1. Validation
