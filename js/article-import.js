@@ -50,12 +50,15 @@
         }
         content.querySelectorAll('foreignObject').forEach(foreign => {
             let label = '';
-            function collect(node) {
-                if (node.nodeType === 3) { label += node.nodeValue; return; }
+            function collect(node, inherited = 'visible') {
+                if (node.nodeType === 3) { if (!['hidden', 'collapse'].includes(inherited)) label += node.nodeValue; return; }
                 if (node.nodeType !== 1) return;
+                if (node.hasAttribute('hidden') || node.style?.display === 'none' || (node.style?.opacity && Number(node.style.opacity) === 0)) return;
+                const declared = node.style?.visibility || node.getAttribute('visibility');
+                const visibility = !declared || declared === 'inherit' ? inherited : declared;
                 const block = /^(p|div|section|br|li)$/.test(node.localName);
                 if (block) label += '\n';
-                node.childNodes.forEach(collect);
+                node.childNodes.forEach(child => collect(child, visibility));
                 if (block) label += '\n';
             }
             collect(foreign);
@@ -215,7 +218,7 @@
                     if (/(?:url\s*\(|expression\s*\(|javascript:|@import|behavior)/i.test(nonLocalValue) ||
                         ['position', 'z-index', 'animation', 'animation-name', 'transition'].includes(property)) el.style.removeProperty(property);
                 }
-                if (el.namespaceURI !== 'http://www.w3.org/2000/svg') {
+                if (!el.closest('svg')) {
                     if (el.style.visibility === 'hidden' || el.style.visibility === 'collapse') el.style.removeProperty('visibility');
                     if (el.style.opacity && Number(el.style.opacity) === 0) el.style.removeProperty('opacity');
                 }
