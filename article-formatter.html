@@ -372,13 +372,22 @@
                     const keepImg = !$('#clearImg').is(':checked') && $el.is('img');
                     const keepLink = !$('#clearLink').is(':checked') && $el.is('a');
                     const keepSvg = this.namespaceURI === 'http://www.w3.org/2000/svg';
+                    if (keepSvg) {
+                        // SVG paint and geometry are image content, not article typography.
+                        for (const property of [...this.style]) {
+                            const value = this.style.getPropertyValue(property).replace(/url\(\s*['"]?#[\w:.-]+['"]?\s*\)/gi, '');
+                            if (!/^(fill|stroke)(-[a-z-]+)?$|^(font-[a-z-]+|opacity|color|paint-order|marker-(start|mid|end)|clip-path|clip-rule|mask|mask-type|filter|vector-effect|shape-rendering|text-rendering|letter-spacing|word-spacing|text-anchor|dominant-baseline|alignment-baseline|baseline-shift|writing-mode|direction|white-space|transform|transform-origin|transform-box|display|visibility|stop-color|stop-opacity|flood-color|flood-opacity|lighting-color|x|y|cx|cy|r|rx|ry|width|height|max-width|max-height|min-width|min-height|overflow)$/.test(property) ||
+                                /url\s*\(|expression\s*\(|javascript:|@import|behavior/i.test(value)) this.style.removeProperty(property);
+                        }
+                    }
 
                     // Native attributes map
                     $.each([...this.attributes], function (i, attr) {
                         const name = attr.name;
                         if (keepImg && (name === 'src' || name === 'alt' || name === 'width' || name === 'height' || name === 'referrerpolicy')) return;
+                        if (keepSvg && name === 'style' && this.style.length) return;
                         if (keepSvg && name === 'xlink:href' && /^#[\w:.-]+$/.test(attr.value)) return;
-                        if (keepSvg && /^(viewBox|xmlns|d|points|x|y|dx|dy|x1|x2|y1|y2|cx|cy|r|rx|ry|width|height|fill|stroke|stroke-width|transform|href|id|clip-path|text-anchor|dominant-baseline|font-size|font-family|font-weight|font-style)$/.test(name)) return;
+                        if (keepSvg && /^(viewBox|preserveAspectRatio|xmlns|d|points|pathLength|x|y|dx|dy|x1|x2|y1|y2|cx|cy|r|rx|ry|width|height|fill|fill-opacity|fill-rule|stroke|stroke-width|stroke-linecap|stroke-linejoin|stroke-miterlimit|stroke-dasharray|stroke-dashoffset|stroke-opacity|opacity|color|transform|href|id|clip-path|clip-rule|clipPathUnits|mask|maskUnits|maskContentUnits|filter|filterUnits|primitiveUnits|text-anchor|dominant-baseline|font-size|font-family|font-weight|font-style|marker-start|marker-mid|marker-end|markerWidth|markerHeight|markerUnits|orient|refX|refY|gradientUnits|gradientTransform|spreadMethod|offset|stop-color|stop-opacity|patternUnits|patternContentUnits|patternTransform|vector-effect)$/.test(name)) return;
                         if (keepLink && (name === 'href' || name === 'target')) return;
                         $el.removeAttr(name);
                     });
@@ -421,7 +430,7 @@
                 text = text.replace(/“/g, "「").replace(/”/g, "」");
 
                 node.nodeValue = text;
-            } else if (node.nodeType === 1 && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
+            } else if (node.nodeType === 1 && node.namespaceURI !== 'http://www.w3.org/2000/svg' && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
                 // Recursion
                 for (let i = 0; i < node.childNodes.length; i++) {
                     processTextNodes(node.childNodes[i]);
