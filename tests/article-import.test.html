@@ -1,0 +1,54 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WeChat extraction tests</title>
+<pre id="result">Running…</pre>
+<script src="../js/article-import.js"></script>
+<script>
+try {
+    function assert(condition, message) { if (!condition) throw new Error(message); }
+    function rejects(fn, expected) {
+        try { fn(); } catch (error) { assert(expected.test(error.message), error.message); return; }
+        throw new Error('Expected rejection');
+    }
+    const url = 'https://mp.weixin.qq.com/s/test';
+    const fixture = `<h1 id="activity-name">测试标题 &amp; 标题</h1><span id="js_name">作者</span>
+        <div id="js_content" style="visibility:hidden;opacity:0">
+          <section style="padding:12px;color:rgb(1,2,3);background-image:url(https://evil.example/track)">
+            <p style="text-align:center">正文 <a href="https://example.com">链接</a></p>
+            <img data-src="//mmbiz.qpic.cn/icon.png?a=1&amp;b=2" width="640" height="640" style="width:23px;display:inline-block;opacity:0" onerror="alert(1)">
+            <img src="https://mmbiz.qpic.cn/photo.png" style="width:100%;height:999px">
+            <img data-original="https://mmbiz.qpic.cn/lazy.png"><img src="javascript:alert(1)">
+            <svg viewBox="0 0 100 100"><defs><linearGradient id="shade"><stop offset="0" stop-color="red"/></linearGradient></defs><circle id="shape" cx="50" cy="50" r="20" style="fill:url(#shade)"/><use href="#shape"/><use href="https://evil.example/shape.svg#shape"/><image href="https://mmbiz.qpic.cn/svg.png" width="10" height="10"/><foreignObject><iframe srcdoc="bad"></iframe></foreignObject></svg>
+            <iframe src="https://v.qq.com/test"></iframe><video src="https://example.com/video"></video>
+            <a href="javascript:alert(1)" onclick="alert(1)">不安全链接</a><script>alert(1)<\/script>
+          </section>
+        </div>`;
+    const article = WeChatArticle.extract(fixture, url);
+    const root = new DOMParser().parseFromString(article.html, 'text/html').body;
+    assert(article.title === '测试标题 & 标题' && article.author === '作者', 'metadata');
+    assert(article.images === 4, 'all safe lazy, regular and SVG images retained');
+    assert(root.querySelector('section section').style.padding === '12px', 'nested section styling');
+    assert(!root.querySelector('[onerror], [onclick], script, iframe, video, foreignObject'), 'active content removed');
+    assert(!root.innerHTML.includes('javascript:') && !root.innerHTML.includes('background-image'), 'unsafe URLs removed');
+    assert(!root.innerHTML.includes('visibility: hidden') && !root.innerHTML.includes('opacity: 0'), 'visible content');
+    const images = [...root.querySelectorAll('img')];
+    assert(images[0].style.width === '23px' && images[0].style.display === 'inline-block' && images[0].getAttribute('width') === '23', 'small inline image proportions');
+    assert(images.every(img => img.style.maxWidth === '100%' && img.style.height === 'auto' && !img.hasAttribute('height')), 'responsive images');
+    assert(images.every(img => new URL(img.src).origin === location.origin && new URL(img.src).pathname === '/api/proxy-image'), 'absolute proxy URLs survive copying');
+    assert(new URL(images[0].src).searchParams.get('url') === 'https://mmbiz.qpic.cn/icon.png?a=1&b=2', 'lazy source and entities');
+    assert(root.querySelector('svg').getAttribute('viewBox') === '0 0 100 100' && root.querySelector('circle'), 'SVG layout');
+    assert(root.querySelector('circle').style.fill.includes('#shade') && root.querySelectorAll('use').length === 1 && root.querySelector('use').getAttribute('href') === '#shape', 'safe local SVG references');
+    assert(root.textContent.includes('请在微信原文中查看'), 'media placeholder');
+    rejects(() => WeChatArticle.extract('', url), /未找到/);
+    rejects(() => WeChatArticle.extract('<div id="js_content"></div>', url), /正文为空/);
+    rejects(() => WeChatArticle.extract('<h2>环境异常</h2><p>完成验证</p>', url), /安全验证/);
+    for (const invalid of ['', 'not a url', 'https://example.com/?mp.weixin.qq.com', 'https://mp.weixin.qq.com.evil.test/s/a', 'file://mp.weixin.qq.com/s/a']) {
+        rejects(() => WeChatArticle.extract(fixture, invalid), /链接/);
+    }
+    document.querySelector('#result').textContent = 'PASS: extraction preserves metadata, sections, SVG and image proportions; proxies lazy images; sanitizes content; handles placeholders, empty content, invalid links and verification';
+    window.testResult = {passed: true};
+} catch (error) {
+    document.querySelector('#result').textContent = 'FAIL: ' + error.stack;
+    window.testResult = {passed: false, error: error.stack};
+}
+</script>
