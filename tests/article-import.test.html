@@ -118,6 +118,7 @@ try {
       <foreignObject id="percent" x="25%" y="50%" width="50%" height="20%"><div style="background-color:#ddd">percent</div></foreignObject>
       <foreignObject x="20" y="30" width="100" height="40" style="transform:rotate(90deg);transform-origin:50% 50%;transform-box:fill-box"><div>pivot</div></foreignObject>
       <foreignObject width="40" height="24"><section style="white-space:nowrap">INITIALIZE</section></foreignObject>
+      <foreignObject x="20" y="30" width="100" height="40" style="transform:rotate(90deg);transform-origin:center;transform-box:fill-box"><div>center pivot</div></foreignObject>
     </svg></div>`, url);
     const regressionRoot = new DOMParser().parseFromString(regressions.html, 'text/html').body;
     const labels = [...regressionRoot.querySelectorAll('[data-wechat-svg-label]')];
@@ -130,6 +131,7 @@ try {
     assert(units.firstElementChild.getAttribute('transform') === 'translate(20,10)' && units.querySelector('rect').getAttribute('width') === '100' && units.querySelector('rect').getAttribute('height') === '30' && units.querySelector('text').getAttribute('font-size') === '20', 'geometry em units use foreignObject font, not descendant text font');
     assert(units.style.transform === 'rotate(30deg)' && units.style.transformOrigin === '25px 15px' && units.style.transformBox === 'view-box', 'CSS transform retains its pivot and reference box');
     assert(findLabel('pivot').style.transformOrigin === '70px 50px' && findLabel('pivot').style.transformBox === 'view-box', 'fill-box percentage pivot uses original foreignObject geometry, not text bounds');
+    assert(findLabel('center pivot').style.transformOrigin === '70px 50px', 'keyword origins use the original box center');
     const percent = findLabel('percent');
     assert(percent.firstElementChild.getAttribute('transform') === 'translate(100,100)' && percent.querySelector('rect').getAttribute('width') === '200' && percent.querySelector('rect').getAttribute('height') === '40', 'inline SVG dimensions resolve percentages without a viewBox');
     assert(WeChatArticle.clipboardContent(regressionRoot).text.includes('alpha beta gamma delta'), 'clipboard plain text retains wrapped words');

@@ -112,7 +112,11 @@
             }
             if (['fill-box', 'stroke-box', 'border-box', 'content-box'].includes(foreign.style.transformBox)) {
                 const origin = (foreign.style.transformOrigin || '0px 0px').split(/\s+/);
-                group.style.transformOrigin = `${positionX + (length(origin[0], width, geometryFontSize) ?? 0)}px ${positionY + (length(origin[1] || '50%', height, geometryFontSize) ?? 0)}px`;
+                if (origin.length === 1) origin.push('center');
+                if (['top', 'bottom'].includes(origin[0]) || ['left', 'right'].includes(origin[1])) [origin[0], origin[1]] = [origin[1], origin[0]];
+                const originX = {left: '0%', center: '50%', right: '100%'}[origin[0]] || origin[0];
+                const originY = {top: '0%', center: '50%', bottom: '100%'}[origin[1]] || origin[1];
+                group.style.transformOrigin = `${positionX + (length(originX, width, geometryFontSize) ?? 0)}px ${positionY + (length(originY, height, geometryFontSize) ?? 0)}px ${origin.slice(2).join(' ')}`.trim();
                 group.style.transformBox = 'view-box';
             }
             const positioned = foreign.ownerDocument.createElementNS(ns, 'g');
