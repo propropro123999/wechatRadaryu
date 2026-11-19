@@ -324,7 +324,7 @@
                 if (moveCaret || (!selection.rangeCount && document.activeElement === articleEditor)) {
                     let after = frame.nextSibling;
                     if (!after || after.nodeType !== 3 || !after.nodeValue) {
-                        after = document.createTextNode(' ');
+                        after = document.createTextNode('\u00a0');
                         frame.after(after);
                     }
                     const restore = () => {
@@ -335,9 +335,9 @@
                         selection.addRange(range);
                     };
                     restore();
-                    queueMicrotask(() => {
+                    setTimeout(() => {
                         if (!selection.rangeCount && document.activeElement === articleEditor && articleEditor.contains(after)) restore();
-                    });
+                    }, 0);
                 }
             });
         }
