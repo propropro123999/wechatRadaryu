@@ -81,7 +81,7 @@
             const width = length(foreign.getAttribute('width') || '', view.width, geometryFontSize) ?? 200;
             const height = length(foreign.getAttribute('height') || '', view.height, geometryFontSize) ?? fontSize * 1.5 * lines.length;
             canvas.font = `${styleValue('font-style') || 'normal'} ${styleValue('font-weight') || 'normal'} ${fontSize}px ${styleValue('font-family') || 'sans-serif'}`;
-            if (width > 0) {
+            if (width > 0 && !['nowrap', 'pre'].includes(styleValue('white-space'))) {
                 lines = lines.flatMap((line, index, original) => {
                     const wrapped = [];
                     let current = '';
@@ -134,7 +134,10 @@
             text.setAttribute('dominant-baseline', 'central');
             text.setAttribute('fill', styleValue('color') || '#333');
             text.setAttribute('stroke', 'none');
-            const fittedFontSize = height > 0 ? Math.min(fontSize, height / lines.length / 1.2) : fontSize;
+            const textWidth = Math.max(1, ...lines.map(line => canvas.measureText(line).width));
+            const fittedFontSize = Math.min(fontSize,
+                height > 0 ? height / lines.length / 1.2 : fontSize,
+                width > 0 ? fontSize * width / textWidth : fontSize);
             text.setAttribute('font-size', fittedFontSize);
             for (const property of ['font-family', 'font-weight', 'font-style']) {
                 if (styleValue(property)) text.setAttribute(property, styleValue(property));

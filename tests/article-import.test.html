@@ -117,6 +117,7 @@ try {
       <foreignObject id="units" x="2em" y="1em" width="10em" height="3em" style="font-size:10px;transform:rotate(30deg);transform-origin:25px 15px;transform-box:view-box"><div style="font-size:2em;background-color:#eee">units</div></foreignObject>
       <foreignObject id="percent" x="25%" y="50%" width="50%" height="20%"><div style="background-color:#ddd">percent</div></foreignObject>
       <foreignObject x="20" y="30" width="100" height="40" style="transform:rotate(90deg);transform-origin:50% 50%;transform-box:fill-box"><div>pivot</div></foreignObject>
+      <foreignObject width="40" height="24"><section style="white-space:nowrap">INITIALIZE</section></foreignObject>
     </svg></div>`, url);
     const regressionRoot = new DOMParser().parseFromString(regressions.html, 'text/html').body;
     const labels = [...regressionRoot.querySelectorAll('[data-wechat-svg-label]')];
@@ -132,6 +133,7 @@ try {
     const percent = findLabel('percent');
     assert(percent.firstElementChild.getAttribute('transform') === 'translate(100,100)' && percent.querySelector('rect').getAttribute('width') === '200' && percent.querySelector('rect').getAttribute('height') === '40', 'inline SVG dimensions resolve percentages without a viewBox');
     assert(WeChatArticle.clipboardContent(regressionRoot).text.includes('alpha beta gamma delta'), 'clipboard plain text retains wrapped words');
+    assert(findLabel('INITIALIZE').querySelectorAll('tspan').length === 1 && Number(findLabel('INITIALIZE').querySelector('text').getAttribute('font-size')) < 20, 'explicit nowrap labels fit their width without splitting words');
     document.querySelector('#result').textContent = 'PASS: extraction preserves metadata, sections, SVG and image proportions; proxies lazy images; sanitizes content; handles placeholders, empty content, invalid links and verification';
     document.querySelector('#result').textContent += '\nPASS: clipboard preserves inline typography and width, exports original WeChat CDN sources, retains other proxies, and handles empty/malformed image content';
     document.querySelector('#result').textContent += '\nPASS: SVG foreignObject labels become safe SVG text with original edge backgrounds, transforms, multiline positioning and clipboard preservation';
