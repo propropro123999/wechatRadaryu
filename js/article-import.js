@@ -134,7 +134,7 @@
             text.setAttribute('dominant-baseline', 'central');
             text.setAttribute('fill', styleValue('color') || '#333');
             text.setAttribute('stroke', 'none');
-            const textWidth = Math.max(1, ...lines.map(line => canvas.measureText(line).width));
+            const textWidth = Math.max(1, ...lines.map(line => canvas.measureText(line.trimEnd()).width));
             const fittedFontSize = Math.min(fontSize,
                 height > 0 ? height / lines.length / 1.2 : fontSize,
                 width > 0 ? fontSize * width / textWidth : fontSize);
