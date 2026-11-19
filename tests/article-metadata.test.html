@@ -74,6 +74,10 @@ document.querySelector('#formatter').addEventListener('load', async function () 
         assert(w.getComputedStyle(svg.querySelector('path[d="M0,50 L100,50"]')).fill === 'none' && svg.querySelector('marker').getAttribute('orient') === 'auto', 'connectors and marker geometry retained');
         assert(!svg.querySelector('[onclick]') && !svg.querySelector('rect').style.backgroundImage, 'SVG retains only safe presentation styles');
         assert(svg.querySelector('text').textContent === '中文English', 'article typography rules do not reflow diagram labels');
+        assert(svg.parentElement.contentEditable === 'false', 'diagram has an atomic HTML editing boundary after formatting');
+        const spanCount = editor.querySelectorAll('span').length;
+        w.formatText();
+        assert(editor.querySelector('svg').parentElement.contentEditable === 'false' && editor.querySelectorAll('span').length === spanCount, 'repeated cleanup restores the editing boundary without nesting wrappers');
         document.querySelector('#result').textContent = 'PASS: metadata stays separate from body/copy; title and author copy plain text; partial corrections preserve metadata, full replacement/deletion clears it; failed/invalid imports preserve the existing article; missing metadata and clipboard errors handled';
         window.testResult = {passed: true};
     } catch (error) {
