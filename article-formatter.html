@@ -310,6 +310,9 @@
         function protectEditorDiagrams() {
             [...articleEditor.querySelectorAll('svg')].filter(svg => !svg.parentElement.closest('svg')).forEach(svg => {
                 let frame = svg.parentElement;
+                const selection = window.getSelection();
+                const moveCaret = selection.isCollapsed && (svg.contains(selection.anchorNode) ||
+                    (frame.hasAttribute('data-editor-diagram') && frame.contains(selection.anchorNode)));
                 if (!frame.hasAttribute('data-editor-diagram') || frame.localName !== 'span' || frame.childNodes.length !== 1) {
                     frame = document.createElement('span');
                     frame.setAttribute('data-editor-diagram', '');
@@ -318,13 +321,23 @@
                 }
                 frame.style.display = 'contents';
                 frame.contentEditable = 'false';
-                const selection = window.getSelection();
-                if (selection.isCollapsed && frame.contains(selection.anchorNode)) {
-                    const range = document.createRange();
-                    range.setStartAfter(frame);
-                    range.collapse(true);
-                    selection.removeAllRanges();
-                    selection.addRange(range);
+                if (moveCaret || (!selection.rangeCount && document.activeElement === articleEditor)) {
+                    let after = frame.nextSibling;
+                    if (!after || after.nodeType !== 3 || !after.nodeValue) {
+                        after = document.createTextNode(' ');
+                        frame.after(after);
+                    }
+                    const restore = () => {
+                        const range = document.createRange();
+                        range.setStart(after, 0);
+                        range.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    };
+                    restore();
+                    queueMicrotask(() => {
+                        if (!selection.rangeCount && document.activeElement === articleEditor && articleEditor.contains(after)) restore();
+                    });
                 }
             });
         }
