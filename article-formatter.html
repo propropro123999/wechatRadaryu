@@ -382,7 +382,7 @@
                     }
 
                     // Native attributes map
-                    $.each([...this.attributes], function (i, attr) {
+                    $.each([...this.attributes], (i, attr) => {
                         const name = attr.name;
                         if (keepImg && (name === 'src' || name === 'alt' || name === 'width' || name === 'height' || name === 'referrerpolicy')) return;
                         if (keepSvg && name === 'style' && this.style.length) return;
