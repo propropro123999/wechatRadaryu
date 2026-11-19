@@ -115,5 +115,42 @@
         return {html: wrapper.outerHTML, title, author, images: wrapper.querySelectorAll('img, image').length};
     }
 
-    window.WeChatArticle = {articleUrl, extract};
+    function clipboardContent(editor) {
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'width:578px;max-width:100%;margin:0 auto;background:#fff;';
+        wrapper.innerHTML = editor.innerHTML;
+        const originals = [editor, ...editor.querySelectorAll('*')];
+        const copies = [wrapper, ...wrapper.querySelectorAll('*')];
+        const properties = ['font-family', 'font-size', 'font-weight', 'font-style', 'line-height', 'letter-spacing', 'color', 'text-align', 'text-decoration', 'white-space', 'word-break', 'overflow-wrap', 'box-sizing', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left', 'min-height'];
+        copies.forEach((copy, index) => {
+            const computed = getComputedStyle(originals[index]);
+            for (const property of properties) {
+                if (index === 0 && property === 'min-height') continue;
+                if (!copy.style.getPropertyValue(property) || copy.style.getPropertyValue(property).includes('var(')) {
+                    copy.style.setProperty(property, computed.getPropertyValue(property));
+                }
+            }
+            copy.removeAttribute('class');
+        });
+        wrapper.querySelectorAll('img, image').forEach(img => {
+            const attr = img.localName === 'image' ? 'href' : 'src';
+            let src;
+            try { src = new URL(img.getAttribute(attr), location.href); } catch { return; }
+            if (src.origin === location.origin && src.pathname === '/api/proxy-image') {
+                try {
+                    const original = new URL(src.searchParams.get('url'));
+                    if (['https:', 'http:'].includes(original.protocol) && !original.username && !original.password &&
+                        ['mmbiz.qpic.cn', 'mmbiz.qlogo.cn'].includes(original.hostname)) {
+                        original.protocol = 'https:';
+                        img.setAttribute(attr, original.href);
+                        return;
+                    }
+                } catch {}
+            }
+            img.setAttribute(attr, src.href);
+        });
+        return {html: wrapper.outerHTML, text: editor.innerText};
+    }
+
+    window.WeChatArticle = {articleUrl, extract, clipboardContent};
 })();

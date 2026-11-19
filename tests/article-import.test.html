@@ -45,7 +45,33 @@ try {
     for (const invalid of ['', 'not a url', 'https://example.com/?mp.weixin.qq.com', 'https://mp.weixin.qq.com.evil.test/s/a', 'file://mp.weixin.qq.com/s/a']) {
         rejects(() => WeChatArticle.extract(fixture, invalid), /链接/);
     }
+    const editor = document.createElement('div');
+    editor.innerHTML = article.html;
+    const output = WeChatArticle.clipboardContent(editor);
+    const clipboard = new DOMParser().parseFromString(output.html, 'text/html').body;
+    assert(clipboard.firstElementChild.style.width === '578px' && clipboard.firstElementChild.style.maxWidth === '100%', 'clipboard retains article width');
+    assert(!clipboard.querySelector('[class], style, link'), 'clipboard has no stylesheet dependencies');
+    assert(clipboard.querySelector('img').src === 'https://mmbiz.qpic.cn/icon.png?a=1&b=2', 'WeChat clipboard uses original CDN');
+    assert(clipboard.querySelector('image').getAttribute('href') === 'https://mmbiz.qpic.cn/svg.png', 'SVG clipboard image uses original CDN');
+    const fallback = document.createElement('div');
+    fallback.innerHTML = '<img src="/api/proxy-image?url=https%3A%2Fexample.com%2Fimage.png"><img src="http://[">';
+    const fallbackCopy = new DOMParser().parseFromString(WeChatArticle.clipboardContent(fallback).html, 'text/html');
+    assert(fallbackCopy.querySelector('img').src.startsWith(location.origin + '/api/proxy-image?'), 'non-WeChat image retains absolute proxy URL');
+    const stylesheet = document.createElement('style');
+    stylesheet.textContent = '.clipboard-test-style { color:rgb(1,2,3);margin-bottom:13px;text-decoration:underline; }';
+    document.head.append(stylesheet);
+    const styled = document.createElement('div');
+    styled.innerHTML = '<p class="clipboard-test-style">复制文字</p>';
+    document.body.append(styled);
+    const styledCopy = new DOMParser().parseFromString(WeChatArticle.clipboardContent(styled).html, 'text/html').body;
+    assert(styledCopy.querySelector('p').style.color === 'rgb(1, 2, 3)' && styledCopy.querySelector('p').style.marginBottom === '13px' && !styledCopy.querySelector('[class]'), 'computed typography is inlined');
+    assert(styledCopy.querySelector('p').style.textDecoration.includes('underline'), 'stylesheet text decoration is inlined');
+    assert(WeChatArticle.clipboardContent(styled).text === '复制文字', 'plain text payload');
+    styled.remove();
+    stylesheet.remove();
+    assert(WeChatArticle.clipboardContent(document.createElement('div')).html.includes('578px'), 'empty clipboard content');
     document.querySelector('#result').textContent = 'PASS: extraction preserves metadata, sections, SVG and image proportions; proxies lazy images; sanitizes content; handles placeholders, empty content, invalid links and verification';
+    document.querySelector('#result').textContent += '\nPASS: clipboard preserves inline typography and width, exports original WeChat CDN sources, retains other proxies, and handles empty/malformed image content';
     window.testResult = {passed: true};
 } catch (error) {
     document.querySelector('#result').textContent = 'FAIL: ' + error.stack;
