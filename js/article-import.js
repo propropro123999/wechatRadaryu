@@ -167,15 +167,18 @@
             throw new Error('未找到微信文章正文，文章可能已删除、不可访问或不支持导入');
         }
         content.querySelectorAll('script, style, link, meta, base, object, embed, form, input, button, textarea, select').forEach(el => el.remove());
-        function removeHidden(el, inherited = 'visible') {
-            if (el.hasAttribute('hidden') || el.style?.display === 'none' || el.getAttribute('display') === 'none' ||
-                (el.style?.opacity && Number(el.style.opacity) === 0)) { el.remove(); return; }
+        const resources = 'defs, symbol, marker, linearGradient, radialGradient, pattern, clipPath, mask, filter';
+        function removeHidden(el, inherited = 'visible', rendered = true) {
+            if (el.matches(resources)) return;
+            rendered = rendered && !(el.hasAttribute('hidden') || el.style?.display === 'none' || el.getAttribute('display') === 'none' ||
+                (el.style?.opacity && Number(el.style.opacity) === 0));
+            if (!rendered && !el.querySelector(resources)) { el.remove(); return; }
             const declared = el.style?.visibility || el.getAttribute('visibility');
             const visibility = !declared || declared === 'inherit' ? inherited : declared;
             const hidden = ['hidden', 'collapse'].includes(visibility);
             for (const child of [...el.childNodes]) {
-                if (child.nodeType === 1) removeHidden(child, visibility);
-                else if (hidden && child.nodeType === 3) child.remove();
+                if (child.nodeType === 1) removeHidden(child, visibility, rendered);
+                else if ((hidden || !rendered) && child.nodeType === 3) child.remove();
             }
             if (hidden) {
                 if (!el.children.length) { el.remove(); return; }
@@ -183,7 +186,7 @@
                 el.removeAttribute('visibility');
             }
         }
-        content.querySelectorAll('svg').forEach(svg => { if (!svg.parentElement.closest('svg')) removeHidden(svg); });
+        [...content.querySelectorAll('svg')].filter(svg => !svg.parentElement.closest('svg')).forEach(svg => removeHidden(svg));
         content.querySelectorAll('iframe, video, audio, mp-video, mpvoice, qqmusic, mp-common-video').forEach(el => {
             if (el.closest('svg')) { el.remove(); return; }
             const placeholder = doc.createElement('p');
@@ -208,8 +211,10 @@
                     if (/(?:url\s*\(|expression\s*\(|javascript:|@import|behavior)/i.test(nonLocalValue) ||
                         ['position', 'z-index', 'animation', 'animation-name', 'transition'].includes(property)) el.style.removeProperty(property);
                 }
-                if (el.style.visibility === 'hidden' || el.style.visibility === 'collapse') el.style.removeProperty('visibility');
-                if (el.style.opacity && Number(el.style.opacity) === 0) el.style.removeProperty('opacity');
+                if (el.namespaceURI !== 'http://www.w3.org/2000/svg') {
+                    if (el.style.visibility === 'hidden' || el.style.visibility === 'collapse') el.style.removeProperty('visibility');
+                    if (el.style.opacity && Number(el.style.opacity) === 0) el.style.removeProperty('opacity');
+                }
             }
             if (el.localName === 'a') {
                 el.removeAttribute('target');
