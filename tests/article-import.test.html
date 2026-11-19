@@ -70,8 +70,25 @@ try {
     styled.remove();
     stylesheet.remove();
     assert(WeChatArticle.clipboardContent(document.createElement('div')).html.includes('578px'), 'empty clipboard content');
+    const diagram = WeChatArticle.extract(`<div id="js_content"><svg viewBox="0 0 200 120" style="font-family:Arial;font-size:16px">
+      <g transform="translate(10,20)"><foreignObject width="120" height="24" onclick="alert(1)"><section xmlns="http://www.w3.org/1999/xhtml" style="text-align:center;color:rgb(19,19,0)"><span>DEAD</span></section></foreignObject></g>
+      <foreignObject x="20" y="60" width="140" height="24"><p></p><p style="margin:0;background-color:rgba(232,232,232,0.8)"><span>ppp_connect()</span></p><p></p><script>alert(1)<\/script><img src="invalid" onerror="alert(1)"></foreignObject>
+      <foreignObject width="100" height="48"><section>first<br>second</section></foreignObject><foreignObject width="0" height="0"></foreignObject>
+      <text x="5" y="110">existing SVG text</text></svg></div>`, url);
+    const diagramRoot = new DOMParser().parseFromString(diagram.html, 'text/html').body;
+    assert(!diagramRoot.querySelector('foreignObject, script, [onclick], [onerror]'), 'diagram contains no foreign HTML or active content');
+    assert(diagramRoot.textContent.includes('DEAD') && diagramRoot.textContent.includes('ppp_connect()') && diagramRoot.textContent.includes('existing SVG text'), 'HTML labels and existing SVG text retained');
+    assert(diagramRoot.querySelectorAll('[data-wechat-svg-label]').length === 3, 'empty foreignObject removed');
+    const nodeLabel = diagramRoot.querySelector('text');
+    assert(nodeLabel.getAttribute('text-anchor') === 'middle' && nodeLabel.querySelector('tspan').getAttribute('x') === '60' && nodeLabel.querySelector('tspan').getAttribute('y') === '12', 'node alignment and label geometry');
+    const background = diagramRoot.querySelector('[data-wechat-svg-label] rect');
+    assert(background.getAttribute('fill') === 'rgba(232, 232, 232, 0.8)' && background.getAttribute('width') === '140' && background.getAttribute('height') === '24', 'edge background uses original color and dimensions');
+    assert(diagramRoot.querySelectorAll('tspan').length === 4, 'multiline labels preserved');
+    const diagramCopy = WeChatArticle.clipboardContent(diagramRoot).html;
+    assert(diagramCopy.includes('DEAD') && diagramCopy.includes('ppp_connect()') && !diagramCopy.includes('foreignObject'), 'clipboard diagram uses portable SVG labels');
     document.querySelector('#result').textContent = 'PASS: extraction preserves metadata, sections, SVG and image proportions; proxies lazy images; sanitizes content; handles placeholders, empty content, invalid links and verification';
     document.querySelector('#result').textContent += '\nPASS: clipboard preserves inline typography and width, exports original WeChat CDN sources, retains other proxies, and handles empty/malformed image content';
+    document.querySelector('#result').textContent += '\nPASS: SVG foreignObject labels become safe SVG text with original edge backgrounds, transforms, multiline positioning and clipboard preservation';
     window.testResult = {passed: true};
 } catch (error) {
     document.querySelector('#result').textContent = 'FAIL: ' + error.stack;

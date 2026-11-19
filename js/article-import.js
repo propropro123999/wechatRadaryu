@@ -22,6 +22,70 @@
         return url ? new URL('/api/proxy-image?url=' + encodeURIComponent(url), location.origin).href : '';
     }
 
+    function svgLabels(content) {
+        const ns = 'http://www.w3.org/2000/svg';
+        content.querySelectorAll('foreignObject').forEach(foreign => {
+            let label = '';
+            function collect(node) {
+                if (node.nodeType === 3) { label += node.nodeValue; return; }
+                if (node.nodeType !== 1) return;
+                const block = /^(p|div|section|br|li)$/.test(node.localName);
+                if (block) label += '\n';
+                node.childNodes.forEach(collect);
+                if (block) label += '\n';
+            }
+            collect(foreign);
+            const lines = label.split('\n').map(line => line.replace(/\s+/g, ' ').trim()).filter(Boolean);
+            if (!lines.length) { foreign.remove(); return; }
+            const descendants = [foreign, ...foreign.querySelectorAll('*')];
+            function styleValue(property) {
+                for (const node of descendants) {
+                    if (node.style?.getPropertyValue(property)) return node.style.getPropertyValue(property);
+                }
+                for (let node = foreign.parentElement; node; node = node.parentElement) {
+                    if (node.style?.getPropertyValue(property)) return node.style.getPropertyValue(property);
+                    if (node.localName === 'svg') break;
+                }
+                return '';
+            }
+            const fontSize = parseFloat(styleValue('font-size')) || 16;
+            const width = parseFloat(foreign.getAttribute('width')) || 200;
+            const height = parseFloat(foreign.getAttribute('height')) || fontSize * 1.5 * lines.length;
+            const group = foreign.ownerDocument.createElementNS(ns, 'g');
+            group.setAttribute('data-wechat-svg-label', '');
+            group.setAttribute('transform', `translate(${parseFloat(foreign.getAttribute('x')) || 0},${parseFloat(foreign.getAttribute('y')) || 0})`);
+            const background = styleValue('background-color');
+            if (background && background !== 'transparent' && !/rgba\([^)]*,\s*0\)$/.test(background)) {
+                const rect = foreign.ownerDocument.createElementNS(ns, 'rect');
+                rect.setAttribute('width', width);
+                rect.setAttribute('height', height);
+                rect.setAttribute('fill', background);
+                rect.setAttribute('stroke', 'none');
+                group.append(rect);
+            }
+            const align = styleValue('text-align');
+            const text = foreign.ownerDocument.createElementNS(ns, 'text');
+            const x = align === 'center' ? width / 2 : align === 'right' || align === 'end' ? width : 0;
+            text.setAttribute('text-anchor', align === 'center' ? 'middle' : x ? 'end' : 'start');
+            text.setAttribute('dominant-baseline', 'central');
+            text.setAttribute('fill', styleValue('color') || '#333');
+            text.setAttribute('stroke', 'none');
+            text.setAttribute('font-size', fontSize);
+            for (const property of ['font-family', 'font-weight', 'font-style']) {
+                if (styleValue(property)) text.setAttribute(property, styleValue(property));
+            }
+            lines.forEach((line, index) => {
+                const span = foreign.ownerDocument.createElementNS(ns, 'tspan');
+                span.setAttribute('x', x);
+                span.setAttribute('y', (index + 0.5) * height / lines.length);
+                span.textContent = line;
+                text.append(span);
+            });
+            group.append(text);
+            foreign.replaceWith(group);
+        });
+    }
+
     function extract(html, source) {
         const url = articleUrl(source);
         const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -64,7 +128,8 @@
                 el.setAttribute('rel', 'noopener noreferrer');
             }
         }
-        content.querySelectorAll('foreignObject, animate, animateMotion, animateTransform, set').forEach(el => el.remove());
+        content.querySelectorAll('animate, animateMotion, animateTransform, set').forEach(el => el.remove());
+        svgLabels(content);
         content.querySelectorAll('use').forEach(el => {
             const href = el.getAttribute('href') || el.getAttribute('xlink:href') || '';
             if (!href.startsWith('#')) el.remove();
