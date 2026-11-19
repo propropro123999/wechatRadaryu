@@ -16,7 +16,11 @@
     saveList('icviews-recent', [path, ...readList('icviews-recent').filter(item => item !== path)].slice(0, 11));
   }
   function hydrateIcons(root = document) {
-    root.querySelectorAll('[data-icon]').forEach(element => { element.innerHTML = workspaceIcon(element.dataset.icon); });
+    const icons = [...root.querySelectorAll('[data-icon]')];
+    if (root.matches?.('[data-icon]')) icons.unshift(root);
+    icons.forEach(element => {
+      if (!element.querySelector('svg')) element.innerHTML = workspaceIcon(element.dataset.icon);
+    });
   }
 
   const path = location.pathname.split('/').pop().replace(/\.html$/, '') + '.html';
@@ -53,6 +57,11 @@
   }
 
   hydrateIcons();
+  new MutationObserver(records => {
+    records.forEach(record => record.addedNodes.forEach(node => {
+      if (node.nodeType === Node.ELEMENT_NODE) hydrateIcons(node);
+    }));
+  }).observe(document.body, { childList: true, subtree: true });
   const grid = document.getElementById('tool-grid');
   if (!grid) return;
   const search = document.getElementById('tool-search');

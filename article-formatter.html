@@ -209,9 +209,9 @@
             <div class="actions-bar">
                 <!-- URL Import -->
                 <div style="display: flex; gap: 8px; flex: 1; max-width: 500px;">
-                    <input type="text" id="articleUrl" placeholder="🔗 粘贴微信公众号文章链接..."
+                    <input type="text" id="articleUrl" placeholder="粘贴微信公众号文章链接..."
                         style="flex-grow: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; outline: none;">
-                    <button class="action-btn" onclick="importArticle()">导入</button>
+                    <button class="action-btn" onclick="importArticle()"><span data-icon="link"></span>导入</button>
                 </div>
 
                 <div style="width: 1px; height: 24px; background: #eee; margin: 0 8px;"></div>
@@ -230,14 +230,12 @@
 
                 <button class="action-btn"
                     style="background-color: white; color: #333; border: 1px solid #ddd; box-shadow:none;"
-                    onclick="copyToClipboard()">📋 复制结果</button>
-                <button class="action-btn" onclick="formatText()">✨ 一键排版</button>
+                    onclick="copyToClipboard()"><span data-icon="copy"></span> 复制结果</button>
+                <button class="action-btn" onclick="formatText()"><span data-icon="sparkles"></span> 一键排版</button>
             </div>
 
             <!-- Native Editor Content -->
-            <div id="editor-content" class="native-editor" contenteditable="true" placeholder="在此输入内容...">
-                <p>📝 粘贴文章内容，或使用上方导入链接...</p>
-            </div>
+            <div id="editor-content" class="native-editor" contenteditable="true" data-placeholder="粘贴文章内容，或使用上方导入链接…" aria-label="文章编辑区"></div>
 
         </div>
     </div>
@@ -256,8 +254,8 @@
         async function importArticle() {
             const url = $('#articleUrl').val().trim();
 
-            if (!url) return showToast('⚠️ 请输入文章链接');
-            if (url.indexOf('mp.weixin.qq.com') < 0) return showToast('⚠️ 仅支持微信公众号文章');
+            if (!url) return showToast('请输入文章链接');
+            if (url.indexOf('mp.weixin.qq.com') < 0) return showToast('仅支持微信公众号文章');
 
             const $btn = $('button[onclick="importArticle()"]');
             const originalHtml = $btn.html();
@@ -330,15 +328,15 @@
 
                     // Native DOM Insert
                     $('#editor-content').html(safeHtml);
-                    showToast(`✅ 导入成功 (代理 ${images.length} 张图片)`);
+                    showToast(`导入成功 (代理 ${images.length} 张图片)`);
 
                 } else {
-                    showToast('⚠️ 未找到正文内容');
+                    showToast('未找到正文内容');
                 }
 
             } catch (err) {
                 console.error('Import Error:', err);
-                showToast('❌ 导入失败: ' + err.message);
+                showToast('导入失败: ' + err.message);
             } finally {
                 $btn.html(originalHtml).prop('disabled', false);
             }
@@ -348,7 +346,7 @@
             // Get Content
             const $editor = $('#editor-content');
             const rawHtml = $editor.html();
-            if (!rawHtml || rawHtml === '<p><br></p>') return showToast('⚠️ 内容为空');
+            if (!rawHtml || rawHtml === '<p><br></p>') return showToast('内容为空');
 
             // Virtual DOM processing
             const $temp = $('<div>').html(rawHtml);
@@ -392,7 +390,7 @@
 
             // Set back to editor
             $editor.html($temp.html());
-            showToast('✨ 排版完成');
+            showToast('排版完成');
         }
 
         // Helper: Traverse and process text nodes only
@@ -448,7 +446,7 @@
     <script>
       renderNav({
         title: '文章排版',
-        icon: '📝'
+        icon: 'edit'
       });
     </script>
     <script src="js/workspace.js"></script>

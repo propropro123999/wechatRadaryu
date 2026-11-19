@@ -205,6 +205,10 @@ svg { flex-shrink: 0; vertical-align: middle; }
 .tool-processing-note svg { width: 13px; height: 13px; }
 .workspace-tool .actions-bar { gap: 12px; padding: 18px; border-bottom: 1px solid #e6ece4; flex-wrap: wrap; }
 .workspace-tool .actions-bar #articleUrl { font-size: 14px !important; min-height: 38px; min-width: 0; }
+.workspace-tool [data-icon] { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; flex-shrink: 0; }
+.workspace-tool [data-icon] > svg { width: 1.1em; height: 1.1em; }
+.workspace-tool :is(button, .gem-chip) > [data-icon] { margin-right: .35em; }
+.workspace-tool .native-editor:empty::before { content: attr(data-placeholder); color: #7d8a81; pointer-events: none; }
 .workspace-tool .native-editor { min-height: 440px; padding: 32px; font-size: 15px; line-height: 1.9; }
 .workspace-tool .checkbox-group { flex-wrap: wrap; }
 .workspace-tool .chart-container, .workspace-tool .table-container { max-width: 100%; overflow-x: auto; }
@@ -274,7 +278,8 @@ svg { flex-shrink: 0; vertical-align: middle; }
   .workspace-tool .nav-title { font-size: 12px; }
   .workspace-tool .tool-nav-separator { display: none; }
   .workspace-tool .nav-actions { gap: 7px; }
-  .workspace-tool .tool-home-link { display: none; }
+  .workspace-tool .tool-home-link { display: inline-flex; }
+  .workspace-tool .nav-actions { margin-left: auto; }
   .workspace-tool .nav-btn { font-size: 10px; padding: 0 9px; }
   .workspace-tool :is(.grid-2, .content-grid) { grid-template-columns: 1fr; }
   .workspace-tool .actions-bar { align-items: stretch; }

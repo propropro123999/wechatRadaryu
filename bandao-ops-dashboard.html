@@ -901,10 +901,10 @@
   <script>
     renderNav({
       title: '专栏/帖子分析',
-      icon: '🧭',
+      icon: 'compass',
       showFileInput: true,
       fileAccept: '.xlsx,.xls,.csv',
-      fileLabel: '📤 选择文件',
+      fileLabel: '选择文件',
       onFileChange: (e) => {
         const file = e.target.files[0];
         if (file) handleFile({ target: { files: [file] } });

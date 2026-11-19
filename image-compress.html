@@ -503,7 +503,7 @@
     <div class="main-container">
       <!-- 介绍卡片 -->
       <div class="intro-card">
-        <div class="intro-title">🚀 快速压缩您的图片</div>
+        <div class="intro-title"><span data-icon="bolt"></span> 快速压缩您的图片</div>
         <div class="intro-desc">
           在浏览器中完全处理，无需上传到服务器。支持 JPG、PNG 和 WebP 格式，可批量压缩和下载。
         </div>
@@ -514,7 +514,7 @@
         <!-- 参数设置卡片 -->
         <div class="card">
           <div class="card-title">
-            <span class="card-icon">⚙️</span>
+            <span class="card-icon"><span data-icon="settings"></span></span>
             <span>选择图片 & 参数设置</span>
           </div>
 
@@ -523,7 +523,7 @@
 
           <!-- 拖拽区 -->
           <div class="dropzone" id="dropzone">
-            <div class="dropzone-icon">📁</div>
+            <div class="dropzone-icon"><span data-icon="folder"></span></div>
             <div class="dropzone-text">拖拽图片到此处</div>
             <div class="dropzone-hint">或点击选择多个文件</div>
           </div>
@@ -564,15 +564,15 @@
           <!-- 按钮组 -->
           <div class="button-group">
             <button class="btn btn-primary" id="btnCompress">
-              <span>⚡</span>
+              <span><span data-icon="bolt"></span></span>
               <span>压缩所有</span>
             </button>
             <button class="btn btn-secondary" id="btnDownloadAll">
-              <span>📦</span>
+              <span><span data-icon="package"></span></span>
               <span>下载 ZIP</span>
             </button>
             <button class="btn btn-secondary" id="btnClear">
-              <span>🗑️</span>
+              <span><span data-icon="trash"></span></span>
               <span>清空</span>
             </button>
           </div>
@@ -584,7 +584,7 @@
         <!-- 文件列表卡片 -->
         <div class="card">
           <div class="card-title">
-            <span class="card-icon">📋</span>
+            <span class="card-icon"><span data-icon="copy"></span></span>
             <span>文件列表</span>
           </div>
 
@@ -605,7 +605,7 @@
                 <tr>
                   <td colspan="7">
                     <div class="empty-state">
-                      <div class="empty-icon">📸</div>
+                      <div class="empty-icon"><span data-icon="image"></span></div>
                       <div class="empty-text">未选择文件</div>
                     </div>
                   </td>
@@ -659,7 +659,7 @@
           <tr>
             <td colspan="7">
               <div class="empty-state">
-                <div class="empty-icon">📸</div>
+                <div class="empty-icon"><span data-icon="image"></span></div>
                 <div class="empty-text">未选择文件</div>
               </div>
             </td>
@@ -877,7 +877,7 @@
   <script>
     renderNav({
       title: '图片压缩',
-      icon: '🗜️'
+      icon: 'compress'
     });
   </script>
     <script src="js/workspace.js"></script>

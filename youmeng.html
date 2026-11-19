@@ -88,7 +88,7 @@
 
       <div style="margin-bottom: 24px;">
         <div class="debug-box">
-          <div><strong>🔎 匹配规则自检：</strong> <span id="selfTest"></span></div>
+          <div><strong><span data-icon="search"></span> 匹配规则自检：</strong> <span id="selfTest"></span></div>
         </div>
 
         <!-- 状态提示（JS用于显示解析进度） -->
@@ -296,7 +296,7 @@
         return "";
       }
 
-      /** ✅ 你最新的细化规则：完整 detectPageType（最终版） */
+      /**  你最新的细化规则：完整 detectPageType（最终版） */
       function detectPageType(url) {
         const u = (url || "").toString().toLowerCase();
         if (!u) return "其他";
@@ -523,8 +523,8 @@
       runSelfTest();
 
       // 文件上传
-      document.getElementById("fileInput").addEventListener("change", function () {
-        const file = this.files[0];
+      function handleFile(event) {
+        const file = event.target.files[0];
         if (!file) return;
 
         mergedData = [];
@@ -649,7 +649,7 @@
           }
         };
         reader.readAsBinaryString(file);
-      });
+      }
 
       // ---------- 一、整体概况 ----------
       function renderOverview(data) {
@@ -880,10 +880,10 @@
     <script>
       renderNav({
         title: '友盟多表分析',
-        icon: '📄',
+        icon: 'document',
         showFileInput: true,
         fileAccept: '.xlsx,.xls',
-        fileLabel: '📤 选择 XLSX',
+        fileLabel: '选择 XLSX',
         onFileChange: (e) => {
           const file = e.target.files[0];
           if (file) handleFile({ target: { files: [file] } });

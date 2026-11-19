@@ -19,6 +19,10 @@ for (const tool of tools) {
   const page = readFileSync(resolve(root, tool.href), 'utf8');
   assert.match(page, /href="workspace.css"/, tool.href);
   assert.match(page, /src="js\/workspace.js"/, tool.href);
+  assert.doesNotMatch(page, /\p{Extended_Pictographic}/u, tool.href);
+  for (const match of page.matchAll(/data-icon="([a-z-]+)"/g)) {
+    assert.ok(vm.runInNewContext('WORKSPACE_ICONS', context)[match[1]], match[1]);
+  }
   assert.ok(page.indexOf('src="js/nav.js"') < page.indexOf('src="js/workspace.js"'), tool.href);
 }
 assert.deepEqual(counts, { analytics: 5, documents: 2, media: 3, developer: 1 });

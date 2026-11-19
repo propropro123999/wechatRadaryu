@@ -587,12 +587,12 @@
         <!-- 上传卡片 -->
         <div class="card">
           <div class="card-title">
-            <span class="card-icon">📁</span>
+            <span class="card-icon"><span data-icon="folder"></span></span>
             <span>上传 PDF</span>
           </div>
 
           <div id="upload-alert" class="alert alert-warning">
-            <div class="alert-icon">⚠️</div>
+            <div class="alert-icon"><span data-icon="alert"></span></div>
             <div class="alert-content">
               <div class="alert-title">文件限制</div>
               <div class="alert-message">单个文件最大 200MB。超大文件可能导致浏览器缓慢。</div>
@@ -601,7 +601,7 @@
 
           <div class="upload-area" id="upload-area" ondrop="handleDrop(event)" ondragover="handleDragOver(event)"
             ondragleave="handleDragLeave(event)" onclick="document.getElementById('file-input').click();">
-            <div class="upload-icon">📤</div>
+            <div class="upload-icon"><span data-icon="upload"></span></div>
             <div class="upload-text">拖拽或点击上传 PDF</div>
             <div class="upload-hint">支持 .pdf 格式 · 最大 200MB</div>
             <input type="file" id="file-input" class="upload-input" accept=".pdf" onchange="handleFileSelect(event)" />
@@ -637,7 +637,7 @@
         <!-- 压缩参数卡片 -->
         <div class="card">
           <div class="card-title">
-            <span class="card-icon">⚙️</span>
+            <span class="card-icon"><span data-icon="settings"></span></span>
             <span>压缩参数</span>
           </div>
 
@@ -670,9 +670,9 @@
                 <span>压缩强度</span>
               </label>
               <div class="strength-buttons">
-                <button class="strength-btn active" onclick="setStrength('fast')">🚀 快速</button>
-                <button class="strength-btn" onclick="setStrength('medium')">⚖️ 均衡</button>
-                <button class="strength-btn" onclick="setStrength('maximum')">📦 最小</button>
+                <button class="strength-btn active" onclick="setStrength('fast')"><span data-icon="bolt"></span> 快速</button>
+                <button class="strength-btn" onclick="setStrength('medium')"><span data-icon="scale"></span> 均衡</button>
+                <button class="strength-btn" onclick="setStrength('maximum')"><span data-icon="package"></span> 最小</button>
               </div>
               <small id="strength-hint" style="color: var(--color-text-tertiary);">保留高质量，压缩率 40%</small>
             </div>
@@ -688,7 +688,7 @@
             <!-- 开始压缩按钮 -->
             <div style="margin-top: var(--space-2xl); display: flex; justify-content: flex-end;">
               <button class="btn btn-primary" onclick="compressPDF()" style="padding: var(--space-md) var(--space-3xl);">
-                🚀 开始压缩
+                <span data-icon="bolt"></span> 开始压缩
               </button>
             </div>
           </div>
@@ -697,7 +697,7 @@
         <!-- 进度卡片 -->
         <div id="progress-card" class="card" style="display: none;">
           <div class="card-title">
-            <span class="card-icon">⏳</span>
+            <span class="card-icon"><span data-icon="clock"></span></span>
             <span>压缩中...</span>
           </div>
 
@@ -718,7 +718,7 @@
         <!-- 结果卡片 -->
         <div id="result-card" class="card" style="display: none;">
           <div class="result-card">
-            <div class="result-icon">✅</div>
+            <div class="result-icon"><span data-icon="check"></span></div>
             <div class="result-title">压缩完成！</div>
 
             <div class="result-stats">
@@ -738,10 +738,10 @@
 
             <div class="btn-group" style="justify-content: center;">
               <button class="btn btn-primary" onclick="downloadPDF()">
-                ⬇️ 下载压缩文件
+                <span data-icon="download"></span> 下载压缩文件
               </button>
               <button class="btn btn-secondary" onclick="resetTool()">
-                🔄 再来一次
+                <span data-icon="refresh"></span> 再来一次
               </button>
             </div>
           </div>
@@ -780,7 +780,7 @@
       if (files.length > 0 && files[0].type === 'application/pdf') {
         loadPDF(files[0]);
       } else {
-        alert('❌ 请上传 PDF 文件');
+        alert('请上传 PDF 文件');
       }
     }
 
@@ -799,7 +799,7 @@
       try {
         // 检查文件大小
         if (file.size > 200 * 1024 * 1024) {
-          alert('❌ 文件过大（>200MB），请选择较小的 PDF');
+          alert('文件过大（>200MB），请选择较小的 PDF');
           return;
         }
 
@@ -824,7 +824,7 @@
         // 显示上传提示
         document.getElementById('upload-alert').classList.add('show');
       } catch (error) {
-        alert('❌ PDF 加载失败：' + error.message);
+        alert(' PDF 加载失败：' + error.message);
         console.error(error);
       }
     }
@@ -913,7 +913,7 @@
     // ===== 压缩处理 =====
     async function compressPDF() {
       if (!currentPDF) {
-        alert('❌ 请先上传 PDF 文件');
+        alert('请先上传 PDF 文件');
         return;
       }
 
@@ -982,7 +982,7 @@
         compressionStats.compressed = compressedPDFData.byteLength;
         showResult();
       } catch (error) {
-        alert('❌ 压缩失败：' + error.message);
+        alert('压缩失败：' + error.message);
         console.error('压缩错误:', error);
         document.getElementById('progress-card').style.display = 'none';
       }
@@ -1003,7 +1003,7 @@
 
     function downloadPDF() {
       if (!compressedPDFData) {
-        alert('❌ 没有可下载的文件');
+        alert('没有可下载的文件');
         return;
       }
 
@@ -1050,7 +1050,7 @@
   <script>
     renderNav({
       title: 'PDF 压缩',
-      icon: '📄'
+      icon: 'document'
     });
   </script>
     <script src="js/workspace.js"></script>
