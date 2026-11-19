@@ -32,4 +32,34 @@ for (const id of ['tool-grid', 'tool-search', 'catalog-empty', 'grid-view', 'lis
 }
 assert.match(home, /aria-live="polite"/);
 assert.match(home, /name="viewport"/);
+const workspace = readFileSync(resolve(root, 'js/workspace.js'), 'utf8');
+const hydrationSource = workspace.slice(workspace.indexOf('function hydrateIcons'), workspace.indexOf('  const sampleRows'));
+const decoration = { dataset: { icon: 'copy' }, closest: () => null, hasChildNodes: () => false, innerHTML: '' };
+const importedParagraph = { dataset: { icon: 'copy' }, closest: () => null, hasChildNodes: () => true, innerHTML: 'Article text' };
+const importedDecoration = { dataset: { icon: 'copy' }, closest: () => ({}), hasChildNodes: () => false, innerHTML: '' };
+vm.runInNewContext(hydrationSource + 'hydrateIcons();', {
+  document: { querySelectorAll: () => [decoration, importedParagraph, importedDecoration] },
+  workspaceIcon: context.window.workspaceIcon
+});
+assert.match(decoration.innerHTML, /<svg/);
+assert.equal(importedParagraph.innerHTML, 'Article text');
+assert.equal(importedDecoration.innerHTML, '');
+
+const pdf = readFileSync(resolve(root, 'pdf-compress.html'), 'utf8');
+const presetSource = pdf.slice(pdf.indexOf('function setStrength('), pdf.indexOf('// ===== 压缩处理'));
+const buttons = ['fast', 'medium', 'maximum'].map(strength => ({
+  dataset: { strength },
+  classList: { toggle: (_name, selected) => { buttons.find(button => button.dataset.strength === strength).active = selected; } },
+  setAttribute: (name, value) => { buttons.find(button => button.dataset.strength === strength)[name] = value; }
+}));
+const fields = {};
+const presetContext = {
+  document: { querySelectorAll: () => buttons, getElementById: id => (fields[id] ||= {}) },
+  updateQualityValue() {}, updateMaxWidthValue() {}, localStorage: { setItem() {} }
+};
+vm.runInNewContext(presetSource + "setStrength('medium');", presetContext);
+assert.equal(buttons.filter(button => button.active).length, 1);
+assert.equal(buttons[1]['aria-pressed'], 'true');
+assert.equal(fields['quality-slider'].value, 70);
+assert.equal(fields['max-width'].value, 960);
 console.log('Workspace catalog, shared assets, category counts, and entry points passed.');

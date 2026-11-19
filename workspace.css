@@ -246,11 +246,12 @@ svg { flex-shrink: 0; vertical-align: middle; }
 .workspace-tool [data-icon] > svg { width: 1.1em; height: 1.1em; }
 .workspace-tool :is(button, .gem-chip) > [data-icon] { margin-right: .35em; }
 .workspace-tool .native-editor:empty::before { content: attr(data-placeholder); color: #7d8a81; pointer-events: none; }
+.workspace-tool[data-tool="article-formatter"] .native-editor:empty::before { display: block; text-align: center; margin-top: 16px; line-height: 1.8; }
 .workspace-tool .native-editor { min-height: 440px; padding: 32px; font-size: 15px; line-height: 1.9; }
 .workspace-tool .checkbox-group { flex-wrap: wrap; }
 .workspace-tool .chart-container, .workspace-tool .table-container { max-width: 100%; overflow-x: auto; }
 .workspace-tool :is(.grid-2, .content-grid) > * { min-width: 0; }
-.workspace-tool .tool-intro { display: flex; justify-content: space-between; align-items: center; gap: 24px; max-width: 1280px; padding: 36px 32px 0; text-align: left; }
+.workspace-tool .tool-intro { display: flex; justify-content: space-between; align-items: center; gap: 24px; width: 100%; max-width: 1280px; padding: 36px 32px 0; text-align: left; }
 .workspace-tool .tool-intro .eyebrow { color: #698574; font-size: 10px; letter-spacing: 1.6px; }
 .workspace-tool .tool-intro h1 { font-size: 28px; line-height: 1.35; margin: 0; color: #234636; }
 .workspace-tool .tool-intro p { max-width: 760px; font-size: 13px; line-height: 1.8; margin: 10px 0 0; }
