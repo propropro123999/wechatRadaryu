@@ -95,9 +95,35 @@
         .native-editor img {
             max-width: 100%;
             height: auto;
-            display: block;
-            margin: 10px 0;
         }
+
+        .workspace-tool #editor-content.native-editor {
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 642px;
+            min-width: 0;
+            margin: 0 auto;
+            overflow-wrap: break-word;
+        }
+
+        .native-editor svg { max-width: 100%; }
+
+        #article-metadata {
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 642px;
+            margin: 0 auto;
+            padding: 16px 32px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .article-metadata-row { display: flex; align-items: center; gap: 16px; }
+        .article-metadata-row[hidden] { display: none; }
+        .article-metadata-row + .article-metadata-row { margin-top: 12px; }
+        .article-metadata-row > div { flex: 1; min-width: 0; }
+        .article-metadata-row > div > span { color: var(--color-text-secondary); font-size: 12px; }
+        .article-metadata-row p { margin: 4px 0 0; color: var(--color-text); overflow-wrap: anywhere; }
+        .article-metadata-row button { flex-shrink: 0; }
 
         .native-editor p {
             margin-bottom: 1em;
@@ -195,6 +221,7 @@
             margin-right: 6px;
         }
     </style>
+    <link rel="stylesheet" href="workspace.css" />
 </head>
 
 <body>
@@ -207,13 +234,13 @@
             <!-- 1. Actions Bar (Import & Format Settings) -->
             <div class="actions-bar">
                 <!-- URL Import -->
-                <div style="display: flex; gap: 8px; flex: 1; max-width: 500px;">
-                    <input type="text" id="articleUrl" placeholder="🔗 粘贴微信公众号文章链接..."
+                <div class="article-import-row" style="display: flex; gap: 8px; flex: 1;">
+                    <input type="text" id="articleUrl" placeholder="粘贴微信公众号文章链接..."
                         style="flex-grow: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; outline: none;">
-                    <button class="action-btn" onclick="importArticle()" style="background:#4F46E5;">📥 导入</button>
+                    <button class="action-btn" onclick="importArticle()"><span data-icon="link"></span>导入</button>
                 </div>
 
-                <div style="width: 1px; height: 24px; background: #eee; margin: 0 8px;"></div>
+                <div class="toolbar-divider" aria-hidden="true"></div>
 
                 <!-- Settings -->
                 <div class="checkbox-group">
@@ -223,20 +250,27 @@
                     <label class="checkbox-item"><input id="clearImg" type="checkbox">清除图片</label>
                 </div>
 
-                <div style="flex-grow: 1;"></div>
-
                 <!-- Main Actions -->
-
+                <div class="editor-main-actions">
                 <button class="action-btn"
                     style="background-color: white; color: #333; border: 1px solid #ddd; box-shadow:none;"
-                    onclick="copyToClipboard()">📋 复制结果</button>
-                <button class="action-btn" onclick="formatText()">✨ 一键排版</button>
+                    onclick="copyToClipboard()"><span data-icon="copy"></span> 复制结果</button>
+                <button class="action-btn" onclick="formatText()"><span data-icon="sparkles"></span> 一键排版</button>
+                </div>
             </div>
 
             <!-- Native Editor Content -->
-            <div id="editor-content" class="native-editor" contenteditable="true" placeholder="在此输入内容...">
-                <p>📝 粘贴文章内容，或使用上方导入链接...</p>
-            </div>
+            <section id="article-metadata" hidden aria-label="导入文章信息">
+                <div class="article-metadata-row" id="article-title-row">
+                    <div><span>文章标题</span><p id="article-title"></p></div>
+                    <button type="button" class="action-btn" onclick="copyArticleMetadata('title')"><span data-icon="copy"></span>复制标题</button>
+                </div>
+                <div class="article-metadata-row" id="article-author-row">
+                    <div><span>作者</span><p id="article-author"></p></div>
+                    <button type="button" class="action-btn" onclick="copyArticleMetadata('author')"><span data-icon="copy"></span>复制作者</button>
+                </div>
+            </section>
+            <div id="editor-content" class="native-editor" contenteditable="true" data-placeholder="粘贴文章内容，或使用上方导入链接…" aria-label="文章编辑区"></div>
 
         </div>
     </div>
@@ -245,6 +279,7 @@
 
     <div id="toast" class="status-toast">操作完成</div>
 
+    <script src="js/article-import.js"></script>
     <script>
         // Native Editor Logic
         // No external dependencies needed for editor core
@@ -252,11 +287,83 @@
 
         // --- Core Functions ---
 
-        async function importArticle() {
-            const url = $('#articleUrl').val().trim();
+        function setArticleMetadata(article = {}) {
+            for (const key of ['title', 'author']) {
+                document.getElementById('article-' + key).textContent = article[key] || '';
+                document.getElementById('article-' + key + '-row').hidden = !article[key];
+            }
+            document.getElementById('article-metadata').hidden = !article.title && !article.author;
+        }
 
-            if (!url) return showToast('⚠️ 请输入文章链接');
-            if (url.indexOf('mp.weixin.qq.com') < 0) return showToast('⚠️ 仅支持微信公众号文章');
+        async function copyArticleMetadata(key) {
+            const value = document.getElementById('article-' + key)?.textContent;
+            if (!value) return showToast('没有可复制的内容');
+            try {
+                await navigator.clipboard.writeText(value);
+                showToast(key === 'title' ? '标题已复制' : '作者已复制');
+            } catch {
+                showToast('复制失败，请允许浏览器访问剪贴板后重试');
+            }
+        }
+
+        const articleEditor = document.getElementById('editor-content');
+        function protectEditorDiagrams() {
+            [...articleEditor.querySelectorAll('svg')].filter(svg => !svg.parentElement.closest('svg')).forEach(svg => {
+                let frame = svg.parentElement;
+                const selection = window.getSelection();
+                const moveCaret = selection.isCollapsed && (svg.contains(selection.anchorNode) ||
+                    (frame.hasAttribute('data-editor-diagram') && frame.contains(selection.anchorNode)));
+                if (!frame.hasAttribute('data-editor-diagram') || frame.localName !== 'span' || frame.childNodes.length !== 1) {
+                    frame = document.createElement('span');
+                    frame.setAttribute('data-editor-diagram', '');
+                    svg.before(frame);
+                    frame.append(svg);
+                }
+                frame.style.display = 'contents';
+                frame.contentEditable = 'false';
+                if (moveCaret || (!selection.rangeCount && document.activeElement === articleEditor)) {
+                    let after = frame.nextSibling;
+                    if (!after || after.nodeType !== 3 || !after.nodeValue) {
+                        after = document.createTextNode('\u00a0');
+                        frame.after(after);
+                    }
+                    const restore = () => {
+                        const range = document.createRange();
+                        range.setStart(after, 0);
+                        range.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    };
+                    restore();
+                    setTimeout(() => {
+                        if (!selection.rangeCount && document.activeElement === articleEditor && articleEditor.contains(after)) restore();
+                    }, 0);
+                }
+            });
+        }
+        function clearReplacedArticleMetadata(event) {
+            if (event.type === 'beforeinput' && !/^(insert|delete)/.test(event.inputType)) return;
+            const selection = window.getSelection();
+            if (!selection.rangeCount || selection.isCollapsed) return;
+            const range = selection.getRangeAt(0);
+            if (!range.intersectsNode(articleEditor)) return;
+            const selected = range.cloneContents();
+            if (selected.textContent.trim() === articleEditor.textContent.trim() &&
+                selected.querySelectorAll('img, svg').length === articleEditor.querySelectorAll('img, svg').length) {
+                setArticleMetadata();
+            }
+        }
+        articleEditor.addEventListener('paste', clearReplacedArticleMetadata);
+        articleEditor.addEventListener('beforeinput', clearReplacedArticleMetadata);
+        articleEditor.addEventListener('input', () => {
+            protectEditorDiagrams();
+            if (!articleEditor.textContent.trim() && !articleEditor.querySelector('img, svg')) setArticleMetadata();
+        });
+
+        async function importArticle() {
+            let url;
+            try { url = WeChatArticle.articleUrl($('#articleUrl').val().trim()); }
+            catch (err) { return showToast(err.message); }
 
             const $btn = $('button[onclick="importArticle()"]');
             const originalHtml = $btn.html();
@@ -270,74 +377,15 @@
                 if (!resp.ok) throw new Error(json.error || 'Fetch failed');
                 if (!json.html) throw new Error('无内容');
 
-                // Parse HTML
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(json.html, 'text/html');
-                const content = doc.querySelector('#js_content');
-
-                if (content) {
-                    // 1. Force Content Visibility (Fixes blank editor issue)
-                    content.style.visibility = 'visible';
-                    content.style.opacity = '1';
-
-                    // 2. Image Processing (Critical: Convert data-src to Proxy URL)
-                    const images = content.querySelectorAll('img');
-                    images.forEach(img => {
-                        let realSrc = img.getAttribute('data-src');
-                        if (!realSrc) realSrc = img.getAttribute('src');
-
-                        if (realSrc) {
-                            // Standardize source
-                            realSrc = realSrc.replace(/&amp;/g, '&');
-
-                            // Use Proxy for WeChat Images
-                            const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(realSrc)}`;
-
-                            // Re-apply to src and clear interference
-                            img.setAttribute('src', proxyUrl);
-                            img.setAttribute('referrerpolicy', 'no-referrer');
-
-                            // Remove Wechat-specific lazy load attributes that might hide the image
-                            ['data-src', 'data-type', 'loading', 'class', 'style'].forEach(attr => img.removeAttribute(attr));
-
-                            // Apply safe default styles to ensure visibility in editor
-                            img.style.cssText = 'max-width: 100%; height: auto; display: block; margin: 10px 0; visibility: visible !important; opacity: 1 !important;';
-                        }
-                    });
-
-                    // 3. Flatten Structure for Editor Stability
-                    // Replace <section> with <div> to play nice with contenteditable
-                    const structuralTags = ['section', 'article', 'aside', 'footer', 'header'];
-                    structuralTags.forEach(tag => {
-                        content.querySelectorAll(tag).forEach(el => {
-                            const div = document.createElement('div');
-                            div.innerHTML = el.innerHTML;
-                            // Preserve minimal styling if needed, but clearing is safer for "one-click format"
-                            if (el.style.textAlign) div.style.textAlign = el.style.textAlign;
-                            el.parentNode.replaceChild(div, el);
-                        });
-                    });
-
-                    // 4. Remove Scripts/Styles/Iframes
-                    content.querySelectorAll('script, style, iframe').forEach(el => el.remove());
-
-                    // 5. Final Insertion
-                    const htmlToInsert = content.innerHTML;
-
-                    // Extra safety: replace any remaining visibility: hidden in string
-                    const safeHtml = htmlToInsert.replace(/visibility:\s*hidden/gi, 'visibility: visible');
-
-                    // Native DOM Insert
-                    $('#editor-content').html(safeHtml);
-                    showToast(`✅ 导入成功 (代理 ${images.length} 张图片)`);
-
-                } else {
-                    showToast('⚠️ 未找到正文内容');
-                }
+                const article = WeChatArticle.extract(json.html, url);
+                $('#editor-content').html(article.html).scrollTop(0);
+                protectEditorDiagrams();
+                setArticleMetadata(article);
+                showToast(`导入成功 (代理 ${article.images} 张图片)`);
 
             } catch (err) {
                 console.error('Import Error:', err);
-                showToast('❌ 导入失败: ' + err.message);
+                showToast('导入失败: ' + err.message);
             } finally {
                 $btn.html(originalHtml).prop('disabled', false);
             }
@@ -347,7 +395,7 @@
             // Get Content
             const $editor = $('#editor-content');
             const rawHtml = $editor.html();
-            if (!rawHtml || rawHtml === '<p><br></p>') return showToast('⚠️ 内容为空');
+            if (!rawHtml || rawHtml === '<p><br></p>') return showToast('内容为空');
 
             // Virtual DOM processing
             const $temp = $('<div>').html(rawHtml);
@@ -360,11 +408,25 @@
                     // Logic to keep some attrs (e.g. img src)
                     const keepImg = !$('#clearImg').is(':checked') && $el.is('img');
                     const keepLink = !$('#clearLink').is(':checked') && $el.is('a');
+                    const keepSvg = this.namespaceURI === 'http://www.w3.org/2000/svg';
+                    const keepDiagram = this.localName === 'span' && this.hasAttribute('data-editor-diagram') && this.childNodes.length === 1 && this.firstChild.localName === 'svg';
+                    if (keepSvg) {
+                        // SVG paint and geometry are image content, not article typography.
+                        for (const property of [...this.style]) {
+                            const value = this.style.getPropertyValue(property).replace(/url\(\s*['"]?#[\w:.-]+['"]?\s*\)/gi, '');
+                            if (!/^(fill|stroke)(-[a-z-]+)?$|^(font-[a-z-]+|opacity|color|paint-order|marker-(start|mid|end)|clip-path|clip-rule|mask|mask-type|filter|vector-effect|shape-rendering|text-rendering|letter-spacing|word-spacing|text-anchor|dominant-baseline|alignment-baseline|baseline-shift|writing-mode|direction|white-space|transform|transform-origin|transform-box|display|visibility|stop-color|stop-opacity|flood-color|flood-opacity|lighting-color|x|y|cx|cy|r|rx|ry|width|height|max-width|max-height|min-width|min-height|overflow)$/.test(property) ||
+                                /url\s*\(|expression\s*\(|javascript:|@import|behavior/i.test(value)) this.style.removeProperty(property);
+                        }
+                    }
 
                     // Native attributes map
-                    $.each(this.attributes || [], function (i, attr) {
+                    $.each([...this.attributes], (i, attr) => {
                         const name = attr.name;
                         if (keepImg && (name === 'src' || name === 'alt' || name === 'width' || name === 'height' || name === 'referrerpolicy')) return;
+                        if (keepDiagram && name === 'data-editor-diagram') return;
+                        if (keepSvg && name === 'style' && this.style.length) return;
+                        if (keepSvg && name === 'xlink:href' && /^#[\w:.-]+$/.test(attr.value)) return;
+                        if (keepSvg && /^(viewBox|preserveAspectRatio|xmlns|d|points|pathLength|x|y|dx|dy|x1|x2|y1|y2|cx|cy|r|rx|ry|width|height|fill|fill-opacity|fill-rule|stroke|stroke-width|stroke-linecap|stroke-linejoin|stroke-miterlimit|stroke-dasharray|stroke-dashoffset|stroke-opacity|opacity|color|transform|href|id|clip-path|clip-rule|clipPathUnits|mask|maskUnits|maskContentUnits|filter|filterUnits|primitiveUnits|text-anchor|dominant-baseline|font-size|font-family|font-weight|font-style|marker-start|marker-mid|marker-end|markerWidth|markerHeight|markerUnits|orient|refX|refY|gradientUnits|gradientTransform|spreadMethod|offset|stop-color|stop-opacity|patternUnits|patternContentUnits|patternTransform|vector-effect)$/.test(name)) return;
                         if (keepLink && (name === 'href' || name === 'target')) return;
                         $el.removeAttr(name);
                     });
@@ -381,7 +443,7 @@
 
             // 3. Remove Images
             if ($('#clearImg').is(':checked')) {
-                $temp.find('img').remove();
+                $temp.find('img, svg').remove();
             }
 
             // 4. Text Spacing & Punctuation
@@ -391,7 +453,8 @@
 
             // Set back to editor
             $editor.html($temp.html());
-            showToast('✨ 排版完成');
+            protectEditorDiagrams();
+            showToast('排版完成');
         }
 
         // Helper: Traverse and process text nodes only
@@ -407,7 +470,7 @@
                 text = text.replace(/“/g, "「").replace(/”/g, "」");
 
                 node.nodeValue = text;
-            } else if (node.nodeType === 1 && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
+            } else if (node.nodeType === 1 && node.namespaceURI !== 'http://www.w3.org/2000/svg' && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
                 // Recursion
                 for (let i = 0; i < node.childNodes.length; i++) {
                     processTextNodes(node.childNodes[i]);
@@ -416,22 +479,35 @@
         }
 
         function copyToClipboard() {
-            // Native Copy for ContentEditable
             const $content = document.getElementById('editor-content');
+            const clipboard = WeChatArticle.clipboardContent($content);
+            const copy = document.createElement('div');
+            copy.innerHTML = clipboard.html;
+            copy.style.cssText = 'position:fixed;left:-10000px;top:0;width:578px;';
+            document.body.append(copy);
 
             const selection = window.getSelection();
             selection.removeAllRanges();
             const range = document.createRange();
-            range.selectNodeContents($content);
+            range.selectNodeContents(copy);
             selection.addRange(range);
+            const writeClipboard = event => {
+                event.clipboardData.setData('text/html', clipboard.html);
+                event.clipboardData.setData('text/plain', clipboard.text);
+                event.preventDefault();
+            };
+            document.addEventListener('copy', writeClipboard);
 
             try {
-                document.execCommand('copy');
+                if (!document.execCommand('copy')) throw new Error('copy failed');
                 showToast('已复制 (保留格式)');
             } catch (e) {
                 showToast('复制失败');
+            } finally {
+                document.removeEventListener('copy', writeClipboard);
+                selection.removeAllRanges();
+                copy.remove();
             }
-            selection.removeAllRanges();
         }
 
         function showToast(msg) {
@@ -447,9 +523,10 @@
     <script>
       renderNav({
         title: '文章排版',
-        icon: '📝'
+        icon: 'edit'
       });
     </script>
+    <script src="js/workspace.js"></script>
 </body>
 
 </html>

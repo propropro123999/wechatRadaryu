@@ -10,7 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     #app {
-      display: none;
+      display: block;
     }
 
     .chart {
@@ -83,40 +83,12 @@
       }
     }
   </style>
+    <link rel="stylesheet" href="workspace.css" />
 </head>
 
 <body>
   <!-- 授权层 -->
-  <div id="auth-screen">
-    <div class="auth-card" id="auth-card">
-      <div style="margin-bottom: 24px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-          <h2 style="font-size: 20px; margin: 0;">🔐 内部数据访问</h2>
-          <span class="chip chip-accent" style="font-size: 11px;">Auth Required</span>
-        </div>
-        <p style="font-size: 13px;">请输入授权码访问「内容表现 Dashboard」。<br>本页仅供经授权的内部成员 / 合作方使用。</p>
-      </div>
 
-      <div style="margin-bottom: 20px;">
-        <label
-          style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px; color: var(--color-text-secondary);">授权码</label>
-        <input id="auth-code" class="input" type="text" placeholder="例如：ICV-2025-7QAF" autocomplete="off" />
-      </div>
-
-      <div class="flex items-center justify-between gap-4">
-        <span style="font-size: 12px; color: var(--color-text-tertiary);">按需分发，一次一码</span>
-        <button class="btn btn-primary" id="auth-btn">确认进入</button>
-      </div>
-
-      <div id="auth-error" style="color: #D93025; font-size: 12px; margin-top: 12px; min-height: 16px;"></div>
-
-      <div
-        style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #F0F4F9; font-size: 11px; color: var(--color-text-tertiary); display: flex; justify-content: space-between;">
-        <span>WeChat 内容 Dashboard</span>
-        <span id="auth-info-tag">未授权</span>
-      </div>
-    </div>
-  </div>
 
   <!-- 真正的 Dashboard 根节点：授权后显示 -->
   <div id="app" class="animate-fade-in">
@@ -124,7 +96,7 @@
 
     <!-- 顶部提示条 -->
     <div class="upload-hint-bar">
-      ⚠️ 使用前请先点击右上角按钮导入公众号内容数据。
+      <span data-icon="alert"></span> 使用前请先点击右上角按钮导入公众号内容数据。
     </div>
 
     <div class="container">
@@ -137,7 +109,7 @@
       <div id="usageModal" class="usage-modal-backdrop">
         <div class="gem-card" style="width: 420px; max-width: 90vw;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <div style="font-size: 40px; margin-bottom: 12px;">👋</div>
+            <div style="font-size: 40px; margin-bottom: 12px;"><span data-icon="sparkles"></span></div>
             <h3 style="font-size: 18px; margin-bottom: 8px;">欢迎使用内容表现 Dashboard</h3>
             <p style="font-size: 14px;">本地浏览器运行，数据均在本地解析不上传。</p>
           </div>
@@ -154,13 +126,13 @@
           <div class="flex items-center gap-4">
             <div
               style="width: 36px; height: 36px; background: #E8F0FE; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">
-              📘</div>
+              <span data-icon="document"></span></div>
             <div>
               <div style="font-weight: 600; font-size: 16px; margin-bottom: 2px;">Dashboard 使用指南</div>
               <div style="font-size: 12px; color: var(--color-text-tertiary);">支持 CSV / XLSX，本地解析公众号内容维度数据</div>
             </div>
           </div>
-          <div id="usageChevron" style="transition: transform 0.2s;">▼</div>
+          <div id="usageChevron" style="transition: transform 0.2s;"><span data-icon="arrow"></span></div>
         </div>
 
         <div id="usageBody" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #E0E3E7;">
@@ -394,6 +366,7 @@
         };
       });
 
+      window.workspaceDataReady?.();
       renderSummary(data);
       renderTopRead(data);
       renderReadShare(data);
@@ -723,18 +696,17 @@
 
   <script src="js/utils.js"></script>
   <script src="js/nav.js"></script>
-  <script src="js/auth.js"></script>
   <script>
     renderNav({
       title: '内容数据分析',
-      icon: '📈',
+      icon: 'chart',
       showFileInput: true,
       fileAccept: '.csv,.xlsx,.xls',
-      fileLabel: '📤 选择 CSV / XLSX',
+      fileLabel: '选择 CSV / XLSX',
       onFileChange: handleFile
     });
-    initAuth('content-analysis');
   </script>
+    <script src="js/workspace.js"></script>
 </body>
 
 </html>

@@ -104,26 +104,18 @@
             color: #4ADE80;
         }
     </style>
+    <link rel="stylesheet" href="workspace.css" />
 </head>
 
 <body>
 
     <!-- Access Control Overlay -->
-    <div id="auth-screen"
-        style="position:fixed;inset:0;background:rgba(255,255,255,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px);">
-        <div class="gem-card" style="width:360px;padding:32px;">
-            <h2 style="font-size:20px;margin-bottom:8px;">🔐 ORC 日志解析</h2>
-            <p style="font-size:13px;color:#64748B;margin-bottom:24px;">请输入授权码访问本工具</p>
-            <input type="text" id="auth-code" class="gem-input" placeholder="请输入授权码" style="margin-bottom:16px;">
-            <button id="auth-btn" class="gem-btn gem-btn-primary w-full">确认进入</button>
-            <div id="auth-error" style="color:#EF4444;font-size:12px;margin-top:12px;min-height:20px;"></div>
-        </div>
-    </div>
 
-    <div id="app" style="display:none;">
+
+    <div id="app">
         <nav class="gem-navbar">
             <a href="#" class="gem-navbar-brand">
-                <span class="gem-navbar-icon">🪵</span>
+                <span class="gem-navbar-icon"><span data-icon="code"></span></span>
                 <span>ORC 日志解析</span>
             </a>
             <div class="gem-navbar-actions">
@@ -137,41 +129,41 @@
                     </button>
                     <div class="gem-app-switcher-menu">
                         <a href="content-dashboard.html" class="gem-app-item">
-                            <span class="gem-app-icon">📈</span>
+                            <span class="gem-app-icon"><span data-icon="chart"></span></span>
                             <span>内容数据</span>
                         </a>
                         <a href="bandao-ops-dashboard.html" class="gem-app-item">
-                            <span class="gem-app-icon">🧭</span>
+                            <span class="gem-app-icon"><span data-icon="compass"></span></span>
                             <span>专栏/帖子</span>
                         </a>
                         <a href="page-traffic-dashboard.html" class="gem-app-item">
-                            <span class="gem-app-icon">🌐</span>
+                            <span class="gem-app-icon"><span data-icon="globe"></span></span>
                             <span>页面流量</span>
                         </a>
                         <a href="youmeng.html" class="gem-app-item">
-                            <span class="gem-app-icon">📄</span>
+                            <span class="gem-app-icon"><span data-icon="document"></span></span>
                             <span>友盟多表</span>
                         </a>
                         <a href="image-compress.html" class="gem-app-item">
-                            <span class="gem-app-icon">🗜️</span>
+                            <span class="gem-app-icon"><span data-icon="compress"></span></span>
                             <span>图片压缩</span>
                         </a>
                         <a href="yiban-dashboard.html" class="gem-app-item">
-                            <span class="gem-app-icon">📊</span>
+                            <span class="gem-app-icon"><span data-icon="chart"></span></span>
                             <span>壹伴数据</span>
                         </a>
                         <a href="article-formatter.html" class="gem-app-item">
-                            <span class="gem-app-icon">📝</span>
+                            <span class="gem-app-icon"><span data-icon="edit"></span></span>
                             <span>文章排版</span>
                         </a>
                         <a href="image-stitch.html" class="gem-app-item">
-                            <span class="gem-app-icon">🖼️</span>
+                            <span class="gem-app-icon"><span data-icon="image"></span></span>
                             <span>长图拼接</span>
                         </a>
                     </div>
                 </div>
 
-                <a href="index.html" class="gem-btn gem-btn-secondary" style="font-size:13px; margin-left: 12px;">🏠
+                <a href="index.html" class="gem-btn gem-btn-secondary" style="font-size:13px; margin-left: 12px;"><span data-icon="home"></span>
                     返回首页</a>
             </div>
         </nav>
@@ -180,12 +172,12 @@
             <div style="text-align:center;margin-bottom:32px;">
                 <h1>ORC 日志批量解析</h1>
                 <p></p>
-                <div class="gem-chip">⚠️ 实验性功能 (云端 PyORC 解析)</div>
+                <div class="gem-chip"><span data-icon="alert"></span> 实验性功能 (云端 PyORC 解析)</div>
             </div>
 
             <div class="gem-card">
                 <div class="dropzone" id="dropzone">
-                    <div style="font-size:48px;margin-bottom:16px;">📂</div>
+                    <div style="font-size:48px;margin-bottom:16px;"><span data-icon="folder"></span></div>
                     <div style="font-size:16px;font-weight:600;color:#1E293B;margin-bottom:8px;">点击或拖拽上传 ORC 文件</div>
                     <div style="font-size:13px;color:#64748B;">支持批量上传，单个文件大小建议不超过 100MB</div>
                     <input type="file" id="fileInput" multiple accept=".orc" style="display:none;">
@@ -198,8 +190,8 @@
                             <p id="merged-summary" style="margin:4px 0 0 0;font-size:13px;color:#64748B;">已加载 0 个文件，共 0 行</p>
                         </div>
                         <div style="display:flex; gap:12px; align-items:center;">
-                            <input type="text" id="merged-search-input" class="gem-input" placeholder="🔍 搜索筛选（多列内容）" style="width:220px;height:36px;font-size:13px;padding:6px 12px;">
-                            <button id="export-merged-btn" class="gem-btn gem-btn-primary" disabled>📥 导出汇总表 Excel</button>
+                            <input type="text" id="merged-search-input" class="gem-input" placeholder="搜索筛选（多列内容）" style="width:220px;height:36px;font-size:13px;padding:6px 12px;">
+                            <button id="export-merged-btn" class="gem-btn gem-btn-primary" disabled><span data-icon="download"></span> 导出汇总表 Excel</button>
                         </div>
                     </div>
                     <!-- 已加载文件列表（仅展示） -->
@@ -222,52 +214,12 @@
         // --- API Configuration ---
         // Railway API endpoint (update this after deploying to Railway)
         const ORC_API_URL = 'https://wechatradaryu-production.up.railway.app/api/parse-orc';
-        // Fallback to local API if Railway is not configured
-        // const ORC_API_URL = '/api/parse-orc';
 
-        // --- Auth Logic ---
         document.addEventListener('DOMContentLoaded', () => {
-            initAuth();
             initDropzone();
+            if (window.initDuckDB) window.initDuckDB();
+            else window.appReady = true;
         });
-
-        function initAuth() {
-            const savedCode = localStorage.getItem('orc_auth_code');
-            if (verifyCode(savedCode)) {
-                showApp();
-            }
-
-            const btn = document.getElementById('auth-btn');
-            if (btn) {
-                btn.onclick = () => {
-                    const code = document.getElementById('auth-code').value.trim();
-                    if (verifyCode(code)) {
-                        localStorage.setItem('orc_auth_code', code);
-                        showApp();
-                    } else {
-                        document.getElementById('auth-error').textContent = '授权码无效';
-                    }
-                };
-            }
-        }
-
-        function verifyCode(code) {
-            const validCodes = ['dcone2025', 'ORC-2025-A1B2', 'ORC-2025-C3D4'];
-            return validCodes.includes(code);
-        }
-
-        function showApp() {
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-
-            // Trigger DuckDB init if available
-            if (window.initDuckDB) {
-                window.initDuckDB();
-            } else {
-                // If module hasn't loaded yet, set a flag
-                window.appReady = true;
-            }
-        }
 
         // --- 表头显示名称（按列顺序，与 ORC 列一一对应）---
         const HEADER_NAMES = [
@@ -301,7 +253,7 @@
                     btnTab.className = 'gem-btn gem-btn-secondary file-tab-btn';
                     btnTab.id = 'tab-' + fileId;
                     btnTab.style.cssText = 'white-space:nowrap; display:flex; align-items:center; gap:8px; padding:8px 16px; border:1px solid #E2E8F0; background:white; color:#64748B;';
-                    btnTab.innerHTML = '<span>📄 ' + file.name + '</span><div id="status-icon-' + fileId + '" style="font-size:10px;">⏳</div>';
+                    btnTab.innerHTML = '<span><span data-icon="document"></span> ' + file.name + '</span><div id="status-icon-' + fileId + '" style="font-size:10px;"><span data-icon="clock"></span></div>';
                     btnTab.onclick = () => window._switchFile(fileId);
                     container.appendChild(btnTab);
                     window.fallbackToServer(file, fileId);
@@ -364,9 +316,9 @@
         window.updateFileStatus = (fileId, text, type) => {
             const icon = document.getElementById(`status-icon-${fileId}`);
             if (icon) {
-                if (type === 'success') icon.textContent = '✅';
-                else if (type === 'error') icon.textContent = '❌';
-                else icon.textContent = '⏳';
+                if (type === 'success') icon.innerHTML = workspaceIcon('check');
+                else if (type === 'error') icon.innerHTML = workspaceIcon('close');
+                else icon.innerHTML = workspaceIcon('clock');
             }
             // Also update list item status if exists
             const el = document.getElementById(`status-${fileId}`);
@@ -385,7 +337,15 @@
             formData.append('file', file);
 
             try {
-                const resp = await fetch(ORC_API_URL, { method: 'POST', body: formData });
+                let resp;
+                try {
+                    resp = await fetch('/api/parse-orc', { method: 'POST', body: formData });
+                } catch {
+                    resp = await fetch(ORC_API_URL, { method: 'POST', body: formData });
+                }
+                if (resp.status >= 500 && new URL(resp.url || location.href).origin === location.origin) {
+                    resp = await fetch(ORC_API_URL, { method: 'POST', body: formData });
+                }
                 const json = await resp.json().catch(() => ({}));
 
                 if (!resp.ok) {
@@ -424,7 +384,7 @@
             if (entry) entry.ok = true;
 
             window.processedFiles[fileId] = { name: fileName.replace('.orc', '.xlsx'), data: normalized, originalName: fileName };
-            window.updateFileStatus(fileId, '✅ 解析成功', 'success');
+            window.updateFileStatus(fileId, '解析成功', 'success');
 
             updateLoadedFilesList();
             renderMergedTable();
@@ -440,7 +400,7 @@
                 list.innerHTML = '';
                 return;
             }
-            list.innerHTML = '已加载文件: ' + names.map(f => f.name + (f.ok ? ' ✅' : ' ❌')).join('、');
+            list.innerHTML = '已加载文件: ' + names.map(f => f.name + (f.ok ? ' <span data-icon="check"></span>' : ' <span data-icon="close"></span>')).join('、');
         }
 
         function getOrderedKeys(row) {
@@ -475,7 +435,7 @@
             let html = `
             <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
                 <div style="font-size:12px;color:#64748B;">共 ${total} 行，表格中展示前 ${Math.min(500, total)} 行</div>
-                <div style="font-size:11px;color:#94A3B8;">💡 按住 Shift 横向滚动查看更多列</div>
+                <div style="font-size:11px;color:#94A3B8;"><span data-icon="sparkles"></span> 按住 Shift 横向滚动查看更多列</div>
             </div>
             <div style="max-height:480px;overflow:auto;border:1px solid #E2E8F0;border-radius:8px;box-shadow:inset 0 2px 4px rgba(0,0,0,0.02);">
                 <table style="${tableStyle}">
@@ -575,9 +535,9 @@
                     await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
                     conn = await db.connect();
 
-                    log('✅ DuckDB Ready!', 'success');
+                    log(' DuckDB Ready!', 'success');
                 } catch (err) {
-                    log('❌ DuckDB Init Failed: ' + err.message, 'error');
+                    log(' DuckDB Init Failed: ' + err.message, 'error');
                     console.error(err);
                     throw err;
                 }
@@ -675,7 +635,7 @@
                 btn.className = 'gem-btn gem-btn-secondary file-tab-btn';
                 btn.id = `tab-${fileId}`;
                 btn.style.cssText = 'white-space:nowrap; display:flex; align-items:center; gap:8px; padding:8px 16px; border:1px solid #E2E8F0; background:white; color:#64748B;';
-                btn.innerHTML = `<span>📄 ${file.name}</span><div id="status-icon-${fileId}" style="font-size:10px;">⏳</div>`;
+                btn.innerHTML = `<span><span data-icon="document"></span> ${file.name}</span><div id="status-icon-${fileId}" style="font-size:10px;"><span data-icon="clock"></span></div>`;
                 btn.onclick = () => window._switchFile(fileId);
                 container.appendChild(btn);
 
@@ -688,6 +648,8 @@
 
 
     </script>
+    <script src="js/nav.js"></script>
+    <script src="js/workspace.js"></script>
 </body>
 
 </html>

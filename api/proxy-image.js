@@ -1,55 +1,62 @@
+import http from 'node:http';
+import https from 'node:https';
+import { lookup } from 'node:dns/promises';
+import { isIP } from 'node:net';
 
-// Vercel Serverless Function to proxy WeChat images preventing hotlinking
-// Endpoint: /api/proxy-image?url=...
-
-export default async function handler(request, response) {
-    const { url } = request.query;
-
-    if (!url) {
-        return response.status(400).json({ error: 'Missing "url" parameter' });
+const limit = 8 * 1024 * 1024;
+export function privateAddress(address) {
+  const ip = address.replace(/^\[|\]$/g, '').toLowerCase();
+  if (ip.includes(':')) return !/^[23][0-9a-f]{0,3}:/.test(ip) || ip.startsWith('2001:db8:');
+  const [a, b] = ip.split('.').map(Number);
+  return a === 0 || a === 10 || a === 127 || a >= 224 ||
+    (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && (b === 168 || b === 0)) || (a === 100 && b >= 64 && b <= 127) ||
+    (a === 198 && (b === 18 || b === 19));
+}
+export default async function handler(req, res) {
+  let url, addresses;
+  try {
+    url = new URL(req.query.url);
+    const host = url.hostname.replace(/^\[|\]$/g, '');
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password ||
+        (url.port && !['80', '443'].includes(url.port)) ||
+        /(^|\.)(localhost|local|internal|home|lan)\.?$/i.test(host) || (!host.includes('.') && !isIP(host))) throw new Error();
+    if (isIP(host)) addresses = [{address: host, family: isIP(host)}];
+    else {
+      let timer;
+      try {
+        addresses = await Promise.race([lookup(host, {all: true}), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error()), 3000); })]);
+      } finally { clearTimeout(timer); }
     }
-
-    try {
-        const targetUrl = new URL(url);
-        // Allow WeChat image domains
-        // Allow all domains since this is a general purpose tool now
-        // const allowedDomains = ['.qpic.cn', '.qq.com', 'mmbiz.qpic.cn'];
-        // const isAllowed = allowedDomains.some(domain => targetUrl.hostname.endsWith(domain));
-        // if (!isAllowed) { return response.status(403).json({ error: 'Forbidden domain' }); }
-
-        // Fetch image with headers that mimic a browser request but bypass Referer checks
-        const imageResponse = await fetch(url, {
-            headers: {
-                // WeChat servers often check Referer. Sending empty or wechat domain usually works.
-                'Referer': 'https://mp.weixin.qq.com/',
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36'
-            }
+    if (!addresses.length || addresses.some(({address}) => privateAddress(address))) throw new Error();
+  } catch { return res.status(400).json({error: '不允许的图片地址'}); }
+  try {
+    const {buffer, contentType} = await new Promise((resolve, reject) => {
+      const pinned = addresses[0];
+      const upstream = (url.protocol === 'https:' ? https : http).get(url, {
+        lookup: (_hostname, options, callback) => options.all ? callback(null, [pinned]) : callback(null, pinned.address, pinned.family),
+        headers: {'Referer': 'https://mp.weixin.qq.com/', 'User-Agent': 'Mozilla/5.0'}
+      }, response => {
+        const contentType = response.headers['content-type'] || '';
+        if (response.statusCode !== 200 || !/^image\//i.test(contentType) || Number(response.headers['content-length']) > limit) {
+          response.destroy(); reject(new Error('无效图片')); return;
+        }
+        const chunks = []; let size = 0;
+        response.on('data', chunk => {
+          size += chunk.length;
+          if (size > limit) response.destroy(new Error('图片过大'));
+          else chunks.push(chunk);
         });
-
-        if (!imageResponse.ok) {
-            return response.status(imageResponse.status).send(`Failed to fetch image: ${imageResponse.statusText}`);
-        }
-
-        // Forward the Content-Type (important for browser to render image)
-        const contentType = imageResponse.headers.get('content-type');
-        if (contentType) {
-            response.setHeader('Content-Type', contentType);
-        }
-
-        // Cache control for performance
-        response.setHeader('Cache-Control', 'public, max-age=86400');
-
-        // CORS headers to allow usage in our frontend
-        response.setHeader('Access-Control-Allow-Origin', '*');
-
-        // Get buffer and send
-        const arrayBuffer = await imageResponse.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-
-        response.status(200).send(buffer);
-
-    } catch (error) {
-        console.error('Proxy error:', error);
-        response.status(500).json({ error: 'Internal Server Error' });
-    }
+        response.on('error', reject);
+        response.on('end', () => resolve({buffer: Buffer.concat(chunks), contentType}));
+      });
+      const timer = setTimeout(() => upstream.destroy(new Error('请求超时')), 10000);
+      upstream.on('close', () => clearTimeout(timer));
+      upstream.on('error', reject);
+    });
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.status(200).send(buffer);
+  } catch { return res.status(502).json({error: '图片获取失败（超时、格式不符或超过 8 MB）'}); }
 }

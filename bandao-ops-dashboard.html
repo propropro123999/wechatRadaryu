@@ -214,22 +214,15 @@
     }
 
     #app {
-      display: none;
+      display: block;
     }
   </style>
+    <link rel="stylesheet" href="workspace.css" />
 </head>
 
 <body>
   <!-- 授权层 -->
-  <div id="auth-screen">
-    <div class="auth-card" id="auth-card">
-      <h2>🔐 专栏 / 帖子工具</h2>
-      <p>请输入密码访问本工具</p>
-      <input id="auth-code" class="input w-full" type="text" placeholder="请输入密码" autocomplete="off" />
-      <button class="btn btn-primary w-full" id="auth-btn">确认进入</button>
-      <div class="auth-error" id="auth-error"></div>
-    </div>
-  </div>
+
 
   <!-- 真正的应用 -->
   <div id="app">
@@ -563,6 +556,7 @@
             `时间范围：-` + `<span class="tag">用于年终总结展示</span>`;
         }
 
+        window.workspaceDataReady?.();
         document.getElementById("summaryCards").style.display = "grid";
         document.getElementById("totalPosts").textContent = totalPosts;
         document.getElementById("totalLikes").textContent = totalLikes;
@@ -905,21 +899,20 @@
 
   <script src="js/utils.js"></script>
   <script src="js/nav.js"></script>
-  <script src="js/auth.js"></script>
   <script>
     renderNav({
       title: '专栏/帖子分析',
-      icon: '🧭',
+      icon: 'compass',
       showFileInput: true,
       fileAccept: '.xlsx,.xls,.csv',
-      fileLabel: '📤 选择文件',
+      fileLabel: '选择文件',
       onFileChange: (e) => {
         const file = e.target.files[0];
         if (file) handleFile({ target: { files: [file] } });
       }
     });
-    initAuth('bandaoquantiezi');
   </script>
+    <script src="js/workspace.js"></script>
 </body>
 
 </html>

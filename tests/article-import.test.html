@@ -1,0 +1,155 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WeChat extraction tests</title>
+<pre id="result">Running…</pre>
+<script src="../js/article-import.js"></script>
+<script>
+try {
+    function assert(condition, message) { if (!condition) throw new Error(message); }
+    function rejects(fn, expected) {
+        try { fn(); } catch (error) { assert(expected.test(error.message), error.message); return; }
+        throw new Error('Expected rejection');
+    }
+    const url = 'https://mp.weixin.qq.com/s/test';
+    const fixture = `<h1 id="activity-name">测试标题 &amp; 标题</h1><span id="js_name">作者</span>
+        <div id="js_content" style="visibility:hidden;opacity:0">
+          <section style="padding:12px;color:rgb(1,2,3);background-image:url(https://evil.example/track)">
+            <p style="text-align:center">正文 <a href="https://example.com">链接</a></p>
+            <img data-src="//mmbiz.qpic.cn/icon.png?a=1&amp;b=2" width="640" height="640" style="width:23px;display:inline-block;opacity:0" onerror="alert(1)">
+            <img src="https://mmbiz.qpic.cn/photo.png" style="width:100%;height:999px">
+            <img data-original="https://mmbiz.qpic.cn/lazy.png"><img src="javascript:alert(1)">
+            <svg viewBox="0 0 100 100"><defs><linearGradient id="shade"><stop offset="0" stop-color="red"/></linearGradient></defs><circle id="shape" cx="50" cy="50" r="20" style="fill:url(#shade)"/><use href="#shape"/><use href="https://evil.example/shape.svg#shape"/><image href="https://mmbiz.qpic.cn/svg.png" width="10" height="10"/><foreignObject><iframe srcdoc="bad"></iframe></foreignObject></svg>
+            <iframe src="https://v.qq.com/test"></iframe><video src="https://example.com/video"></video>
+            <a href="javascript:alert(1)" onclick="alert(1)">不安全链接</a><script>alert(1)<\/script>
+          </section>
+        </div>`;
+    const article = WeChatArticle.extract(fixture, url);
+    const root = new DOMParser().parseFromString(article.html, 'text/html').body;
+    assert(article.title === '测试标题 & 标题' && article.author === '作者', 'metadata');
+    assert(!article.html.includes('测试标题') && !article.html.includes('作者'), 'metadata excluded from editor body');
+    assert(article.images === 4, 'all safe lazy, regular and SVG images retained');
+    assert(root.querySelector('section section').style.padding === '12px', 'nested section styling');
+    assert(!root.querySelector('[onerror], [onclick], script, iframe, video, foreignObject'), 'active content removed');
+    assert(!root.innerHTML.includes('javascript:') && !root.innerHTML.includes('background-image'), 'unsafe URLs removed');
+    assert(!root.innerHTML.includes('visibility: hidden') && !root.innerHTML.includes('opacity: 0'), 'visible content');
+    const images = [...root.querySelectorAll('img')];
+    assert(images[0].style.width === '23px' && images[0].style.display === 'inline-block' && images[0].getAttribute('width') === '23', 'small inline image proportions');
+    assert(images.every(img => img.style.maxWidth === '100%' && img.style.height === 'auto' && !img.hasAttribute('height')), 'responsive images');
+    assert(images.every(img => new URL(img.src).origin === location.origin && new URL(img.src).pathname === '/api/proxy-image'), 'absolute proxy URLs survive copying');
+    assert(new URL(images[0].src).searchParams.get('url') === 'https://mmbiz.qpic.cn/icon.png?a=1&b=2', 'lazy source and entities');
+    assert(root.querySelector('svg').getAttribute('viewBox') === '0 0 100 100' && root.querySelector('circle'), 'SVG layout');
+    assert(root.querySelector('circle').style.fill.includes('#shade') && root.querySelectorAll('use').length === 1 && root.querySelector('use').getAttribute('href') === '#shape', 'safe local SVG references');
+    assert(root.textContent.includes('请在微信原文中查看'), 'media placeholder');
+    rejects(() => WeChatArticle.extract('', url), /未找到/);
+    rejects(() => WeChatArticle.extract('<div id="js_content"></div>', url), /正文为空/);
+    rejects(() => WeChatArticle.extract('<h2>环境异常</h2><p>完成验证</p>', url), /安全验证/);
+    for (const invalid of ['', 'not a url', 'https://example.com/?mp.weixin.qq.com', 'https://mp.weixin.qq.com.evil.test/s/a', 'file://mp.weixin.qq.com/s/a']) {
+        rejects(() => WeChatArticle.extract(fixture, invalid), /链接/);
+    }
+    const editor = document.createElement('div');
+    editor.innerHTML = article.html;
+    const output = WeChatArticle.clipboardContent(editor);
+    const clipboard = new DOMParser().parseFromString(output.html, 'text/html').body;
+    assert(clipboard.firstElementChild.style.width === '578px' && clipboard.firstElementChild.style.maxWidth === '100%', 'clipboard retains article width');
+    assert(!clipboard.querySelector('[class], style, link'), 'clipboard has no stylesheet dependencies');
+    assert(clipboard.querySelector('img').src === 'https://mmbiz.qpic.cn/icon.png?a=1&b=2', 'WeChat clipboard uses original CDN');
+    assert(clipboard.querySelector('image').getAttribute('href') === 'https://mmbiz.qpic.cn/svg.png', 'SVG clipboard image uses original CDN');
+    const fallback = document.createElement('div');
+    fallback.innerHTML = '<img src="/api/proxy-image?url=https%3A%2Fexample.com%2Fimage.png"><img src="http://[">';
+    const fallbackCopy = new DOMParser().parseFromString(WeChatArticle.clipboardContent(fallback).html, 'text/html');
+    assert(fallbackCopy.querySelector('img').src.startsWith(location.origin + '/api/proxy-image?'), 'non-WeChat image retains absolute proxy URL');
+    const stylesheet = document.createElement('style');
+    stylesheet.textContent = '.clipboard-test-style { color:rgb(1,2,3);margin-bottom:13px;text-decoration:underline; }';
+    document.head.append(stylesheet);
+    const styled = document.createElement('div');
+    styled.innerHTML = '<p class="clipboard-test-style">复制文字</p>';
+    document.body.append(styled);
+    const styledCopy = new DOMParser().parseFromString(WeChatArticle.clipboardContent(styled).html, 'text/html').body;
+    assert(styledCopy.querySelector('p').style.color === 'rgb(1, 2, 3)' && styledCopy.querySelector('p').style.marginBottom === '13px' && !styledCopy.querySelector('[class]'), 'computed typography is inlined');
+    assert(styledCopy.querySelector('p').style.textDecoration.includes('underline'), 'stylesheet text decoration is inlined');
+    assert(WeChatArticle.clipboardContent(styled).text === '复制文字', 'plain text payload');
+    styled.remove();
+    stylesheet.remove();
+    assert(WeChatArticle.clipboardContent(document.createElement('div')).html.includes('578px'), 'empty clipboard content');
+    const diagram = WeChatArticle.extract(`<div id="js_content"><svg viewBox="0 0 200 120" style="font-family:Arial;font-size:16px">
+      <g transform="translate(10,20)"><foreignObject width="120" height="24" onclick="alert(1)"><section xmlns="http://www.w3.org/1999/xhtml" style="text-align:center;color:rgb(19,19,0)"><span>DEAD</span></section></foreignObject></g>
+      <foreignObject x="20" y="60" width="140" height="24"><p></p><p style="margin:0;background-color:rgba(232,232,232,0.8)"><span>ppp_connect()</span></p><p></p><script>alert(1)<\/script><img src="invalid" onerror="alert(1)"></foreignObject>
+      <foreignObject width="100" height="48"><section>first<br>second</section></foreignObject><foreignObject width="0" height="0"></foreignObject>
+      <text x="5" y="110">existing SVG text</text></svg></div>`, url);
+    const diagramRoot = new DOMParser().parseFromString(diagram.html, 'text/html').body;
+    assert(!diagramRoot.querySelector('foreignObject, script, [onclick], [onerror]'), 'diagram contains no foreign HTML or active content');
+    assert(diagramRoot.textContent.includes('DEAD') && diagramRoot.textContent.includes('ppp_connect()') && diagramRoot.textContent.includes('existing SVG text'), 'HTML labels and existing SVG text retained');
+    assert(diagramRoot.querySelectorAll('[data-wechat-svg-label]').length === 3, 'empty foreignObject removed');
+    const nodeLabel = diagramRoot.querySelector('text');
+    assert(nodeLabel.getAttribute('text-anchor') === 'middle' && nodeLabel.querySelector('tspan').getAttribute('x') === '60' && nodeLabel.querySelector('tspan').getAttribute('y') === '12', 'node alignment and label geometry');
+    const background = diagramRoot.querySelector('[data-wechat-svg-label] rect');
+    assert(background.getAttribute('fill') === 'rgba(232, 232, 232, 0.8)' && background.getAttribute('width') === '140' && background.getAttribute('height') === '24', 'edge background uses original color and dimensions');
+    assert(diagramRoot.querySelectorAll('tspan').length === 4, 'multiline labels preserved');
+    const diagramCopy = WeChatArticle.clipboardContent(diagramRoot).html;
+    assert(diagramCopy.includes('DEAD') && diagramCopy.includes('ppp_connect()') && !diagramCopy.includes('foreignObject'), 'clipboard diagram uses portable SVG labels');
+    const edgeCases = WeChatArticle.extract(`<div id="js_content"><svg viewBox="0 0 400 200" style="font-size:20px;font-family:Arial">
+      <g style="font-size:1.5em"><foreignObject transform="rotate(15) scale(2)" x="25%" y="10%" width="50%" height="240"><div style="font-size:1.25em">A long label that must wrap within its available width</div></foreignObject></g>
+      <foreignObject width="100" height="40"><div style="font-size:1.25rem">root font</div></foreignObject>
+      <foreignObject width="100" height="40"><div>visible<span style="display:none">DISPLAY_SECRET</span><span style="visibility:hidden">VISIBILITY_SECRET</span><span style="opacity:0">OPACITY_SECRET</span><span hidden>HIDDEN_SECRET</span></div><iframe src="https://example.com"></iframe></foreignObject>
+      <foreignObject width="100" height="40"><iframe src="https://example.com"></iframe></foreignObject>
+      <foreignObject width="100" height="40" style="visibility:hidden">WHOLE_SECRET</foreignObject>
+      <foreignObject width="100" height="40"><section>abcdefghijklmnopqrstuvwxyz</section></foreignObject>
+    </svg></div>`, url);
+    const edgeRoot = new DOMParser().parseFromString(edgeCases.html, 'text/html').body;
+    const converted = edgeRoot.querySelectorAll('[data-wechat-svg-label]');
+    const wrapped = converted[0].querySelector('text');
+    assert(wrapped.getAttribute('font-size') === '37.5', 'em font sizes chain through SVG, g and HTML ancestors');
+    assert(converted[1].querySelector('text').getAttribute('font-size') === String(1.25 * parseFloat(getComputedStyle(document.documentElement).fontSize)), 'rem font size resolves against root');
+    assert(converted[0].getAttribute('transform') === 'rotate(15) scale(2)' && converted[0].firstElementChild.getAttribute('transform') === 'translate(100,20)', 'own transform is outside viewBox-relative translation');
+    const measure = document.createElement('canvas').getContext('2d');
+    measure.font = '37.5px Arial';
+    assert(wrapped.querySelectorAll('tspan').length > 1 && [...wrapped.querySelectorAll('tspan')].every(span => measure.measureText(span.textContent).width <= 200), 'long label wraps within percentage width');
+    assert([...wrapped.querySelectorAll('tspan')].map(span => span.textContent).join(' ').replace(/\s+/g, ' ') === 'A long label that must wrap within its available width', 'word wrapping retains text');
+    assert(converted[3].querySelectorAll('tspan').length > 1, 'unbroken labels also wrap');
+    assert(!edgeRoot.textContent.includes('SECRET') && edgeRoot.textContent.includes('visible'), 'hidden subtrees removed before sanitization reveals them');
+    assert(converted.length === 4 && !edgeRoot.textContent.includes('视频') && !edgeRoot.querySelector('iframe'), 'embedded media never becomes an SVG placeholder label');
+    const edgeCopy = WeChatArticle.clipboardContent(edgeRoot).html;
+    assert(!edgeCopy.includes('SECRET') && !edgeCopy.includes('视频') && edgeCopy.includes('rotate(15) scale(2)'), 'clipboard preserves fixes without hidden text or media warnings');
+    const regressions = WeChatArticle.extract(`<div id="js_content"><svg style="width:400px;height:200px;font-size:20px">
+      <g visibility="hidden">HIDDEN_PARENT<foreignObject width="160" height="30"><div>HIDDEN_TEXT<span style="visibility:visible">visible override</span></div></foreignObject><text visibility="visible">visible SVG</text><rect id="hidden-shape" width="50" height="50"/></g>
+      <foreignObject id="overflow" width="50" height="16"><div>A long label needing several wrapped lines</div></foreignObject>
+      <foreignObject id="words" width="55" height="200"><div>alpha beta gamma delta</div></foreignObject>
+      <foreignObject id="units" x="2em" y="1em" width="10em" height="3em" style="font-size:10px;transform:rotate(30deg);transform-origin:25px 15px;transform-box:view-box"><div style="font-size:2em;background-color:#eee">units</div></foreignObject>
+      <foreignObject id="percent" x="25%" y="50%" width="50%" height="20%"><div style="background-color:#ddd">percent</div></foreignObject>
+      <foreignObject x="20" y="30" width="100" height="40" style="transform:rotate(90deg);transform-origin:50% 50%;transform-box:fill-box"><div>pivot</div></foreignObject>
+      <foreignObject width="40" height="24"><section style="white-space:nowrap">INITIALIZE</section></foreignObject>
+      <foreignObject x="20" y="30" width="100" height="40" style="transform:rotate(90deg);transform-origin:center;transform-box:fill-box"><div>center pivot</div></foreignObject>
+    </svg></div>`, url);
+    const regressionRoot = new DOMParser().parseFromString(regressions.html, 'text/html').body;
+    const labels = [...regressionRoot.querySelectorAll('[data-wechat-svg-label]')];
+    const findLabel = value => labels.find(label => label.textContent === value);
+    assert(regressionRoot.textContent.includes('visible override') && regressionRoot.textContent.includes('visible SVG') && !regressionRoot.textContent.includes('HIDDEN') && !regressionRoot.querySelector('#hidden-shape'), 'visible descendants override hidden ancestors without revealing hidden siblings');
+    const overflow = labels[1].querySelector('text');
+    assert(Number(overflow.getAttribute('font-size')) < 20 && Number(overflow.getAttribute('font-size')) * overflow.children.length * 1.2 <= 16.000001, 'wrapped font and line height fit the original foreignObject height');
+    assert(findLabel('alpha beta gamma delta'), 'wrapped tspan textContent retains inter-word spaces');
+    const units = findLabel('units');
+    assert(units.firstElementChild.getAttribute('transform') === 'translate(20,10)' && units.querySelector('rect').getAttribute('width') === '100' && units.querySelector('rect').getAttribute('height') === '30' && units.querySelector('text').getAttribute('font-size') === '20', 'geometry em units use foreignObject font, not descendant text font');
+    assert(units.style.transform === 'rotate(30deg)' && units.style.transformOrigin === '25px 15px' && units.style.transformBox === 'view-box', 'CSS transform retains its pivot and reference box');
+    assert(findLabel('pivot').style.transformOrigin === '70px 50px' && findLabel('pivot').style.transformBox === 'view-box', 'fill-box percentage pivot uses original foreignObject geometry, not text bounds');
+    assert(findLabel('center pivot').style.transformOrigin === '70px 50px', 'keyword origins use the original box center');
+    const percent = findLabel('percent');
+    assert(percent.firstElementChild.getAttribute('transform') === 'translate(100,100)' && percent.querySelector('rect').getAttribute('width') === '200' && percent.querySelector('rect').getAttribute('height') === '40', 'inline SVG dimensions resolve percentages without a viewBox');
+    assert(WeChatArticle.clipboardContent(regressionRoot).text.includes('alpha beta gamma delta'), 'clipboard plain text retains wrapped words');
+    assert(findLabel('INITIALIZE').querySelectorAll('tspan').length === 1 && Number(findLabel('INITIALIZE').querySelector('text').getAttribute('font-size')) < 20, 'explicit nowrap labels fit their width without splitting words');
+    const hiddenResources = WeChatArticle.extract('<div id="js_content"><svg style="display:none"><defs><linearGradient id="shared"><stop stop-color="purple"/></linearGradient></defs><svg><text>HIDDEN_NESTED</text></svg></svg><svg viewBox="0 0 100 100"><rect width="100" height="100" fill="url(#shared)"/><svg style="display:none"><text>HIDDEN_CHILD</text></svg></svg></div>', url);
+    const resourcesRoot = new DOMParser().parseFromString(hiddenResources.html, 'text/html').body;
+    assert(resourcesRoot.querySelector('#shared stop').getAttribute('stop-color') === 'purple' && resourcesRoot.querySelector('rect').getAttribute('fill') === 'url(#shared)' && !resourcesRoot.textContent.includes('HIDDEN'), 'hidden nested SVGs do not abort import or remove shared resources');
+    const symbolLabel = WeChatArticle.extract('<div id="js_content"><svg><defs><symbol id="label"><foreignObject width="120" height="40"><div>visible<span style="display:none">SECRET</span><span style="visibility:hidden">HIDDEN</span></div></foreignObject></symbol></defs><use href="#label"/></svg></div>', url);
+    assert(symbolLabel.html.includes('visible') && !symbolLabel.html.includes('SECRET') && !symbolLabel.html.includes('HIDDEN'), 'reused SVG symbols retain labels without hidden words');
+    rejects(() => WeChatArticle.extract('<div id="js_content"><svg style="display:none"><defs><linearGradient id="unused"><stop stop-color="purple"/></linearGradient></defs></svg></div>', url), /正文为空/);
+    document.querySelector('#result').textContent = 'PASS: extraction preserves metadata, sections, SVG and image proportions; proxies lazy images; sanitizes content; handles placeholders, empty content, invalid links and verification';
+    document.querySelector('#result').textContent += '\nPASS: clipboard preserves inline typography and width, exports original WeChat CDN sources, retains other proxies, and handles empty/malformed image content';
+    document.querySelector('#result').textContent += '\nPASS: SVG foreignObject labels become safe SVG text with original edge backgrounds, transforms, multiline positioning and clipboard preservation';
+    document.querySelector('#result').textContent += '\nPASS: SVG labels wrap to width, retain transforms and percentage coordinates, resolve inherited em/rem fonts, and omit media placeholders and hidden subtrees';
+    document.querySelector('#result').textContent += '\nPASS: SVG visibility overrides, overflow fitting, wrapped word spacing, geometry font units, CSS pivots and inline viewport dimensions';
+    window.testResult = {passed: true};
+} catch (error) {
+    document.querySelector('#result').textContent = 'FAIL: ' + error.stack;
+    window.testResult = {passed: false, error: error.stack};
+}
+</script>

@@ -1,0 +1,93 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Article metadata tests</title>
+<pre id="result">Running…</pre>
+<iframe id="formatter" src="../article-formatter.html" title="Formatter under test"></iframe>
+<script>
+document.querySelector('#formatter').addEventListener('load', async function () {
+    try {
+        const w = this.contentWindow;
+        const d = w.document;
+        const assert = (condition, message) => { if (!condition) throw new Error(message); };
+        const metadata = d.querySelector('#article-metadata');
+        const editor = d.querySelector('#editor-content');
+        assert(metadata.hidden && !editor.textContent, 'initial metadata hidden and editor empty');
+        const fixture = '<h1 id="activity-name">独立标题 &amp; 标题</h1><span id="js_name">独立作者</span><div id="js_content"><p>正文内容</p></div>';
+        d.querySelector('#articleUrl').value = 'https://mp.weixin.qq.com/s/test';
+        w.fetch = async () => new w.Response(JSON.stringify({html: fixture}), {headers: {'Content-Type': 'application/json'}});
+        await w.importArticle();
+        assert(!metadata.hidden && d.querySelector('#article-title').textContent === '独立标题 & 标题' && d.querySelector('#article-author').textContent === '独立作者', 'metadata shown separately');
+        assert(editor.textContent === '正文内容' && !w.WeChatArticle.clipboardContent(editor).html.includes('独立'), 'editor and body clipboard exclude title and author');
+        let copied = '';
+        Object.defineProperty(w.navigator, 'clipboard', {configurable: true, value: {writeText: async text => { copied = text; }}});
+        await w.copyArticleMetadata('title');
+        assert(copied === '独立标题 & 标题' && d.querySelector('#global-toast').textContent === '标题已复制', 'title copied as plain text with shared toast');
+        await w.copyArticleMetadata('author');
+        assert(copied === '独立作者' && d.querySelector('#global-toast').textContent === '作者已复制', 'author copied as plain text with shared toast');
+        w.navigator.clipboard.writeText = async () => { throw new Error('permission denied'); };
+        await w.copyArticleMetadata('title');
+        assert(d.querySelector('#global-toast').textContent.includes('复制失败'), 'clipboard error reported');
+        const selection = w.getSelection();
+        selection.selectAllChildren(editor);
+        editor.dispatchEvent(new w.InputEvent('beforeinput', {bubbles: true, inputType: 'formatBold'}));
+        assert(!metadata.hidden, 'formatting the whole article preserves metadata');
+        editor.dispatchEvent(new w.InputEvent('beforeinput', {bubbles: true, inputType: 'insertText', data: 'replacement'}));
+        assert(metadata.hidden, 'typing over the whole body clears metadata');
+        await w.importArticle();
+        const correction = d.createRange();
+        correction.setStart(editor.querySelector('p').firstChild, 0);
+        correction.setEnd(editor.querySelector('p').firstChild, 1);
+        selection.removeAllRanges();
+        selection.addRange(correction);
+        editor.dispatchEvent(new w.Event('paste', {bubbles: true}));
+        assert(!metadata.hidden, 'partial paste correction keeps metadata');
+        selection.selectAllChildren(editor);
+        editor.dispatchEvent(new w.Event('paste', {bubbles: true}));
+        assert(metadata.hidden && !d.querySelector('#article-title').textContent && !d.querySelector('#article-author').textContent, 'full body replacement clears metadata');
+        await w.importArticle();
+        editor.textContent = '';
+        editor.dispatchEvent(new w.Event('input', {bubbles: true}));
+        assert(metadata.hidden, 'deleting the body clears metadata before typing a replacement');
+        await w.importArticle();
+        let finish;
+        w.fetch = () => new Promise(resolve => { finish = resolve; });
+        const importing = w.importArticle();
+        assert(!metadata.hidden && d.querySelector('#article-title').textContent === '独立标题 & 标题', 'pending import keeps metadata attached to existing body');
+        finish(new w.Response(JSON.stringify({error: '获取失败'}), {status: 502}));
+        await importing;
+        assert(!metadata.hidden && editor.textContent === '正文内容' && !d.querySelector('button[onclick="importArticle()"]').disabled, 'failed import keeps the existing article and restores button');
+        w.setArticleMetadata({title: '标题'});
+        assert(!metadata.hidden && d.querySelector('#article-author-row').hidden, 'missing author has no empty block');
+        d.querySelector('#articleUrl').value = 'invalid';
+        await w.importArticle();
+        assert(!metadata.hidden && d.querySelector('#article-title').textContent === '标题', 'invalid import preserves existing metadata');
+        w.fetch = async () => new w.Response(JSON.stringify({html: '<div id="js_content">无元数据正文</div>'}));
+        d.querySelector('#articleUrl').value = 'https://mp.weixin.qq.com/s/test';
+        await w.importArticle();
+        assert(metadata.hidden && editor.textContent === '无元数据正文', 'article without metadata imports body only');
+        editor.innerHTML = '<svg viewBox="0 0 200 100"><defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 Z"></path></marker></defs><rect width="100" height="40" style="fill:#ECECFF;stroke:#9370DB;stroke-width:2px;background-image:url(https://invalid.example/track)" onclick="alert(1)"></rect><path d="M0,50 L100,50" style="fill:none;stroke:#333;stroke-linecap:round;marker-end:url(#arrow)"></path><text x="10" y="20" style="font:16px sans-serif;fill:#333">中文English</text></svg>';
+        d.querySelector('#clearAttr').checked = true;
+        d.querySelector('#clearImg').checked = false;
+        w.formatText();
+        const svg = editor.querySelector('svg');
+        assert(w.getComputedStyle(svg.querySelector('rect')).fill === 'rgb(236, 236, 255)' && w.getComputedStyle(svg.querySelector('rect')).stroke === 'rgb(147, 112, 219)', 'default format retains SVG node fill and stroke');
+        assert(w.getComputedStyle(svg.querySelector('path[d="M0,50 L100,50"]')).fill === 'none' && svg.querySelector('marker').getAttribute('orient') === 'auto', 'connectors and marker geometry retained');
+        assert(!svg.querySelector('[onclick]') && !svg.querySelector('rect').style.backgroundImage, 'SVG retains only safe presentation styles');
+        assert(svg.querySelector('text').textContent === '中文English', 'article typography rules do not reflow diagram labels');
+        assert(svg.parentElement.contentEditable === 'false', 'diagram has an atomic HTML editing boundary after formatting');
+        const spanCount = editor.querySelectorAll('span').length;
+        w.formatText();
+        assert(editor.querySelector('svg').parentElement.contentEditable === 'false' && editor.querySelectorAll('span').length === spanCount, 'repeated cleanup restores the editing boundary without nesting wrappers');
+        assert(editor.querySelector('svg').parentElement.style.display === 'contents', 'atomic boundary does not replace diagram grid/flex layout');
+        selection.collapse(editor.querySelector('svg text').firstChild, 1);
+        w.protectEditorDiagrams();
+        assert(!editor.querySelector('svg').parentElement.contains(selection.anchorNode), 'caret moves outside newly protected diagrams');
+        assert(!w.WeChatArticle.clipboardContent(editor).html.includes('contenteditable'), 'body clipboard omits editor-only locks');
+        document.querySelector('#result').textContent = 'PASS: metadata stays separate from body/copy; title and author copy plain text; partial corrections preserve metadata, full replacement/deletion clears it; failed/invalid imports preserve the existing article; missing metadata and clipboard errors handled';
+        window.testResult = {passed: true};
+    } catch (error) {
+        document.querySelector('#result').textContent = 'FAIL: ' + error.stack;
+        window.testResult = {passed: false, error: error.stack};
+    }
+});
+</script>

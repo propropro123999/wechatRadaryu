@@ -1,6 +1,7 @@
 {
   "name": "wechat-radar-tools",
   "version": "1.0.0",
+  "type": "module",
   "description": "WeChat data analysis tools",
   "scripts": {
     "dev": "vercel dev",

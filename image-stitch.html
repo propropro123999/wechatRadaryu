@@ -187,6 +187,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="workspace.css" />
 </head>
 
 <body>
@@ -198,7 +199,7 @@
 
             <!-- Upload Area -->
             <div class="dropzone" id="dropzone">
-                <div style="font-size:32px;margin-bottom:8px;">📂</div>
+                <div style="font-size:32px;margin-bottom:8px;"><span data-icon="folder"></span></div>
                 <div style="font-size:14px;font-weight:600;color:#1E293B;">点击或拖拽添加图片</div>
                 <div style="font-size:12px;color:#64748B;">支持 JPG, PNG, WEBP</div>
                 <input type="file" id="fileInput" multiple accept="image/*" style="display:none;">
@@ -206,11 +207,11 @@
 
             <!-- Settings -->
             <div class="form-group">
-                <label class="form-label">拼接方向</label>
+                <label class="form-label" for="direction">拼接方向</label>
                 <select id="direction" class="input">
-                    <option value="vertical">⬇️ 竖向长图 (公众号/手机)</option>
-                    <option value="horizontal">➡️ 横向拼接 (电脑/对比)</option>
-                    <option value="grid">▦ 网格拼接 (2x2, 3x3...)</option>
+                    <option value="vertical">竖向长图 (公众号/手机)</option>
+                    <option value="horizontal">横向拼接 (电脑/对比)</option>
+                    <option value="grid">网格拼接 (2x2, 3x3...)</option>
                 </select>
             </div>
 
@@ -252,7 +253,7 @@
 
             <div class="btn-group">
                 <button id="downloadBtn" class="btn btn-primary w-full" disabled>
-                    ⬇️ 下载图片
+                    <span data-icon="download"></span> 下载图片
                 </button>
             </div>
         </div>
@@ -260,7 +261,7 @@
         <!-- Right: Preview -->
         <div class="preview-panel" id="previewPanel">
             <div id="emptyState" style="text-align:center; color:#94A3B8; margin-top:100px;">
-                <div style="font-size:48px; margin-bottom:16px; opacity:0.5;">🎨</div>
+                <div style="font-size:48px; margin-bottom:16px; opacity:0.5;"><span data-icon="image"></span></div>
                 <div>添加图片后自动生成预览</div>
             </div>
             <div class="canvas-wrapper">
@@ -397,13 +398,13 @@
             div.className = 'image-item';
             div.dataset.id = item.id;
             div.innerHTML = `
-          <div style="cursor:grab; color:#CBD5E1;">☰</div>
+          <div style="cursor:grab; color:#CBD5E1;"><span data-icon="menu"></span></div>
           <img src="${thumbUrl}" class="img-thumb">
           <div class="img-info">
              <div class="img-name" title="${item.name}">${item.name}</div>
              <div class="img-meta">${item.width} x ${item.height}</div>
           </div>
-          <div class="img-remove" onclick="removeImage('${item.id}')">✕</div>
+          <button type="button" class="img-remove" onclick="removeImage('${item.id}')" aria-label="移除图片"><span data-icon="close"></span></button>
        `;
             imageList.appendChild(div);
         }
@@ -521,9 +522,10 @@
     <script>
       renderNav({
         title: '长图拼接',
-        icon: '🖼️'
+        icon: 'image'
       });
     </script>
+    <script src="js/workspace.js"></script>
 </body>
 
 </html>

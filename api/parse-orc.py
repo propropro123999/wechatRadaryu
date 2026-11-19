@@ -1,92 +1,61 @@
 from http.server import BaseHTTPRequestHandler
-import cgi
+from email.parser import BytesParser
+from email.policy import default
+from datetime import date, datetime
+from decimal import Decimal
+import base64
+import io
 import json
-import tempfile
-import os
+import pyorc
 
-try:
-    import pyorc
-except ImportError:
-    pyorc = None
+
+def json_value(value):
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, bytes):
+        return base64.b64encode(value).decode('ascii')
+    raise TypeError(f'Unsupported value: {type(value).__name__}')
+
 
 class handler(BaseHTTPRequestHandler):
-    def do_POST(self):
-        if not pyorc:
-            self.send_response(500)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps({
-                "error": "Server configuration error: 'pyorc' not installed."
-            }).encode('utf-8'))
-            return
-
-        ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
-        if ctype != 'multipart/form-data':
-            self.send_response(400)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "Content-Type must be multipart/form-data"}).encode('utf-8'))
-            return
-
-        pdict['boundary'] = bytes(pdict['boundary'], "utf-8")
-        
-        try:
-            form = cgi.FieldStorage(
-                fp=self.rfile, 
-                headers=self.headers,
-                environ={'REQUEST_METHOD': 'POST',
-                         'CONTENT_TYPE': self.headers['Content-Type'],
-                         }
-            )
-            
-            if 'file' not in form:
-                self.send_response(400)
-                self.send_header('Content-type', 'application/json')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                self.wfile.write(json.dumps({"error": "No file field found"}).encode('utf-8'))
-                return
-
-            file_item = form['file']
-            if not file_item.file:
-                self.send_response(400)
-                self.send_header('Content-type', 'application/json')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                self.wfile.write(json.dumps({"error": "Empty file"}).encode('utf-8'))
-                return
-
-            with tempfile.NamedTemporaryFile(delete=False) as tmp:
-                tmp.write(file_item.file.read())
-                tmp_path = tmp.name
-
-            data = []
-            try:
-                with open(tmp_path, "rb") as f:
-                    reader = pyorc.Reader(f)
-                    for row in reader:
-                        data.append(row)
-            finally:
-                os.remove(tmp_path)
-
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps({"data": data}, default=str).encode('utf-8'))
-
-        except Exception as e:
-            self.send_response(500)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
-    
-    def do_OPTIONS(self):
-        self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+    def reply(self, status, data):
+        body = json.dumps(data, default=json_value, ensure_ascii=False).encode('utf-8')
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Cache-Control', 'no-store')
         self.end_headers()
+        self.wfile.write(body)
+
+    def do_POST(self):
+        content_type = self.headers.get('Content-Type', '')
+        try:
+            length = int(self.headers.get('Content-Length', '0'))
+        except ValueError:
+            return self.reply(400, {'error': 'Invalid Content-Length'})
+        if length <= 0:
+            return self.reply(400, {'error': 'No file uploaded'})
+        if length > 4 * 1024 * 1024:
+            return self.reply(413, {'error': '文件过大，请使用本地解析'})
+        if not content_type.lower().startswith('multipart/form-data;') or '\r' in content_type or '\n' in content_type:
+            return self.reply(400, {'error': 'Content-Type must be multipart/form-data'})
+        try:
+            message = BytesParser(policy=default).parsebytes(
+                b'Content-Type: ' + content_type.encode('ascii') + b'\r\nMIME-Version: 1.0\r\n\r\n' + self.rfile.read(length)
+            )
+            if not message.is_multipart():
+                return self.reply(400, {'error': 'Invalid multipart boundary'})
+            file_part = next((part for part in message.iter_parts() if part.get_param('name', header='content-disposition') == 'file'), None)
+            if file_part is None:
+                return self.reply(400, {'error': 'No file field found'})
+            data = file_part.get_payload(decode=True)
+            if not data:
+                return self.reply(400, {'error': 'Empty file'})
+            rows = list(pyorc.Reader(io.BytesIO(data)))
+            encoded = json.dumps({'data': rows}, default=json_value, ensure_ascii=False).encode('utf-8')
+            if len(encoded) > 4 * 1024 * 1024:
+                return self.reply(413, {'error': '解析结果过大，请使用本地解析'})
+            return self.reply(200, {'data': rows})
+        except Exception:
+            return self.reply(400, {'error': '无法解析 ORC 文件，请检查文件格式'})

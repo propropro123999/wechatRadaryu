@@ -213,26 +213,15 @@
     }
 
     #app {
-      display: none;
+      display: block;
     }
   </style>
+    <link rel="stylesheet" href="workspace.css" />
 </head>
 
 <body>
   <!-- 授权层 -->
-  <div id="auth-screen" class="auth-overlay">
-    <div class="auth-card" id="auth-card">
-      <div class="auth-title">🔐 页面流量分析</div>
-      <div class="auth-subtitle">请输入密码访问本工具</div>
 
-      <label class="auth-label" for="auth-code">密码</label>
-      <input id="auth-code" class="auth-input" type="text" placeholder="请输入密码" autocomplete="off" />
-
-      <button class="auth-btn" id="auth-btn">确认进入</button>
-
-      <div class="auth-error" id="auth-error"></div>
-    </div>
-  </div>
 
   <!-- 真正的应用 -->
   <div id="app">
@@ -320,6 +309,8 @@
       <script>
         // 延迟脚本执行，确保 DOM 已加载
         let globalRows = []; // 清洗后的数据，含 page / title 等
+        const loadingEl = document.getElementById("loading");
+        const errorEl = document.getElementById("error");
 
         document.addEventListener('DOMContentLoaded', function () {
           const fileInput = document.getElementById("fileInput");
@@ -330,9 +321,6 @@
         function handleFile(e) {
           const file = e.target.files[0];
           if (!file) return;
-          const loadingEl = document.getElementById("loading");
-          const errorEl = document.getElementById("error");
-
           loadingEl.textContent = "正在读取并解析数据，请稍候…";
           errorEl.textContent = "";
 
@@ -360,6 +348,15 @@
         function parseStayTimeToSeconds(value) {
           if (!value) return 0;
           const s = String(value).trim();
+          if (s.includes(":")) {
+            const parts = s.split(":");
+            if ((parts.length === 2 || parts.length === 3) &&
+                parts.every(part => /^\d+(?:\.\d+)?$/.test(part)) &&
+                parts.slice(1).every(part => Number(part) < 60)) {
+              return parts.reduce((seconds, part) => seconds * 60 + Number(part), 0);
+            }
+            return 0;
+          }
           const num = parseFloat(s.replace("秒", "").replace("s", ""));
           return isNaN(num) ? 0 : num;
         }
@@ -448,6 +445,7 @@
             }
           });
 
+          window.workspaceDataReady?.();
           document.getElementById("summaryCards").style.display = "grid";
           document.getElementById("totalPV").textContent = totalPV;
           document.getElementById("totalUV").textContent = totalUV;
@@ -664,21 +662,20 @@
 
     <script src="js/utils.js"></script>
     <script src="js/nav.js"></script>
-    <script src="js/auth.js"></script>
     <script>
       renderNav({
         title: '页面流量分析',
-        icon: '🌐',
+        icon: 'globe',
         showFileInput: true,
         fileAccept: '.xlsx,.xls,.csv',
-        fileLabel: '📤 选择文件',
+        fileLabel: '选择文件',
         onFileChange: (e) => {
           const file = e.target.files[0];
           if (file) handleFile({ target: { files: [file] } });
         }
       });
-      initAuth('page-traffic');
     </script>
+    <script src="js/workspace.js"></script>
 </body>
 
 </html>

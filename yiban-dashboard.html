@@ -11,7 +11,7 @@
   <style>
     /* ===== 页面特定样式 ===== */
     #app {
-      display: none;
+      display: block;
       min-height: 100vh;
     }
 
@@ -159,25 +159,12 @@
       }
     }
   </style>
+    <link rel="stylesheet" href="workspace.css" />
 </head>
 
 <body>
   <!-- 授权层 -->
-  <div id="auth-screen">
-    <div class="auth-card" id="auth-card">
-      <h2>🔐 壹伴数据分析</h2>
-      <p>请输入授权码访问本工具</p>
 
-      <div class="form-group">
-        <label class="form-label" for="auth-code">授权码</label>
-        <input id="auth-code" class="input" type="text" placeholder="例如：YB-2025-A1B2" autocomplete="off" />
-      </div>
-
-      <button class="btn btn-primary" id="auth-btn" style="width: 100%;">确认进入</button>
-
-      <div class="auth-error" id="auth-error"></div>
-    </div>
-  </div>
 
   <!-- 真正的应用 -->
   <div id="app">
@@ -337,11 +324,9 @@
   </div>
 
   <script>
-    const fileInput = document.getElementById("fileInput");
     const loadingEl = document.getElementById("loading");
     const errorEl = document.getElementById("error");
 
-    fileInput.addEventListener("change", handleFile, false);
 
     function handleFile(e) {
       const file = e.target.files[0];
@@ -469,7 +454,7 @@
 
       // 如果字段未匹配，尝试自动查找（只执行一次）
       if (!colMap.look) {
-        console.warn("⚠️ 看一看字段未匹配，尝试在所有字段中查找...");
+        console.warn("看一看字段未匹配，尝试在所有字段中查找...");
         const possibleCol = allCols.find(col => {
           const colStr = String(col);
           return colStr.includes("看") || colStr.toLowerCase().includes("look");
@@ -480,7 +465,7 @@
         }
       }
       if (!colMap.momentsOpenRate) {
-        console.warn("⚠️ 朋友圈打开率字段未匹配，尝试在所有字段中查找...");
+        console.warn("朋友圈打开率字段未匹配，尝试在所有字段中查找...");
         const possibleCol = allCols.find(col => {
           const colStr = String(col);
           return (colStr.includes("朋友圈") && colStr.includes("打")) ||
@@ -515,7 +500,7 @@
           look: (function () {
             if (!colMap.look) {
               if (rows.indexOf(row) === 0) {
-                console.warn("⚠️ 看一看字段仍未匹配");
+                console.warn("看一看字段仍未匹配");
               }
               return 0;
             }
@@ -608,7 +593,7 @@
             }
             // 如果字段未匹配，尝试计算
             if (rows.indexOf(row) === 0) {
-              console.warn("⚠️ 朋友圈打开率字段未匹配，将使用计算值");
+              console.warn("朋友圈打开率字段未匹配，将使用计算值");
             }
             // 计算：朋友圈阅读数 / 阅读人数 * 100
             const readers = num(row[colMap.readers]);
@@ -671,6 +656,7 @@
     }
 
     function renderSummary(data) {
+      window.workspaceDataReady?.();
       document.getElementById("summaryCards").style.display = "grid";
 
       const total = data.length;
@@ -925,7 +911,7 @@
         sampleValues: data.slice(0, 5).map(item => ({ title: item.title, look: item.look }))
       });
       if (topLook.length === 0) {
-        console.warn("⚠️ 看一看 TOP 5 为空，可能原因：字段匹配失败或所有数据都是0");
+        console.warn("看一看 TOP 5 为空，可能原因：字段匹配失败或所有数据都是0");
       }
       renderTop5Table("topLookTable", topLook, "看一看阅读数", (item) => item.look.toLocaleString());
 
@@ -979,7 +965,7 @@
         }))
       });
       if (topMomentsOpenRate.length === 0) {
-        console.warn("⚠️ 朋友圈打开率 TOP 5 为空，可能原因：字段匹配失败或所有数据都是0");
+        console.warn("朋友圈打开率 TOP 5 为空，可能原因：字段匹配失败或所有数据都是0");
       }
       renderTop5Table("topMomentsOpenRateTable", topMomentsOpenRate, "朋友圈打开率", (item) => item.momentsOpenRate.toFixed(2) + "%");
 
@@ -1083,25 +1069,24 @@
   <!-- 公共模块 -->
   <script src="js/utils.js"></script>
   <script src="js/nav.js"></script>
-  <script src="js/auth.js"></script>
   
   <script>
     // 初始化导航
     renderNav({
       title: '壹伴数据分析',
-      icon: '📊',
+      icon: 'chart',
       showFileInput: true,
       fileAccept: '.xlsx,.xls,.csv',
-      fileLabel: '📤 选择 Excel',
+      fileLabel: '选择 Excel',
       onFileChange: (e) => {
         const file = e.target.files[0];
-        if (file) handleFile(file);
+        if (file) handleFile(e);
       }
     });
 
     // 初始化授权
-    initAuth('yiban-analysis');
   </script>
+    <script src="js/workspace.js"></script>
 </body>
 
 </html>

@@ -11,7 +11,7 @@
 
   <style>
     #app {
-      display: none;
+      display: block;
     }
 
     .chart {
@@ -73,24 +73,12 @@
       margin-bottom: 24px;
     }
   </style>
+    <link rel="stylesheet" href="workspace.css" />
 </head>
 
 <body>
   <!-- 授权层 -->
-  <div id="auth-screen">
-    <div class="auth-card fade-in" id="auth-card">
-      <h2 class="text-center">🔐 友盟多表流量工具</h2>
-      <p class="text-center text-muted">请输入密码访问本工具</p>
 
-      <div class="form-group">
-        <label class="form-label">密码</label>
-        <input id="auth-code" class="input" type="password" placeholder="请输入密码" autocomplete="off" />
-      </div>
-
-      <button class="btn btn-primary w-full" id="auth-btn">确认进入</button>
-      <div class="auth-error text-center" id="auth-error"></div>
-    </div>
-  </div>
 
   <!-- 真正的应用 -->
   <div id="app" class="fade-in">
@@ -100,7 +88,7 @@
 
       <div style="margin-bottom: 24px;">
         <div class="debug-box">
-          <div><strong>🔎 匹配规则自检：</strong> <span id="selfTest"></span></div>
+          <div><strong><span data-icon="search"></span> 匹配规则自检：</strong> <span id="selfTest"></span></div>
         </div>
 
         <!-- 状态提示（JS用于显示解析进度） -->
@@ -308,7 +296,7 @@
         return "";
       }
 
-      /** ✅ 你最新的细化规则：完整 detectPageType（最终版） */
+      /**  你最新的细化规则：完整 detectPageType（最终版） */
       function detectPageType(url) {
         const u = (url || "").toString().toLowerCase();
         if (!u) return "其他";
@@ -535,8 +523,8 @@
       runSelfTest();
 
       // 文件上传
-      document.getElementById("fileInput").addEventListener("change", function () {
-        const file = this.files[0];
+      function handleFile(event) {
+        const file = event.target.files[0];
         if (!file) return;
 
         mergedData = [];
@@ -644,6 +632,7 @@
               .sort((a, b) => num(b.平均停留秒) - num(a.平均停留秒));
 
             // 渲染
+            window.workspaceDataReady?.();
             renderOverview(mergedData);
             renderTypeAnalysis(mergedData);
             renderTopAnalysis();
@@ -661,7 +650,7 @@
           }
         };
         reader.readAsBinaryString(file);
-      });
+      }
 
       // ---------- 一、整体概况 ----------
       function renderOverview(data) {
@@ -889,21 +878,20 @@
 
     <script src="js/utils.js"></script>
     <script src="js/nav.js"></script>
-    <script src="js/auth.js"></script>
     <script>
       renderNav({
         title: '友盟多表分析',
-        icon: '📄',
+        icon: 'document',
         showFileInput: true,
         fileAccept: '.xlsx,.xls',
-        fileLabel: '📤 选择 XLSX',
+        fileLabel: '选择 XLSX',
         onFileChange: (e) => {
           const file = e.target.files[0];
           if (file) handleFile({ target: { files: [file] } });
         }
       });
-      initAuth('youmeng-traffic');
     </script>
+    <script src="js/workspace.js"></script>
 </body>
 
 </html>
