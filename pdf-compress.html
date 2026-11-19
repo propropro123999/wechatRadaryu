@@ -670,9 +670,9 @@
                 <span>压缩强度</span>
               </label>
               <div class="strength-buttons">
-                <button class="strength-btn active" onclick="setStrength('fast')"><span data-icon="bolt"></span> 快速</button>
-                <button class="strength-btn" onclick="setStrength('medium')"><span data-icon="scale"></span> 均衡</button>
-                <button class="strength-btn" onclick="setStrength('maximum')"><span data-icon="package"></span> 最小</button>
+              <button class="strength-btn active" data-strength="fast" onclick="setStrength('fast')"><span data-icon="bolt"></span> 快速</button>
+              <button class="strength-btn" data-strength="medium" onclick="setStrength('medium')"><span data-icon="scale"></span> 均衡</button>
+              <button class="strength-btn" data-strength="maximum" onclick="setStrength('maximum')"><span data-icon="package"></span> 最小</button>
               </div>
               <small id="strength-hint" style="color: var(--color-text-tertiary);">保留高质量，压缩率 40%</small>
             </div>
@@ -884,8 +884,11 @@
     }
 
     function setStrength(strength) {
-      document.querySelectorAll('.strength-btn').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
+      document.querySelectorAll('.strength-btn').forEach(btn => {
+        const selected = btn.dataset.strength === strength;
+        btn.classList.toggle('active', selected);
+        btn.setAttribute('aria-pressed', String(selected));
+      });
 
       const hints = {
         'fast': '保留高质量，压缩率 40%',
