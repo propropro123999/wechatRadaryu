@@ -7,7 +7,6 @@
     "dev": "vercel dev",
     "build": "echo 'No build required'"
   },
-  "dependencies": {"@vercel/functions": "^3.0.0"},
   "devDependencies": {},
   "engines": {
     "node": "24.x"

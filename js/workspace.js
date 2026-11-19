@@ -39,11 +39,6 @@
       intro.innerHTML = '<div class="eyebrow">CONTENT STUDIO</div><h1>让好内容，拥有好排版。</h1><p>粘贴文章或导入链接，一键规范格式，轻松复制到发布平台。</p>';
       nav.after(intro);
     }
-    const logout = [...document.querySelectorAll('body > button')].find(button => button.textContent === '退出登录');
-    if (logout) {
-      logout.className = 'logout-button';
-      nav.querySelector('.nav-actions').append(logout);
-    }
     document.querySelectorAll('.dropzone-icon, .upload-icon').forEach(icon => { icon.innerHTML = workspaceIcon('upload'); });
     document.querySelectorAll('.dropzone, .drop-zone').forEach(zone => {
       const decoration = zone.querySelector(':scope > div[style*="font-size:48px"], :scope > div[style*="font-size: 48px"]');
