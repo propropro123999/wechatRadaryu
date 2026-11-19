@@ -45,8 +45,8 @@
             const box = (svg.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
             if (box.length === 4 && box.every(Number.isFinite)) return {width: box[2], height: box[3]};
             const parent = viewport(svg.parentElement?.closest('svg'));
-            return {width: length(svg.getAttribute('width') || '', parent.width, fontSizeOf(svg)) ?? parent.width,
-                height: length(svg.getAttribute('height') || '', parent.height, fontSizeOf(svg)) ?? parent.height};
+            return {width: length(svg.style.width || svg.getAttribute('width') || '', parent.width, fontSizeOf(svg)) ?? parent.width,
+                height: length(svg.style.height || svg.getAttribute('height') || '', parent.height, fontSizeOf(svg)) ?? parent.height};
         }
         content.querySelectorAll('foreignObject').forEach(foreign => {
             let label = '';
@@ -74,28 +74,32 @@
             }
             const textNode = descendants.find(node => [...node.childNodes].some(child => child.nodeType === 3 && child.nodeValue.trim())) || foreign;
             const fontSize = fontSizeOf(textNode);
+            const geometryFontSize = fontSizeOf(foreign);
             const view = viewport(foreign.closest('svg'));
-            const width = length(foreign.getAttribute('width') || '', view.width, fontSize) ?? 200;
-            const height = length(foreign.getAttribute('height') || '', view.height, fontSize) ?? fontSize * 1.5 * lines.length;
+            const positionX = length(foreign.getAttribute('x') || '', view.width, geometryFontSize) ?? 0;
+            const positionY = length(foreign.getAttribute('y') || '', view.height, geometryFontSize) ?? 0;
+            const width = length(foreign.getAttribute('width') || '', view.width, geometryFontSize) ?? 200;
+            const height = length(foreign.getAttribute('height') || '', view.height, geometryFontSize) ?? fontSize * 1.5 * lines.length;
             canvas.font = `${styleValue('font-style') || 'normal'} ${styleValue('font-weight') || 'normal'} ${fontSize}px ${styleValue('font-family') || 'sans-serif'}`;
             if (width > 0) {
-                lines = lines.flatMap(line => {
+                lines = lines.flatMap((line, index, original) => {
                     const wrapped = [];
                     let current = '';
                     for (const token of line.match(/\S+\s*|\s+/g) || []) {
                         if (current && canvas.measureText((current + token).trim()).width > width) {
-                            wrapped.push(current.trim());
+                            wrapped.push(current.trimStart());
                             current = '';
                         }
                         for (const character of token) {
                             if (current && canvas.measureText((current + character).trim()).width > width) {
-                                wrapped.push(current.trim());
+                                wrapped.push(current.trimStart());
                                 current = '';
                             }
                             current += character;
                         }
                     }
                     if (current.trim()) wrapped.push(current.trim());
+                    if (index < original.length - 1 && wrapped.length) wrapped[wrapped.length - 1] += '\n';
                     return wrapped;
                 });
             }
@@ -103,8 +107,16 @@
             group.setAttribute('data-wechat-svg-label', '');
             if (foreign.hasAttribute('transform')) group.setAttribute('transform', foreign.getAttribute('transform'));
             if (foreign.style.transform) group.style.transform = foreign.style.transform;
+            for (const property of ['transform-origin', 'transform-box']) {
+                if (foreign.style.getPropertyValue(property)) group.style.setProperty(property, foreign.style.getPropertyValue(property));
+            }
+            if (['fill-box', 'stroke-box', 'border-box', 'content-box'].includes(foreign.style.transformBox)) {
+                const origin = (foreign.style.transformOrigin || '0px 0px').split(/\s+/);
+                group.style.transformOrigin = `${positionX + (length(origin[0], width, geometryFontSize) ?? 0)}px ${positionY + (length(origin[1] || '50%', height, geometryFontSize) ?? 0)}px`;
+                group.style.transformBox = 'view-box';
+            }
             const positioned = foreign.ownerDocument.createElementNS(ns, 'g');
-            positioned.setAttribute('transform', `translate(${length(foreign.getAttribute('x') || '', view.width, fontSize) ?? 0},${length(foreign.getAttribute('y') || '', view.height, fontSize) ?? 0})`);
+            positioned.setAttribute('transform', `translate(${positionX},${positionY})`);
             group.append(positioned);
             const background = styleValue('background-color');
             if (background && background !== 'transparent' && !/rgba\([^)]*,\s*0\)$/.test(background)) {
@@ -122,16 +134,19 @@
             text.setAttribute('dominant-baseline', 'central');
             text.setAttribute('fill', styleValue('color') || '#333');
             text.setAttribute('stroke', 'none');
-            text.setAttribute('font-size', fontSize);
+            const fittedFontSize = height > 0 ? Math.min(fontSize, height / lines.length / 1.2) : fontSize;
+            text.setAttribute('font-size', fittedFontSize);
             for (const property of ['font-family', 'font-weight', 'font-style']) {
                 if (styleValue(property)) text.setAttribute(property, styleValue(property));
             }
             lines.forEach((line, index) => {
                 const span = foreign.ownerDocument.createElementNS(ns, 'tspan');
                 span.setAttribute('x', x);
-                span.setAttribute('y', (index + 0.5) * height / lines.length);
-                span.textContent = line;
+                span.setAttribute('y', (index + 0.5) * Math.max(fittedFontSize * 1.2, height / lines.length));
+                span.textContent = line.trimEnd();
                 text.append(span);
+                const separator = line.match(/\s+$/)?.[0];
+                if (separator) text.append(foreign.ownerDocument.createTextNode(separator));
             });
             positioned.append(text);
             foreign.replaceWith(group);
@@ -149,11 +164,23 @@
             throw new Error('未找到微信文章正文，文章可能已删除、不可访问或不支持导入');
         }
         content.querySelectorAll('script, style, link, meta, base, object, embed, form, input, button, textarea, select').forEach(el => el.remove());
-        content.querySelectorAll('svg *').forEach(el => {
-            if (el.hasAttribute('hidden') || el.style?.display === 'none' || ['hidden', 'collapse'].includes(el.style?.visibility) ||
-                (el.style?.opacity && Number(el.style.opacity) === 0) ||
-                el.getAttribute('display') === 'none' || ['hidden', 'collapse'].includes(el.getAttribute('visibility'))) el.remove();
-        });
+        function removeHidden(el, inherited = 'visible') {
+            if (el.hasAttribute('hidden') || el.style?.display === 'none' || el.getAttribute('display') === 'none' ||
+                (el.style?.opacity && Number(el.style.opacity) === 0)) { el.remove(); return; }
+            const declared = el.style?.visibility || el.getAttribute('visibility');
+            const visibility = !declared || declared === 'inherit' ? inherited : declared;
+            const hidden = ['hidden', 'collapse'].includes(visibility);
+            for (const child of [...el.childNodes]) {
+                if (child.nodeType === 1) removeHidden(child, visibility);
+                else if (hidden && child.nodeType === 3) child.remove();
+            }
+            if (hidden) {
+                if (!el.children.length) { el.remove(); return; }
+                el.style.removeProperty('visibility');
+                el.removeAttribute('visibility');
+            }
+        }
+        content.querySelectorAll('svg').forEach(svg => { if (!svg.parentElement.closest('svg')) removeHidden(svg); });
         content.querySelectorAll('iframe, video, audio, mp-video, mpvoice, qqmusic, mp-common-video').forEach(el => {
             if (el.closest('svg')) { el.remove(); return; }
             const placeholder = doc.createElement('p');
