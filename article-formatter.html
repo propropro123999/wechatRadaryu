@@ -364,11 +364,10 @@
         }
 
         function copyToClipboard() {
-            // Native Copy for ContentEditable
             const $content = document.getElementById('editor-content');
+            const clipboard = WeChatArticle.clipboardContent($content);
             const copy = document.createElement('div');
-            copy.innerHTML = $content.innerHTML;
-            copy.querySelectorAll('img').forEach(img => img.setAttribute('src', img.src));
+            copy.innerHTML = clipboard.html;
             copy.style.cssText = 'position:fixed;left:-10000px;top:0;width:578px;';
             document.body.append(copy);
 
@@ -377,15 +376,23 @@
             const range = document.createRange();
             range.selectNodeContents(copy);
             selection.addRange(range);
+            const writeClipboard = event => {
+                event.clipboardData.setData('text/html', clipboard.html);
+                event.clipboardData.setData('text/plain', clipboard.text);
+                event.preventDefault();
+            };
+            document.addEventListener('copy', writeClipboard);
 
             try {
-                document.execCommand('copy');
+                if (!document.execCommand('copy')) throw new Error('copy failed');
                 showToast('已复制 (保留格式)');
             } catch (e) {
                 showToast('复制失败');
+            } finally {
+                document.removeEventListener('copy', writeClipboard);
+                selection.removeAllRanges();
+                copy.remove();
             }
-            selection.removeAllRanges();
-            copy.remove();
         }
 
         function showToast(msg) {
