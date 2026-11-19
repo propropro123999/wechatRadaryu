@@ -312,6 +312,7 @@
                     $.each([...this.attributes], function (i, attr) {
                         const name = attr.name;
                         if (keepImg && (name === 'src' || name === 'alt' || name === 'width' || name === 'height' || name === 'referrerpolicy')) return;
+                        if (keepSvg && name === 'xlink:href' && /^#[\w:.-]+$/.test(attr.value)) return;
                         if (keepSvg && /^(viewBox|xmlns|d|points|x|y|x1|x2|y1|y2|cx|cy|r|rx|ry|width|height|fill|stroke|stroke-width|transform|href|id|clip-path)$/.test(name)) return;
                         if (keepLink && (name === 'href' || name === 'target')) return;
                         $el.removeAttr(name);
