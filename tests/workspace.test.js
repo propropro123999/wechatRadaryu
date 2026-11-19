@@ -69,4 +69,24 @@ vm.runInNewContext(stayParser, stayContext);
 for (const [input, expected] of [['00:01:20', 80], ['01:20', 80], ['1:02:03', 3723], ['80秒', 80], ['80s', 80], [80, 80], ['', 0], ['0:99', 0], ['bad', 0]]) {
   assert.equal(stayContext.parseStayTimeToSeconds(input), expected, String(input));
 }
+const trafficScript = [...traffic.matchAll(/<script>([\s\S]*?)<\/script>/g)].find(match => match[1].includes('let globalRows'))[1];
+const trafficFields = {};
+const trafficContext = {
+  document: {
+    getElementById: id => (trafficFields[id] ||= { textContent: '', style: {} }),
+    addEventListener() {}
+  },
+  window: {},
+  FileReader: class { readAsArrayBuffer() { this.onload({ target: { result: new ArrayBuffer(0) } }); } },
+  XLSX: { read: () => ({ SheetNames: ['Sheet1'], Sheets: { Sheet1: {} } }), utils: { sheet_to_json: () => [{ 受访页面: 'https://example.com', 浏览次数: 300, 独立访客: 200, 平均页面停留时间: '00:01:20' }] } },
+  Plotly: { newPlot() {} },
+  fetch: () => Promise.reject(new Error('Cross-origin title unavailable')),
+  console: { warn() {}, error() {} }
+};
+vm.runInNewContext(trafficScript + 'handleFile({ target: { files: [{}] } });', trafficContext);
+await new Promise(resolve => setImmediate(resolve));
+assert.equal(trafficFields.error.textContent, '');
+assert.equal(trafficFields.totalPV.textContent, 300);
+assert.equal(trafficFields.avgStayTime.textContent, '80.00');
+assert.ok(trafficFields.detailTable.innerHTML.includes('https://example.com'));
 console.log('Workspace catalog, shared assets, category counts, and entry points passed.');

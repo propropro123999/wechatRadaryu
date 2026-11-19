@@ -309,6 +309,8 @@
       <script>
         // 延迟脚本执行，确保 DOM 已加载
         let globalRows = []; // 清洗后的数据，含 page / title 等
+        const loadingEl = document.getElementById("loading");
+        const errorEl = document.getElementById("error");
 
         document.addEventListener('DOMContentLoaded', function () {
           const fileInput = document.getElementById("fileInput");
@@ -319,9 +321,6 @@
         function handleFile(e) {
           const file = e.target.files[0];
           if (!file) return;
-          const loadingEl = document.getElementById("loading");
-          const errorEl = document.getElementById("error");
-
           loadingEl.textContent = "正在读取并解析数据，请稍候…";
           errorEl.textContent = "";
 
