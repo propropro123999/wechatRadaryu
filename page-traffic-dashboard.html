@@ -349,6 +349,15 @@
         function parseStayTimeToSeconds(value) {
           if (!value) return 0;
           const s = String(value).trim();
+          if (s.includes(":")) {
+            const parts = s.split(":");
+            if ((parts.length === 2 || parts.length === 3) &&
+                parts.every(part => /^\d+(?:\.\d+)?$/.test(part)) &&
+                parts.slice(1).every(part => Number(part) < 60)) {
+              return parts.reduce((seconds, part) => seconds * 60 + Number(part), 0);
+            }
+            return 0;
+          }
           const num = parseFloat(s.replace("秒", "").replace("s", ""));
           return isNaN(num) ? 0 : num;
         }

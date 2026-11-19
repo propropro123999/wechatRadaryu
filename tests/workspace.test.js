@@ -62,4 +62,11 @@ assert.equal(buttons.filter(button => button.active).length, 1);
 assert.equal(buttons[1]['aria-pressed'], 'true');
 assert.equal(fields['quality-slider'].value, 70);
 assert.equal(fields['max-width'].value, 960);
+const traffic = readFileSync(resolve(root, 'page-traffic-dashboard.html'), 'utf8');
+const stayParser = traffic.slice(traffic.indexOf('function parseStayTimeToSeconds'), traffic.indexOf('function safeNumber'));
+const stayContext = {};
+vm.runInNewContext(stayParser, stayContext);
+for (const [input, expected] of [['00:01:20', 80], ['01:20', 80], ['1:02:03', 3723], ['80秒', 80], ['80s', 80], [80, 80], ['', 0], ['0:99', 0], ['bad', 0]]) {
+  assert.equal(stayContext.parseStayTimeToSeconds(input), expected, String(input));
+}
 console.log('Workspace catalog, shared assets, category counts, and entry points passed.');
