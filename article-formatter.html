@@ -310,8 +310,9 @@
         function protectEditorDiagrams() {
             [...articleEditor.querySelectorAll('svg')].filter(svg => !svg.parentElement.closest('svg')).forEach(svg => {
                 let frame = svg.parentElement;
-                if (frame.localName !== 'span' || frame.childNodes.length !== 1) {
+                if (!frame.hasAttribute('data-editor-diagram') || frame.localName !== 'span' || frame.childNodes.length !== 1) {
                     frame = document.createElement('span');
+                    frame.setAttribute('data-editor-diagram', '');
                     svg.before(frame);
                     frame.append(svg);
                 }
@@ -395,6 +396,7 @@
                     const keepImg = !$('#clearImg').is(':checked') && $el.is('img');
                     const keepLink = !$('#clearLink').is(':checked') && $el.is('a');
                     const keepSvg = this.namespaceURI === 'http://www.w3.org/2000/svg';
+                    const keepDiagram = this.localName === 'span' && this.hasAttribute('data-editor-diagram') && this.childNodes.length === 1 && this.firstChild.localName === 'svg';
                     if (keepSvg) {
                         // SVG paint and geometry are image content, not article typography.
                         for (const property of [...this.style]) {
@@ -408,6 +410,7 @@
                     $.each([...this.attributes], (i, attr) => {
                         const name = attr.name;
                         if (keepImg && (name === 'src' || name === 'alt' || name === 'width' || name === 'height' || name === 'referrerpolicy')) return;
+                        if (keepDiagram && name === 'data-editor-diagram') return;
                         if (keepSvg && name === 'style' && this.style.length) return;
                         if (keepSvg && name === 'xlink:href' && /^#[\w:.-]+$/.test(attr.value)) return;
                         if (keepSvg && /^(viewBox|preserveAspectRatio|xmlns|d|points|pathLength|x|y|dx|dy|x1|x2|y1|y2|cx|cy|r|rx|ry|width|height|fill|fill-opacity|fill-rule|stroke|stroke-width|stroke-linecap|stroke-linejoin|stroke-miterlimit|stroke-dasharray|stroke-dashoffset|stroke-opacity|opacity|color|transform|href|id|clip-path|clip-rule|clipPathUnits|mask|maskUnits|maskContentUnits|filter|filterUnits|primitiveUnits|text-anchor|dominant-baseline|font-size|font-family|font-weight|font-style|marker-start|marker-mid|marker-end|markerWidth|markerHeight|markerUnits|orient|refX|refY|gradientUnits|gradientTransform|spreadMethod|offset|stop-color|stop-opacity|patternUnits|patternContentUnits|patternTransform|vector-effect)$/.test(name)) return;

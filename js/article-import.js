@@ -294,6 +294,7 @@
             }
             copy.removeAttribute('class');
             copy.removeAttribute('contenteditable');
+            copy.removeAttribute('data-editor-diagram');
         });
         wrapper.querySelectorAll('img, image').forEach(img => {
             const attr = img.localName === 'image' ? 'href' : 'src';
