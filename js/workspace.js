@@ -19,7 +19,9 @@
     const icons = [...root.querySelectorAll('[data-icon]')];
     if (root.matches?.('[data-icon]')) icons.unshift(root);
     icons.forEach(element => {
-      if (!element.querySelector('svg')) element.innerHTML = workspaceIcon(element.dataset.icon);
+      if (!element.closest('[contenteditable]') && !element.hasChildNodes()) {
+        element.innerHTML = workspaceIcon(element.dataset.icon);
+      }
     });
   }
 
