@@ -1,11 +1,43 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>工具授权</title><link rel="stylesheet" href="/ui.css"></head>
-<body><main class="container"><h1>工具授权</h1><p>请输入此工具的授权码以继续。</p><form id="login"><label for="code">授权码</label><input id="code" class="input" type="password" required autocomplete="current-password"><button class="btn btn-primary" type="submit">登录</button><p id="error" role="alert"></p></form><a href="/">返回工具首页</a></main>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1b4037">
+  <title>工具授权 · ICviews Tools</title>
+  <link rel="stylesheet" href="/ui.css">
+  <link rel="stylesheet" href="/workspace.css">
+</head>
+<body class="workspace-login">
+  <aside class="login-story">
+    <a class="workspace-brand" href="/"><span class="brand-mark">i<span>c</span></span><span>ICviews<span class="brand-sub">TOOLS WORKSPACE</span></span></a>
+    <div class="login-story-copy"><div class="hero-kicker"><span class="status-dot"></span>为内容与运营工作而生</div><h1>好工具，<br>让工作更从容。</h1><p>从数据到内容，把重复的事交给工具，<br>把时间留给创造。</p></div>
+    <div class="login-story-footer">ICVIEWS TOOLS / 专注每一次创造</div>
+  </aside>
+  <main class="login-main">
+    <section class="login-card" aria-labelledby="login-title">
+      <a class="login-back" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg>返回工具工作台</a>
+      <div class="login-lock"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></svg></div>
+      <h2 id="login-title">开启你的高效工作</h2>
+      <p id="login-description">此工具需要授权。请输入授权码，<br>验证通过后，即可继续刚才的工作。</p>
+      <form id="login">
+        <label for="code">工具授权码</label>
+        <input id="code" name="code" type="password" required autocomplete="current-password" placeholder="请输入你的授权码" aria-describedby="error">
+        <button type="submit"><span>验证并进入工具</span><span aria-hidden="true">→</span></button>
+        <p id="error" class="login-error" role="alert"></p>
+      </form>
+      <div class="login-security"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6zm-4 9 3 3 5-6"/></svg><span>授权码仅用于服务端验证，不在浏览器中保存。<br>没有授权码？请联系工作空间管理员。</span></div>
+    </section>
+  </main>
 <script type="module">
 const params = new URLSearchParams(location.search);
 document.getElementById('login').addEventListener('submit', async event => {
   event.preventDefault();
   const error = document.getElementById('error');
+  const button = event.target.querySelector('button');
+  error.textContent = '';
+  button.disabled = true;
+  button.textContent = '正在验证…';
   try {
     const response = await fetch('/api/login', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({tool: params.get('tool'), code: document.getElementById('code').value})});
     const data = await response.json();
@@ -14,5 +46,6 @@ document.getElementById('login').addEventListener('submit', async event => {
     const target = new URL(path, location.origin);
     location.assign(path.startsWith('/') && !path.startsWith('//') && target.origin === location.origin && !path.includes('\\') ? target.href : '/');
   } catch (err) { error.textContent = err.message; }
+  finally { button.disabled = false; button.textContent = '验证并进入工具 →'; }
 });
 </script></body></html>
