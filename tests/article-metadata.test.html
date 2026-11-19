@@ -78,6 +78,10 @@ document.querySelector('#formatter').addEventListener('load', async function () 
         const spanCount = editor.querySelectorAll('span').length;
         w.formatText();
         assert(editor.querySelector('svg').parentElement.contentEditable === 'false' && editor.querySelectorAll('span').length === spanCount, 'repeated cleanup restores the editing boundary without nesting wrappers');
+        assert(editor.querySelector('svg').parentElement.style.display === 'contents', 'atomic boundary does not replace diagram grid/flex layout');
+        selection.collapse(editor.querySelector('svg text').firstChild, 1);
+        w.protectEditorDiagrams();
+        assert(!editor.querySelector('svg').parentElement.contains(selection.anchorNode), 'caret moves outside newly protected diagrams');
         document.querySelector('#result').textContent = 'PASS: metadata stays separate from body/copy; title and author copy plain text; partial corrections preserve metadata, full replacement/deletion clears it; failed/invalid imports preserve the existing article; missing metadata and clipboard errors handled';
         window.testResult = {passed: true};
     } catch (error) {

@@ -315,7 +315,16 @@
                     svg.before(frame);
                     frame.append(svg);
                 }
+                frame.style.display = 'contents';
                 frame.contentEditable = 'false';
+                const selection = window.getSelection();
+                if (selection.isCollapsed && frame.contains(selection.anchorNode)) {
+                    const range = document.createRange();
+                    range.setStartAfter(frame);
+                    range.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
             });
         }
         function clearReplacedArticleMetadata(event) {
