@@ -28,6 +28,12 @@ document.querySelector('#formatter').addEventListener('load', async function () 
         await w.copyArticleMetadata('title');
         assert(d.querySelector('#global-toast').textContent.includes('复制失败'), 'clipboard error reported');
         const selection = w.getSelection();
+        selection.selectAllChildren(editor);
+        editor.dispatchEvent(new w.InputEvent('beforeinput', {bubbles: true, inputType: 'formatBold'}));
+        assert(!metadata.hidden, 'formatting the whole article preserves metadata');
+        editor.dispatchEvent(new w.InputEvent('beforeinput', {bubbles: true, inputType: 'insertText', data: 'replacement'}));
+        assert(metadata.hidden, 'typing over the whole body clears metadata');
+        await w.importArticle();
         const correction = d.createRange();
         correction.setStart(editor.querySelector('p').firstChild, 0);
         correction.setEnd(editor.querySelector('p').firstChild, 1);

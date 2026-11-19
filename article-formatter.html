@@ -307,7 +307,8 @@
         }
 
         const articleEditor = document.getElementById('editor-content');
-        function clearReplacedArticleMetadata() {
+        function clearReplacedArticleMetadata(event) {
+            if (event.type === 'beforeinput' && !/^(insert|delete)/.test(event.inputType)) return;
             const selection = window.getSelection();
             if (!selection.rangeCount || selection.isCollapsed) return;
             const range = selection.getRangeAt(0);
