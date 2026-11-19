@@ -281,6 +281,7 @@
                 }
             }
             copy.removeAttribute('class');
+            copy.removeAttribute('contenteditable');
         });
         wrapper.querySelectorAll('img, image').forEach(img => {
             const attr = img.localName === 'image' ? 'href' : 'src';

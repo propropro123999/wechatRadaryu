@@ -82,6 +82,7 @@ document.querySelector('#formatter').addEventListener('load', async function () 
         selection.collapse(editor.querySelector('svg text').firstChild, 1);
         w.protectEditorDiagrams();
         assert(!editor.querySelector('svg').parentElement.contains(selection.anchorNode), 'caret moves outside newly protected diagrams');
+        assert(!w.WeChatArticle.clipboardContent(editor).html.includes('contenteditable'), 'body clipboard omits editor-only locks');
         document.querySelector('#result').textContent = 'PASS: metadata stays separate from body/copy; title and author copy plain text; partial corrections preserve metadata, full replacement/deletion clears it; failed/invalid imports preserve the existing article; missing metadata and clipboard errors handled';
         window.testResult = {passed: true};
     } catch (error) {
