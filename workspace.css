@@ -318,7 +318,9 @@ svg { flex-shrink: 0; vertical-align: middle; }
 .workspace-tool[data-tool="article-formatter"] .checkbox-group { grid-column: 1 / -1; grid-row: 2; gap: 20px; font-size: 12px; }
 .workspace-tool[data-tool="article-formatter"] .toolbar-divider { display: none; }
 .editor-main-actions { display: flex; gap: 12px; grid-column: 2; grid-row: 1; }
-.workspace-tool[data-tool="article-formatter"] .native-editor { min-height: 500px; }
+.workspace-tool[data-tool="article-formatter"] { height: auto; overflow-y: auto; }
+.workspace-tool[data-tool="article-formatter"] .main-container { height: auto; }
+.workspace-tool[data-tool="article-formatter"] .native-editor { flex: none; height: 65dvh; min-height: 300px; }
 
 @media (min-width: 1600px) { .workspace-content { padding-top: 44px; } .workspace-hero { padding: 38px 46px; } .catalog-card-link { padding-top: 25px; } }
 @media (max-width: 1200px) {
