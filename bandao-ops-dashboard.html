@@ -556,6 +556,7 @@
             `时间范围：-` + `<span class="tag">用于年终总结展示</span>`;
         }
 
+        window.workspaceDataReady?.();
         document.getElementById("summaryCards").style.display = "grid";
         document.getElementById("totalPosts").textContent = totalPosts;
         document.getElementById("totalLikes").textContent = totalLikes;

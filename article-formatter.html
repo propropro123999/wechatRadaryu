@@ -208,7 +208,7 @@
             <!-- 1. Actions Bar (Import & Format Settings) -->
             <div class="actions-bar">
                 <!-- URL Import -->
-                <div style="display: flex; gap: 8px; flex: 1; max-width: 500px;">
+                <div class="article-import-row" style="display: flex; gap: 8px; flex: 1;">
                     <input type="text" id="articleUrl" placeholder="粘贴微信公众号文章链接..."
                         style="flex-grow: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; outline: none;">
                     <button class="action-btn" onclick="importArticle()"><span data-icon="link"></span>导入</button>
@@ -224,14 +224,13 @@
                     <label class="checkbox-item"><input id="clearImg" type="checkbox">清除图片</label>
                 </div>
 
-                <div style="flex-grow: 1;"></div>
-
                 <!-- Main Actions -->
-
+                <div class="editor-main-actions">
                 <button class="action-btn"
                     style="background-color: white; color: #333; border: 1px solid #ddd; box-shadow:none;"
                     onclick="copyToClipboard()"><span data-icon="copy"></span> 复制结果</button>
                 <button class="action-btn" onclick="formatText()"><span data-icon="sparkles"></span> 一键排版</button>
+                </div>
             </div>
 
             <!-- Native Editor Content -->

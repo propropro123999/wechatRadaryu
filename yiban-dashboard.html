@@ -656,6 +656,7 @@
     }
 
     function renderSummary(data) {
+      window.workspaceDataReady?.();
       document.getElementById("summaryCards").style.display = "grid";
 
       const total = data.length;

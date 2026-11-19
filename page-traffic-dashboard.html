@@ -437,6 +437,7 @@
             }
           });
 
+          window.workspaceDataReady?.();
           document.getElementById("summaryCards").style.display = "grid";
           document.getElementById("totalPV").textContent = totalPV;
           document.getElementById("totalUV").textContent = totalUV;

@@ -25,10 +25,60 @@
     });
   }
 
+  const sampleRows = {
+    'content-dashboard.html': { 内容标题: '示例：一次内容复盘', 发表时间: '2026-01-15', 总阅读人数: 1200, 总阅读次数: 1800, 总分享次数: 86, 阅读完成率: 62, 送达人数: 5000 },
+    'bandao-ops-dashboard.html': { 动态ID: 'demo-001', 动态标题: '示例：行业观察', 发布者: '内容团队', 点赞数: 28, 评论数: 9, 创建时间: '2026-01-15' },
+    'page-traffic-dashboard.html': { 受访页面: 'https://www.icviews.cn/news/recommend', 浏览次数: 1800, 独立访客: 1200, IP: 1000, 人均浏览页数: 1.5, 平均页面停留时间: '00:01:20' },
+    'yiban-dashboard.html': { 标题: '示例：内容运营周报', 日期: '2026-01-15', 阅读人数: 1200, 阅读量: 1800, 分享量: 86, 点赞数: 36, 朋友圈: 180 },
+    'youmeng.html': { 受访页面: 'https://www.icviews.cn/news/recommend', 浏览次数: 1800, 独立访客: 1200, IP: 1000, 人均浏览页数: 1.5, 平均页面停留时间: '00:01:20' }
+  };
+  function setupAnalytics(tool) {
+    const container = document.querySelector('.container');
+    const firstResult = document.getElementById('summaryCards') || document.getElementById('section-overview');
+    if (!container || !firstResult) return;
+    document.body.classList.add('workspace-awaiting-data');
+    const results = document.createElement('section');
+    results.className = 'workspace-results';
+    results.hidden = true;
+    firstResult.before(results);
+    let child = results.nextElementSibling;
+    while (child) {
+      const next = child.nextElementSibling;
+      if (child.tagName !== 'SCRIPT') results.append(child);
+      child = next;
+    }
+    const empty = document.createElement('section');
+    empty.className = 'workspace-upload';
+    empty.innerHTML = '<div class="upload-empty-layout"><div><span class="upload-empty-icon">' + workspaceIcon(tool.icon) + '</span><h2>从一份报表，开始发现洞察。</h2><p>导入你的 ' + tool.formats + ' 数据，自动整理关键指标、趋势与内容表现。无需配置，也不用手动计算。</p><div class="upload-empty-actions"><button type="button" class="btn btn-primary" data-upload-action>' + workspaceIcon('upload') + '选择数据文件</button><button type="button" class="btn btn-secondary" data-sample-action>' + workspaceIcon('download') + '下载示例表格</button></div><div class="upload-privacy">' + workspaceIcon('shield') + '报表仅在当前浏览器处理，不会上传。</div></div><div class="upload-steps"><div class="upload-step"><span>01</span><div><strong>导入原始报表</strong><p>保留第一行表头，一次选择一个文件。</p></div></div><div class="upload-step"><span>02</span><div><strong>自动识别与整理</strong><p>匹配字段并汇总关键数据。</p></div></div><div class="upload-step"><span>03</span><div><strong>查看图表与洞察</strong><p>对比表现，找到下一步优化方向。</p></div></div></div></div><details class="upload-guide"><summary>查看导入指南与示例字段</summary><p>表头请与下方字段一致；可先下载示例表格了解结构，再替换为你的真实数据。</p><div class="upload-columns">' + Object.keys(sampleRows[tool.href]).map(column => '<span>' + column + '</span>').join('') + '</div></details>';
+    results.before(empty);
+    const existingGuide = document.getElementById('usageBody');
+    if (existingGuide) {
+      empty.querySelector('.upload-guide').append(existingGuide);
+      document.getElementById('usageCard').hidden = true;
+    }
+    empty.querySelector('[data-upload-action]').addEventListener('click', () => document.getElementById('nav-file-input')?.click());
+    empty.querySelector('[data-sample-action]').addEventListener('click', () => {
+      if (typeof XLSX === 'undefined') {
+        const error = document.getElementById('error') || document.getElementById('status');
+        if (error) error.textContent = '表格组件未加载，请检查网络后刷新页面。';
+        return;
+      }
+      const book = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet([sampleRows[tool.href]]), '示例数据');
+      XLSX.writeFile(book, tool.label + '-示例.xlsx');
+    });
+    window.workspaceDataReady = () => {
+      results.hidden = false;
+      empty.hidden = true;
+      document.body.classList.remove('workspace-awaiting-data');
+    };
+  }
+
   const path = location.pathname.split('/').pop().replace(/\.html$/, '') + '.html';
   const current = NAV_ITEMS.find(tool => tool.href === path);
   if (current) {
     document.body.classList.add('workspace-tool');
+    document.body.dataset.tool = current.href.replace('.html', '');
     markVisited(current.href);
     let nav = document.getElementById('nav-container');
     if (!nav) {
@@ -39,12 +89,17 @@
       else document.body.prepend(nav);
       renderNav({ title: current.label });
     }
-    if (path === 'article-formatter.html') {
-      const intro = document.createElement('section');
-      intro.className = 'tool-intro';
-      intro.innerHTML = '<div class="eyebrow">CONTENT STUDIO</div><h1>让好内容，拥有好排版。</h1><p>粘贴文章或导入链接，一键规范格式，轻松复制到发布平台。</p>';
-      nav.after(intro);
-    }
+    document.querySelectorAll('h1').forEach(heading => {
+      const section = heading.closest('header') || heading.parentElement;
+      if (section.matches('.mb-6') || path === 'orc-log-parser.html' || path === 'word-to-html.html') section.classList.add('legacy-tool-heading');
+      else heading.classList.add('legacy-tool-heading');
+    });
+    const intro = document.createElement('section');
+    intro.className = 'tool-intro';
+    const categoryLabels = { analytics: 'DATA INSIGHTS', documents: 'CONTENT STUDIO', media: 'MEDIA WORKSPACE', developer: 'DEVELOPER TOOLS' };
+    intro.innerHTML = '<div><div class="eyebrow">' + categoryLabels[current.category] + '</div><h1>' + current.label + '</h1><p>' + current.desc + '</p></div><span class="tool-format-badge">' + workspaceIcon(current.local ? 'shield' : current.icon) + current.formats + '</span>';
+    nav.after(intro);
+    if (sampleRows[current.href]) setupAnalytics(current);
     document.querySelectorAll('.dropzone-icon, .upload-icon').forEach(icon => { icon.innerHTML = workspaceIcon('upload'); });
     document.querySelectorAll('.dropzone, .drop-zone').forEach(zone => {
       const decoration = zone.querySelector(':scope > div[style*="font-size:48px"], :scope > div[style*="font-size: 48px"]');

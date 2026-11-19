@@ -132,7 +132,7 @@
               <div style="font-size: 12px; color: var(--color-text-tertiary);">支持 CSV / XLSX，本地解析公众号内容维度数据</div>
             </div>
           </div>
-          <div id="usageChevron" style="transition: transform 0.2s;">▼</div>
+          <div id="usageChevron" style="transition: transform 0.2s;"><span data-icon="arrow"></span></div>
         </div>
 
         <div id="usageBody" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #E0E3E7;">
@@ -366,6 +366,7 @@
         };
       });
 
+      window.workspaceDataReady?.();
       renderSummary(data);
       renderTopRead(data);
       renderReadShare(data);

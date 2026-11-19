@@ -632,6 +632,7 @@
               .sort((a, b) => num(b.平均停留秒) - num(a.平均停留秒));
 
             // 渲染
+            window.workspaceDataReady?.();
             renderOverview(mergedData);
             renderTypeAnalysis(mergedData);
             renderTopAnalysis();
