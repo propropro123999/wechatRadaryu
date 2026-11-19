@@ -32,6 +32,13 @@
     'yiban-dashboard.html': { 标题: '示例：内容运营周报', 日期: '2026-01-15', 阅读人数: 1200, 阅读量: 1800, 分享量: 86, 点赞数: 36, 朋友圈: 180 },
     'youmeng.html': { 受访页面: 'https://www.icviews.cn/news/recommend', 浏览次数: 1800, 独立访客: 1200, IP: 1000, 人均浏览页数: 1.5, 平均页面停留时间: '00:01:20' }
   };
+  const analyticsCopy = {
+    'content-dashboard.html': ['看清阅读、分享与完读表现。', '导入公众号后台的内容明细，对比阅读、分享与完读率，找到真正值得复用的选题。'],
+    'bandao-ops-dashboard.html': ['发现专栏与帖子的增长线索。', '导入帖子报表，串联发布趋势、互动表现与作者贡献，定位高潜内容与活跃作者。'],
+    'page-traffic-dashboard.html': ['找到真正带来访问的页面。', '导入页面流量明细，汇总 PV、UV 与停留时长，识别最受关注的页面。'],
+    'yiban-dashboard.html': ['拆解公众号内容的阅读来源。', '导入壹伴导出的文章数据，比较阅读、分享与来源分布，找到内容传播的关键渠道。'],
+    'youmeng.html': ['把多张流量报表，汇成全局。', '导入包含多个工作表的友盟报表，合并季度数据、识别页面类型，查看整体访问表现与榜单。']
+  };
   function setupAnalytics(tool) {
     const container = document.querySelector('.container');
     const firstResult = document.getElementById('summaryCards') || document.getElementById('section-overview');
@@ -51,6 +58,9 @@
     empty.className = 'workspace-upload';
     empty.innerHTML = '<div class="upload-empty-layout"><div><span class="upload-empty-icon">' + workspaceIcon(tool.icon) + '</span><h2>从一份报表，开始发现洞察。</h2><p>导入你的 ' + tool.formats + ' 数据，自动整理关键指标、趋势与内容表现。无需配置，也不用手动计算。</p><div class="upload-empty-actions"><button type="button" class="btn btn-primary" data-upload-action>' + workspaceIcon('upload') + '选择数据文件</button><button type="button" class="btn btn-secondary" data-sample-action>' + workspaceIcon('download') + '下载示例表格</button></div><div class="upload-privacy">' + workspaceIcon('shield') + '报表仅在当前浏览器处理，不会上传。</div></div><div class="upload-steps"><div class="upload-step"><span>01</span><div><strong>导入原始报表</strong><p>保留第一行表头，一次选择一个文件。</p></div></div><div class="upload-step"><span>02</span><div><strong>自动识别与整理</strong><p>匹配字段并汇总关键数据。</p></div></div><div class="upload-step"><span>03</span><div><strong>查看图表与洞察</strong><p>对比表现，找到下一步优化方向。</p></div></div></div></div><details class="upload-guide"><summary>查看导入指南与示例字段</summary><p>表头请与下方字段一致；可先下载示例表格了解结构，再替换为你的真实数据。</p><div class="upload-columns">' + Object.keys(sampleRows[tool.href]).map(column => '<span>' + column + '</span>').join('') + '</div></details>';
     results.before(empty);
+    const [headline, description] = analyticsCopy[tool.href];
+    empty.querySelector('h2').textContent = headline;
+    empty.querySelector('.upload-empty-layout p').textContent = description;
     const existingGuide = document.getElementById('usageBody');
     if (existingGuide) {
       empty.querySelector('.upload-guide').append(existingGuide);

@@ -309,6 +309,7 @@ svg { flex-shrink: 0; vertical-align: middle; }
 .workspace-tool[data-tool="pdf-compress"] .content-grid { gap: 24px; }
 .workspace-tool[data-tool="word-to-html"] #main-content { max-width: 1280px !important; }
 .workspace-tool[data-tool="word-to-html"] .drop-zone { padding: 64px 32px; }
+.workspace-tool[data-tool="word-to-html"] .gem-button-primary { border: 1px solid #2b624b; }
 .workspace-tool[data-tool="image-stitch"] .app-layout { max-width: 1280px; padding: 28px 32px 48px; grid-template-columns: 340px minmax(0, 1fr); }
 .workspace-tool[data-tool="image-stitch"] .preview-panel { min-height: 620px; border: 1px dashed #c9d7c8; background: #f2f6f1; }
 .workspace-tool[data-tool="image-stitch"] .controls-panel { top: 88px; }
