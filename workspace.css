@@ -281,6 +281,8 @@ svg { flex-shrink: 0; vertical-align: middle; }
   .workspace-tool .nav-actions { gap: 7px; }
   .workspace-tool .tool-home-link { display: inline-flex; }
   .workspace-tool .nav-actions { margin-left: auto; }
+  .workspace-tool .nav-switcher { position: static; }
+  .workspace-tool .nav-switcher-menu { right: 16px; top: calc(100% + 8px); width: calc(100vw - 32px); max-height: 70dvh; overflow-y: auto; }
   .workspace-tool .nav-btn { font-size: 10px; padding: 0 9px; }
   .workspace-tool :is(.grid-2, .content-grid) { grid-template-columns: 1fr; }
   .workspace-tool .actions-bar { align-items: stretch; }
