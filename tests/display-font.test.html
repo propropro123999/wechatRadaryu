@@ -23,7 +23,7 @@
       const d = w.document;
       await d.fonts.ready;
       const display = d.querySelector(path === 'index.html' ? '.workspace-brand > span:last-child' : '.tool-intro h1');
-      assert(display && usesAllo(display), path + ': display text opts into Allo');
+      assert(display && usesAllo(display), path + ': display text opts into Allo (actual: ' + (display ? w.getComputedStyle(display).fontFamily : 'missing heading') + ')');
       assert([...d.fonts].some(font => font.family.includes('Allo') && font.status === 'loaded'), path + ': self-hosted font loaded');
       assert(!usesAllo(d.body), path + ': body keeps system font');
       for (const node of d.querySelectorAll('input, textarea, select, button, table, .native-editor, .word-content, #clipboard-helper, .workspace-results')) {

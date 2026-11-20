@@ -65,7 +65,7 @@
 #nav-container .tool-brand > strong,
 .workspace-home :is(.eyebrow, .workspace-version, .welcome-row h1, .hero-copy h2, .hero-footnote, .toolbox-heading h2, .catalog-card h3, .footer-brand),
 .workspace-home .catalog-card-bottom > span:first-child,
-.workspace-tool > .tool-intro :is(.eyebrow, h1, .tool-format-badge) {
+.workspace-tool #nav-container + .tool-intro :is(.eyebrow, h1, .tool-format-badge) {
   font-family: var(--font-display);
   font-optical-sizing: auto;
 }
