@@ -46,6 +46,12 @@ DuckDB-Wasm 本地路径保持不变。云端优先调用同源 `/api/parse-orc`
 
 Railway 仅作为兼容后备：`Dockerfile` 使用独立的 Flask/Gunicorn 安装和 `app.py`，`railway.json` 指定 Docker 构建。后备服务保持原有公开行为。云端解析会上传文件；Word 图片上传会发送到 Catbox。
 
+## 文章图文复制
+
+「复制结果」保留正常图文与原始纯文本；「兼容复制」针对半导纵横等 wangEditor 后台反馈的“含网址正文粘贴只剩文字”问题，尝试绕过纯文本网址相关的粘贴分支，具体效果仍需在目标后台核对。兼容模式只在剪贴板的 `text/plain` 中将 `http://`、`https://`、`ftp://` 改成带空格的 `http ://` 等形式，`text/html`、真实图片地址、链接地址和当前原稿保持不变。粘贴到记事本时也会看到这个空格，需要原始网址时使用普通复制。
+
+两个按钮都写入图文和纯文本格式，优先使用 Clipboard API，不支持时回退到同样的富文本复制；不会静默退回纯文本。无需插件、登录、新依赖或图片转存。复制成功仅代表剪贴板已写入，目标后台是否保留图片、图片防盗链和外链有效期仍需粘贴后核对；不能承诺任意编辑器都兼容，也不替目标后台关闭图片过滤规则。
+
 ## 展示字体
 
 品牌、展示标题和格式标签使用 [Allo by Josh Puckett](https://allo.joshpuckett.me/) 1.0.3，字体与 SIL Open Font License 1.1 授权保存在 `fonts/`。仅自托管一份约 241 KiB 的 Friendly WOFF2 可变字体（字重 100–900、自动光学尺寸、固定圆润度 50），无需字体 CDN 或额外构建步骤。
@@ -62,3 +68,5 @@ uv run --python 3.12 --with pyorc==0.11.0 python tests/orc_smoke.py
 ```
 
 静态服务启动后打开 `tests/display-font.test.html`，可检查全部 12 页的展示字体加载、功能区域隔离和文章 / Word 的复制结果。
+
+`tests/article-clipboard.test.html` 检查普通 / 兼容复制的 HTML 与纯文本差异、图片和真实链接保留、Clipboard API / 富文本回退、失败提示、连续复制及清理。这是浏览器内模拟剪贴板的回归测试，不代表真实半导纵横后台验收。
