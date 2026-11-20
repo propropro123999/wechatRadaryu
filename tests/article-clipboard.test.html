@@ -55,7 +55,7 @@ document.querySelector('#formatter').addEventListener('load', async function () 
         await w.copyToClipboard('compatible');
         assert(modernWrites === 1, 'modern API writes one multi-format item');
         assert(await item.data['text/html'].text() === compatible.html && await item.data['text/plain'].text() === compatible.text, 'modern API receives the same full HTML and compatible plain text');
-        assert(d.querySelector('#toast').textContent.includes('3 张图片，5 处网址文本'), 'success reports actual payload counts');
+        assert(d.querySelector('#global-toast').textContent.includes('3 张图片，5 处网址文本'), 'success reports actual payload counts');
         await w.copyToClipboard();
         assert(await item.data['text/plain'].text() === normal.text, 'ordinary button does not apply compatibility mode');
         assert(editor.innerHTML === original, 'both modern copy modes leave article unchanged');
@@ -89,12 +89,12 @@ document.querySelector('#formatter').addEventListener('load', async function () 
         assert(fallbackWrites === 2 && fallback['text/html'] === compatible.html, 'modern API rejection retries the same rich-text payload');
         d.execCommand = () => false;
         await w.copyToClipboard('compatible');
-        assert(d.querySelector('#toast').textContent.includes('复制失败') && d.querySelector('#toast').textContent.includes('未退回纯文本'), 'both APIs failing does not report success or downgrade silently');
+        assert(d.querySelector('#global-toast').textContent.includes('复制失败') && d.querySelector('#global-toast').textContent.includes('未退回纯文本'), 'both APIs failing does not report success or downgrade silently');
         assert([...d.querySelectorAll('[data-article-copy]')].every(button => !button.disabled), 'failure restores buttons');
         assert(![...d.body.children].some(el => el.style.left === '-10000px') && selection.toString() === selected, 'failed fallback restores selection and removes helper');
         d.execCommand = () => true;
         await w.copyToClipboard('compatible');
-        assert(d.querySelector('#toast').textContent.includes('复制失败'), 'missing copy event is not reported as a successful rich copy');
+        assert(d.querySelector('#global-toast').textContent.includes('复制失败'), 'missing copy event is not reported as a successful rich copy');
 
         let finish;
         let pendingWrites = 0;
@@ -118,7 +118,7 @@ document.querySelector('#formatter').addEventListener('load', async function () 
         const lastItem = item;
         editor.innerHTML = '<p><br></p>';
         await w.copyToClipboard('compatible');
-        assert(item === lastItem && d.querySelector('#toast').textContent.includes('暂无'), 'empty article cannot overwrite clipboard');
+        assert(item === lastItem && d.querySelector('#global-toast').textContent.includes('暂无'), 'empty article cannot overwrite clipboard');
         assert(d.querySelector('[onclick="copyToClipboard(\'compatible\')"]').getAttribute('aria-describedby') === 'copy-help' && d.querySelector('#copy-help').textContent.includes('不会上传'), 'compatibility action explains text changes and no image uploads');
         document.querySelector('#result').textContent = `PASS: ${checks} article clipboard compatibility assertions`;
         window.testResult = {passed: true, checks};
