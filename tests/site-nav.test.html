@@ -65,6 +65,16 @@ document.querySelector('#page').addEventListener('load', async function () {
         d.querySelector('.sn-chip[data-cat="recent"]').click();
         assert(links().length === 1 && links()[0].href === JSON.parse(w.localStorage.getItem('luyu-toolbox-site-recent'))[0], 'opened sites appear under recent');
         d.querySelector('.sn-chip[data-cat="all"]').click();
+        links()[5].dispatchEvent(new w.MouseEvent('auxclick', { bubbles: true, button: 1 }));
+        assert(JSON.parse(w.localStorage.getItem('luyu-toolbox-site-recent'))[0] === links()[5].href, 'middle-click visits are remembered');
+        w.localStorage.setItem('luyu-toolbox-site-favorites', JSON.stringify([links()[8].href]));
+        d.querySelectorAll('.sn-fav')[9].click();
+        assert(JSON.parse(w.localStorage.getItem('luyu-toolbox-site-favorites')).length === 2, 'favourites saved in another tab are kept');
+        type('电源');
+        const composing = new w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true, isComposing: true });
+        search.dispatchEvent(composing);
+        assert(search.value === '电源' && !composing.defaultPrevented, 'keys pressed while composing are left to the input method');
+        type('');
         d.querySelector('#sn-lucky').click();
         assert(d.querySelector('.sn-card.lucky') && d.activeElement.classList.contains('sn-link'), 'random pick highlights and focuses a site');
         w.localStorage.removeItem('luyu-toolbox-site-favorites');

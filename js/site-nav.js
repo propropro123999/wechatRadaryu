@@ -114,6 +114,11 @@
     favoriteCount.textContent = favorites.length;
     if (category === 'favorites' && !active) render();
   }
+  function remember(link) {
+    if (!link) return;
+    const url = items[Number(link.dataset.site)].url;
+    saveList('luyu-toolbox-site-recent', [url, ...readList('luyu-toolbox-site-recent').filter(item => item !== url)].slice(0, 12));
+  }
   function cards() { return [...results.querySelectorAll('.sn-link')]; }
   function move(from, key) {
     const all = cards();
@@ -138,12 +143,9 @@
     if (filter) return setCategory(filter.dataset.cat, filter.classList.contains('sn-word'));
     const favorite = event.target.closest('[data-fav]');
     if (favorite) return toggleFavorite(favorite);
-    const link = event.target.closest('[data-site]');
-    if (link) {
-      const url = items[Number(link.dataset.site)].url;
-      saveList('luyu-toolbox-site-recent', [url, ...readList('luyu-toolbox-site-recent').filter(item => item !== url)].slice(0, 12));
-    }
+    remember(event.target.closest('[data-site]'));
   });
+  document.addEventListener('auxclick', event => { if (event.button === 1) remember(event.target.closest('[data-site]')); });
   search.addEventListener('input', render);
   document.getElementById('sn-reset').addEventListener('click', () => { search.value = ''; category = 'all'; render(); search.focus(); });
   document.getElementById('sn-lucky').addEventListener('click', () => {
