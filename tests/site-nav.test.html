@@ -28,6 +28,14 @@ document.querySelector('#page').addEventListener('load', async function () {
         assert(allo(d.querySelector('.sn-word')) && allo(d.querySelector('.sn-section-word')), 'category words use the display font');
         assert(!allo(d.querySelector('.sn-name')) && !allo(d.querySelector('.sn-desc')) && !allo(search), 'site text and search keep the system font');
 
+        d.head.insertAdjacentHTML('beforeend', '<style>* { transition: none !important; animation: none !important; }</style>');
+        const wallBox = () => d.querySelector('#sn-wall').offsetHeight + '|' + [...d.querySelectorAll('.sn-word')].map(word => { const box = word.getBoundingClientRect(); return [box.left, box.top, box.width, box.height].map(Math.round).join(','); }).join('|');
+        const restingWall = wallBox();
+        assert(w.getComputedStyle(d.querySelector('.sn-text')).position === 'absolute' && w.getComputedStyle(d.querySelector('.sn-ghost')).visibility === 'hidden', 'word weight changes happen on an overlay, not on the layout box');
+        d.querySelector('.sn-word[data-cat="pcb"]').click();
+        assert(w.getComputedStyle(d.querySelector('.sn-word[data-cat="pcb"] .sn-text')).fontWeight === '900' && wallBox() === restingWall, 'emphasising a word does not move the wall or the page');
+        d.querySelector('.sn-word[data-cat="pcb"]').click();
+        assert(wallBox() === restingWall, 'the wall keeps its layout when the emphasis is removed');
         d.querySelector('.sn-word[data-cat="pcb"]').click();
         assert(links().length === 6 && d.querySelectorAll('.sn-card[data-cat="pcb"]').length === 6, 'word filters one category');
         assert(d.querySelector('.sn-chip[data-cat="pcb"]').getAttribute('aria-pressed') === 'true' && d.querySelector('#sn-wall').classList.contains('filtered'), 'chip and wall stay in sync');

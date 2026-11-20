@@ -16,17 +16,20 @@
 .sn-count { display: inline-block; margin-left: 12px; padding: 3px 12px; border-radius: 999px; background: var(--sn-ink); color: #fff; font-family: var(--font-display); font-size: .42em; font-weight: 600; vertical-align: .55em; font-variant-numeric: tabular-nums; }
 .sn-lead { max-width: 560px; margin: 12px 0 0; color: var(--sn-muted); font-size: 15px; line-height: 1.7; }
 .sn-wall { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 .2em; margin-top: clamp(22px, 4vw, 44px); font-family: var(--font-display); font-size: clamp(38px, 7.4vw, 104px); line-height: 1.02; letter-spacing: -.035em; }
-.sn-word { position: relative; padding: 0; border: 0; background: none; color: var(--c); font: inherit; font-weight: var(--w, 500); letter-spacing: inherit; cursor: pointer; transition: font-weight .38s cubic-bezier(.2,.8,.2,1), opacity .25s, transform .38s cubic-bezier(.2,.8,.2,1); }
+.sn-word { position: relative; padding: 0; border: 0; background: none; color: var(--c); font: inherit; font-weight: var(--w, 500); letter-spacing: inherit; white-space: nowrap; cursor: pointer; transition: opacity .25s; }
+.sn-ghost { visibility: hidden; }
+.sn-text { position: absolute; left: 50%; top: 0; transform: translateX(-50%); transition: font-weight .38s cubic-bezier(.2,.8,.2,1), transform .38s cubic-bezier(.2,.8,.2,1); }
 .sn-word sup { margin-left: .12em; font-size: .2em; font-weight: 600; letter-spacing: 0; vertical-align: 3.1em; opacity: .75; }
 .sn-word::after { content: attr(data-name); position: absolute; left: 0; top: 100%; z-index: 5; padding: 6px 12px; border-radius: 999px; background: var(--sn-ink); color: #fff; font: 600 12px/1 var(--font-sans); letter-spacing: 0; white-space: nowrap; opacity: 0; transform: translateY(-6px) scale(.94); transform-origin: left top; pointer-events: none; transition: opacity .18s, transform .22s cubic-bezier(.2,.8,.2,1); }
-.sn-word:hover, .sn-word:focus-visible { font-weight: var(--wh, 900); transform: translateY(-.03em); outline: none; }
+.sn-word:hover, .sn-word:focus-visible { z-index: 2; outline: none; }
+.sn-word:hover .sn-text, .sn-word:focus-visible .sn-text { font-weight: var(--wh, 900); transform: translate(-50%, -.03em); }
 .sn-word:hover::after, .sn-word:focus-visible::after { opacity: 1; transform: none; }
-.sn-word:focus-visible { text-decoration: underline; text-decoration-thickness: .06em; text-underline-offset: .12em; }
+.sn-word:focus-visible .sn-text { text-decoration: underline; text-decoration-thickness: .06em; text-underline-offset: .12em; }
 .sn-wall.filtered .sn-word:not([aria-pressed="true"]) { opacity: .2; }
 .sn-wall.filtered .sn-word:not([aria-pressed="true"]):hover { opacity: .7; }
-.sn-word[aria-pressed="true"] { font-weight: 900; }
+.sn-word[aria-pressed="true"] .sn-text { font-weight: 900; }
 .sn-glyph { align-self: center; width: .62em; height: .62em; color: var(--c); flex: none; transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .25s; }
-.sn-wall:hover .sn-glyph { transform: rotate(12deg) scale(1.06); }
+.sn-wall:hover .sn-glyph { opacity: .35; transform: rotate(12deg) scale(.72); }
 .sn-wall.filtered .sn-glyph { opacity: .2; }
 .sn-toolbar { position: sticky; top: 64px; z-index: 20; display: flex; align-items: center; gap: 12px; margin: 0 -8px; padding: 10px 8px; background: #fdfdfde6; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
 .sn-search { flex: 0 1 320px; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px 0 14px; border: 1.5px solid var(--sn-line); border-radius: 999px; background: #fff; color: #9a9a9a; transition: border-color .2s, box-shadow .2s, flex-basis .3s cubic-bezier(.2,.8,.2,1); }
@@ -103,6 +106,6 @@
 @media (hover: none) { .sn-go { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
   .sn-card, .sn-card.lucky, .sn-fav.pop { animation: none; }
-  .sn-card, .sn-word, .sn-glyph, .sn-avatar, .sn-pill, .sn-lucky, .sn-chip { transition-duration: .01s; }
+  .sn-card, .sn-word, .sn-text, .sn-glyph, .sn-avatar, .sn-pill, .sn-lucky, .sn-chip { transition-duration: .01s; }
   .sn-card { transform: none; }
 }

@@ -38,7 +38,7 @@
   const counts = categories.map((_, index) => sites.filter(site => site[0] === index).length);
 
   wall.innerHTML = categories.map((cat, index) =>
-    '<button type="button" class="sn-word" data-cat="' + cat.id + '" data-name="' + escapeHtml(cat.name) + ' · ' + counts[index] + '" aria-label="' + escapeHtml(cat.name) + '，' + counts[index] + ' 个站点" aria-pressed="false" style="--c:' + cat.color + ';--w:' + weights[index] + ';--wh:' + (weights[index] >= 700 ? 200 : 900) + '">' + cat.word + '<sup>' + counts[index] + '</sup></button>' +
+    '<button type="button" class="sn-word" data-cat="' + cat.id + '" data-name="' + escapeHtml(cat.name) + ' · ' + counts[index] + '" aria-label="' + escapeHtml(cat.name) + '，' + counts[index] + ' 个站点" aria-pressed="false" style="--c:' + cat.color + ';--w:' + weights[index] + ';--wh:' + (weights[index] >= 700 ? 200 : 900) + '">' + ['<span class="sn-ghost" aria-hidden="true">', '<span class="sn-text">'].map(open => open + cat.word + '<sup>' + counts[index] + '</sup></span>').join('') + '</button>' +
     (index < categories.length - 1 ? '<svg class="sn-glyph" viewBox="0 0 24 24" aria-hidden="true" style="--c:' + categories[(index + 5) % categories.length].color + '">' + glyphs[index % glyphs.length] + '</svg>' : '')
   ).join('');
   function chip(id, label, count, color) {

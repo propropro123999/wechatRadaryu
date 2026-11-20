@@ -33,11 +33,11 @@
     'youmeng.html': { 受访页面: 'https://example.com/news/recommend', 浏览次数: 1800, 独立访客: 1200, IP: 1000, 人均浏览页数: 1.5, 平均页面停留时间: '00:01:20' }
   };
   const analyticsCopy = {
-    'content-dashboard.html': ['看清阅读、分享与完读表现。', '导入公众号后台的内容明细，对比阅读、分享与完读率，找到真正值得复用的选题。'],
-    'community-dashboard.html': ['发现专栏与帖子的增长线索。', '导入帖子报表，串联发布趋势、互动表现与作者贡献，定位高潜内容与活跃作者。'],
-    'page-traffic-dashboard.html': ['找到真正带来访问的页面。', '导入页面流量明细，汇总 PV、UV 与停留时长，识别最受关注的页面。'],
-    'yiban-dashboard.html': ['拆解公众号内容的阅读来源。', '导入文章数据，比较阅读、分享与来源分布，找到内容传播的关键渠道。'],
-    'youmeng.html': ['把多张流量报表，汇成全局。', '导入包含多个工作表的流量报表，合并季度数据、识别页面类型，查看整体访问表现与榜单。']
+    'content-dashboard.html': ['哪篇文章最能打？', '导入公众号后台的内容明细，对比阅读、分享与完读率。'],
+    'community-dashboard.html': ['谁在发帖，发得怎么样？', '导入帖子报表，查看发布趋势、互动表现与作者贡献。'],
+    'page-traffic-dashboard.html': ['流量都去哪儿了？', '导入页面流量明细，汇总 PV、UV 与停留时长。'],
+    'yiban-dashboard.html': ['读者是从哪儿来的？', '导入文章数据，比较阅读、分享与来源分布。'],
+    'youmeng.html': ['一堆 Sheet，合成一张。', '导入包含多个工作表的流量报表，合并季度数据、识别页面类型，查看整体访问表现与榜单。']
   };
   function setupAnalytics(tool) {
     const container = document.querySelector('.container');
@@ -56,7 +56,7 @@
     }
     const empty = document.createElement('section');
     empty.className = 'workspace-upload';
-    empty.innerHTML = '<div class="upload-empty-layout"><div><span class="upload-empty-icon">' + workspaceIcon(tool.icon) + '</span><h2>从一份报表，开始发现洞察。</h2><p>导入你的 ' + tool.formats + ' 数据，自动整理关键指标、趋势与内容表现。无需配置，也不用手动计算。</p><div class="upload-empty-actions"><button type="button" class="btn btn-primary" data-upload-action>' + workspaceIcon('upload') + '选择数据文件</button><button type="button" class="btn btn-secondary" data-sample-action>' + workspaceIcon('download') + '下载示例表格</button></div><div class="upload-privacy">' + workspaceIcon('shield') + '报表仅在当前浏览器处理，不会上传。</div></div><div class="upload-steps"><div class="upload-step"><span>01</span><div><strong>导入原始报表</strong><p>保留第一行表头，一次选择一个文件。</p></div></div><div class="upload-step"><span>02</span><div><strong>自动识别与整理</strong><p>匹配字段并汇总关键数据。</p></div></div><div class="upload-step"><span>03</span><div><strong>查看图表与洞察</strong><p>对比表现，找到下一步优化方向。</p></div></div></div></div><details class="upload-guide"><summary>查看导入指南与示例字段</summary><p>表头请与下方字段一致；可先下载示例表格了解结构，再替换为你的真实数据。</p><div class="upload-columns">' + Object.keys(sampleRows[tool.href]).map(column => '<span>' + column + '</span>').join('') + '</div></details>';
+    empty.innerHTML = '<div class="upload-empty-layout"><div><span class="upload-empty-icon">' + workspaceIcon(tool.icon) + '</span><h2>丢一份报表进来看看。</h2><p>导入你的 ' + tool.formats + ' 数据，自动整理关键指标、趋势与内容表现。无需配置，也不用手动计算。</p><div class="upload-empty-actions"><button type="button" class="btn btn-primary" data-upload-action>' + workspaceIcon('upload') + '选择数据文件</button><button type="button" class="btn btn-secondary" data-sample-action>' + workspaceIcon('download') + '下载示例表格</button></div><div class="upload-privacy">' + workspaceIcon('shield') + '报表仅在当前浏览器处理，不会上传。</div></div><div class="upload-steps"><div class="upload-step"><span>01</span><div><strong>导入原始报表</strong><p>保留第一行表头，一次选择一个文件。</p></div></div><div class="upload-step"><span>02</span><div><strong>自动识别与整理</strong><p>匹配字段并汇总关键数据。</p></div></div><div class="upload-step"><span>03</span><div><strong>查看图表与洞察</strong><p>对比表现，找到下一步优化方向。</p></div></div></div></div><details class="upload-guide"><summary>查看导入指南与示例字段</summary><p>表头请与下方字段一致；可先下载示例表格了解结构，再替换为你的真实数据。</p><div class="upload-columns">' + Object.keys(sampleRows[tool.href]).map(column => '<span>' + column + '</span>').join('') + '</div></details>';
     results.before(empty);
     const [headline, description] = analyticsCopy[tool.href];
     empty.querySelector('h2').textContent = headline;
@@ -158,14 +158,14 @@
     document.getElementById('results-count').textContent = tools.length;
     document.getElementById('tools-title').firstChild.textContent = categoryNames[category] + ' ';
     document.getElementById('breadcrumb-current').textContent = categoryNames[category];
-    document.getElementById('tools-description').textContent = category === 'favorites' ? '顺手的好工具，收藏后随时找到。' : category === 'recent' ? '接着上次的灵感，继续高效工作。' : '为日常工作精选，即开即用。';
+    document.getElementById('tools-description').textContent = category === 'favorites' ? '你的心头好都在这儿。' : category === 'recent' ? '上次用到哪儿了？接着来。' : '点开就能用，不用注册。';
     document.querySelectorAll('[data-category]:is(button)').forEach(button => {
       const active = button.dataset.category === category;
       button.classList.toggle('active', active);
       button.setAttribute('aria-pressed', String(active));
     });
     document.getElementById('catalog-empty').hidden = tools.length !== 0;
-    document.getElementById('empty-title').textContent = terms.length ? '没有找到匹配的工具' : category === 'favorites' ? '收藏你的第一个好工具' : '这里还没有使用记录';
+    document.getElementById('empty-title').textContent = terms.length ? '没有找到匹配的工具' : category === 'favorites' ? '还没有心头好' : '这里还没有使用记录';
     document.getElementById('empty-description').textContent = terms.length ? '换个关键词，或查看全部工具。' : category === 'favorites' ? '点击工具卡片右上角的星标，就能在这里快速找到。' : '打开一个工具后，就能在这里继续上次的工作。';
     document.getElementById('search-announcement').textContent = '找到 ' + tools.length + ' 个工具';
     grid.classList.toggle('list-view', listView);
