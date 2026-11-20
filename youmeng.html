@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>页面访问数据分析 Dashboard</title>
+  <title>多表流量分析 - Luyu的工具箱</title>
   <link rel="stylesheet" href="ui.css" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
@@ -296,60 +296,45 @@
         return "";
       }
 
-      /**  你最新的细化规则：完整 detectPageType（最终版） */
       function detectPageType(url) {
         const u = (url || "").toString().toLowerCase();
         if (!u) return "其他";
-
-        // 半导纵横首页（根域名首页：不带路径）
-        // https://www.icviews.cn/
-        if (/^https?:\/\/(www\.)?icviews\.cn\/?$/.test(u)) return "半导纵横-首页";
-
-        // ---------------- 半导圈（semiCommunity）细分规则 ----------------
-        // 半导圈首页
-        if (u.includes("/semicommunity/latest")) return "半导圈-首页";
-
-        // 半导圈创作发布页
-        if (u.includes("/semicommunity/writepost")) return "半导圈-创作发布页";
-
-        // 半导圈专栏集合页
-        if (u.includes("/semicommunity/column")) return "半导圈-专栏集合页";
-
-        // 半导圈专栏内容页（带 ID）
-        if (/\/semicommunity\/postdetail\/\d+/.test(u)) return "半导圈-专栏内容页";
-
-        // 半导圈其他页面（兜底）
-        if (u.includes("/semicommunity/")) return "半导圈-其他";
+        let page;
+        try { page = new URL(u, "https://example.com"); } catch (_) { return "其他"; }
+        const path = page.pathname.replace(/^\/[^/]*community(?=\/|$)/, "/community");
+        if (path === "/") return "网站首页";
+        if (path.includes("/community/latest")) return "社区-首页";
+        if (path.includes("/community/writepost")) return "社区-创作发布页";
+        if (path.includes("/community/column")) return "社区-专栏集合页";
+        if (/\/community\/postdetail\/\d+/.test(path)) return "社区-专栏内容页";
+        if (path.includes("/community/")) return "社区-其他";
 
         // ---------------- 资讯（news）细分规则 ----------------
         // 产业政策
-        if (u.includes("/news/industpolicy")) return "产业政策";
+        if (path.includes("/news/industpolicy")) return "产业政策";
 
         // 产研前线
-        if (u.includes("/news/prodfront")) return "产研前线";
+        if (path.includes("/news/prodfront")) return "产研前线";
 
         // 产业动态（兼容 industDynamic / industryDynamic）
-        if (u.includes("/news/industrydynamic") || u.includes("/news/industdynamic")) return "产业动态";
+        if (path.includes("/news/industrydynamic") || path.includes("/news/industdynamic")) return "产业动态";
 
         // 资讯推荐页
-        if (u.includes("/news/recommend")) return "资讯推荐页";
+        if (path.includes("/news/recommend")) return "资讯推荐页";
 
-        // 资讯池文章（数字 ID）
-        if (u.includes("/news/") && /\/news\/\d+/.test(u)) return "资讯池文章";
+        // 资讯文章（数字 ID）
+        if (/\/news\/\d+/.test(path)) return "资讯文章";
 
         // ---------------- 会议 / 活动 ----------------
-        if (u.includes("conference.icviews.cn") || u.includes("/conference/")) return "会议活动";
-        if (u.includes("/specialactivity/")) return "活动页面";
+        if (page.hostname.startsWith("conference.") || path.includes("/conference/")) return "会议活动";
+        if (path.includes("/specialactivity/")) return "活动页面";
 
         // ---------------- 产品 / 视频 / 作者 ----------------
-        if (u.includes("/products")) return "产品汇";
-        if (u.includes("/product/")) return "产品汇";
-        if (u.includes("/video/")) return "视频内容";
-        if (u.includes("/usercenter/")) return "作者主页";
+        if (path.includes("/products") || path.includes("/product/")) return "产品页面";
+        if (path.includes("/video/")) return "视频内容";
+        if (path.includes("/usercenter/")) return "作者主页";
 
-        // ---------------- 站内兜底 ----------------
-        if (u.includes("icviews.cn")) return "站内其他";
-        return "其他";
+        return "其他页面";
       }
 
       // CSV 导出
@@ -506,16 +491,16 @@
       // 自检
       function runSelfTest() {
         const samples = [
-          "https://www.icviews.cn/",
-          "https://www.icviews.cn/semiCommunity/latest",
-          "https://www.icviews.cn/semiCommunity/postDetail/5846",
-          "https://www.icviews.cn/semiCommunity/column",
-          "https://www.icviews.cn/semiCommunity/writePost",
-          "https://www.icviews.cn/news/industPolicy",
-          "https://www.icviews.cn/news/prodFront",
-          "https://www.icviews.cn/news/industDynamic",
-          "https://www.icviews.cn/news/recommend",
-          "https://conference.icviews.cn/ADA"
+          "https://example.com/",
+          "https://example.com/community/latest",
+          "https://example.com/community/postDetail/123",
+          "https://example.com/community/column",
+          "https://example.com/community/writePost",
+          "https://example.com/news/industPolicy",
+          "https://example.com/news/prodFront",
+          "https://example.com/news/industDynamic",
+          "https://example.com/news/recommend",
+          "https://conference.example.com/events"
         ];
         document.getElementById("selfTest").textContent =
           samples.map(u => `${u.replace(/[#?].*$/, "")} → ${detectPageType(u)}`).join("  |  ");
@@ -880,7 +865,7 @@
     <script src="js/nav.js"></script>
     <script>
       renderNav({
-        title: '友盟多表分析',
+        title: '多表流量分析',
         icon: 'document',
         showFileInput: true,
         fileAccept: '.xlsx,.xls',
