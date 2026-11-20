@@ -17,14 +17,23 @@
   const hostOf = url => new URL(url).hostname.replace(/^www\./, '');
   const items = sites.map(([cat, name, url, desc], index) => ({ index, cat: categories[cat], name, url, desc, host: hostOf(url), haystack: [name, desc, url, categories[cat].name, categories[cat].word].join(' ').toLocaleLowerCase() }));
   const known = new Set(items.map(item => item.url));
+  // 浏览器禁用本地存储时，列表只留在内存里，本次访问内仍可用。
+  const memory = {};
+  let storageWorks = true;
   function readList(key) {
+    if (!storageWorks) return memory[key] || [];
+    let value = [];
     try {
-      const value = JSON.parse(localStorage.getItem(key) || '[]');
-      return Array.isArray(value) ? [...new Set(value.filter(url => known.has(url)))] : [];
-    } catch (_) { return []; }
+      value = JSON.parse(localStorage.getItem(key) || '[]');
+    } catch (error) {
+      if (!(error instanceof SyntaxError)) { storageWorks = false; return memory[key] || []; }
+    }
+    return memory[key] = Array.isArray(value) ? [...new Set(value.filter(url => known.has(url)))] : [];
   }
   function saveList(key, list) {
-    try { localStorage.setItem(key, JSON.stringify(list)); } catch (_) { /* Works without storage. */ }
+    memory[key] = list;
+    if (!storageWorks) return;
+    try { localStorage.setItem(key, JSON.stringify(list)); } catch (_) { storageWorks = false; }
   }
   let favorites = readList('luyu-toolbox-site-favorites');
   let category = 'all';
@@ -110,9 +119,9 @@
   }
   function toggleFavorite(button) {
     const item = items[Number(button.dataset.fav)];
-    favorites = readList('luyu-toolbox-site-favorites');
-    const active = !favorites.includes(item.url);
-    favorites = active ? [item.url, ...favorites] : favorites.filter(url => url !== item.url);
+    const active = button.getAttribute('aria-pressed') !== 'true';
+    favorites = readList('luyu-toolbox-site-favorites').filter(url => url !== item.url);
+    if (active) favorites.unshift(item.url);
     saveList('luyu-toolbox-site-favorites', favorites);
     button.setAttribute('aria-pressed', String(active));
     button.setAttribute('aria-label', (active ? '取消收藏 ' : '收藏 ') + item.name);
