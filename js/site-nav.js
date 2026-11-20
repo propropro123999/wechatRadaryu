@@ -158,6 +158,7 @@
     target.classList.add('lucky');
   });
   document.addEventListener('keydown', event => {
+    if (event.isComposing || event.keyCode === 229) return;
     const typing = event.target.matches('input, textarea, [contenteditable]');
     if ((event.key === '/' && !typing) || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k')) {
       event.preventDefault();
