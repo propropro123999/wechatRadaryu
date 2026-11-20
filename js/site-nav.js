@@ -102,6 +102,7 @@
   }
   function toggleFavorite(button) {
     const item = items[Number(button.dataset.fav)];
+    favorites = readList('luyu-toolbox-site-favorites');
     const active = !favorites.includes(item.url);
     favorites = active ? [item.url, ...favorites] : favorites.filter(url => url !== item.url);
     saveList('luyu-toolbox-site-favorites', favorites);
