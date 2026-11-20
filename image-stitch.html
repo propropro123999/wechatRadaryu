@@ -356,6 +356,7 @@
             link.download = `stitched_image_${Date.now()}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
+            window.LuyuPlayful?.cheer('长图到手');
         };
 
         // --- Core Logic ---
@@ -529,6 +530,7 @@
       });
     </script>
     <script src="js/workspace.js"></script>
+    <script src="js/playful.js" defer></script>
 </body>
 
 </html>

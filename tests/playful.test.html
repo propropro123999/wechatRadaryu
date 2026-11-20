@@ -1,0 +1,82 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Playful touches tests</title>
+<pre id="result">Running…</pre>
+<iframe id="page" title="Page under test" style="width:1200px;height:900px"></iframe>
+<script>
+(async function () {
+    const frame = document.querySelector('#page');
+    const open = path => new Promise(resolve => { frame.addEventListener('load', () => resolve(frame.contentWindow), { once: true }); frame.src = path; });
+    const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+    let checks = 0;
+    const assert = (condition, message) => { if (!condition) throw new Error(message); checks++; };
+    // 点击链接里的标志时，记录页面脚本是否拦下了跳转，再阻止测试页真的跳走。
+    const clickMark = (w, mark) => {
+        let handled;
+        w.addEventListener('click', event => { handled = event.defaultPrevented; event.preventDefault(); }, { once: true });
+        mark.dispatchEvent(new w.MouseEvent('click', { bubbles: true, cancelable: true }));
+        return handled;
+    };
+    try {
+        let w = await open('../index.html');
+        let d = w.document;
+        const play = w.LuyuPlayful;
+        const lines = [...d.querySelectorAll('.welcome-row h1, .welcome-row p')].map(node => node.textContent).join('|');
+        assert(/[？。]\|.{6,}/.test(lines) && d.querySelector('.welcome-row h1 span').textContent.length === 1, 'home headline renders a title, its mark and a subtitle');
+        assert(['night', 'morning', 'noon', 'afternoon', 'evening', 'night'].join() === [2, 8, 12, 15, 20, 23].map(play.timeSlot).join(), 'hours map to the expected part of the day');
+        const late = Array.from({ length: 60 }, () => play.headline(new Date(2026, 0, 1, 2))[0]);
+        assert(late.some(text => /这么晚|夜深/.test(text)) && !late.some(text => /早上好|饭吃了吗|下班/.test(text)), 'late-night visits get late-night or general headlines only');
+
+        const mark = d.querySelector('.workspace-brand .brand-mark');
+        const face = mark.querySelector('svg').innerHTML;
+        assert(clickMark(w, mark) === true && mark.dataset.face === 'happy' && mark.querySelector('svg').innerHTML !== face, 'clicking the mark on the home page changes its face instead of reloading');
+        assert(Object.values(play.faces).every(markup => { const svg = d.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.innerHTML = markup; return svg.children.length === 3; }), 'every face is two eyes and a mouth, which the blink and look styles rely on');
+        d.dispatchEvent(new w.PointerEvent('pointermove', { clientX: 900, clientY: 700, bubbles: true }));
+        await new Promise(resolve => w.requestAnimationFrame(() => w.requestAnimationFrame(resolve)));
+        assert(parseFloat(mark.querySelector('svg').style.getPropertyValue('--look-x')) > 0 && parseFloat(mark.querySelector('svg').style.getPropertyValue('--look-y')) > 0, 'the eyes look toward the pointer');
+
+        const job = play.busy('pdf');
+        const bubble = d.querySelector('.luyu-bubble');
+        const style = w.getComputedStyle(bubble);
+        assert(bubble.parentElement === d.body && bubble.getAttribute('aria-hidden') === 'true' && style.pointerEvents === 'none' && style.userSelect === 'none' && style.position === 'fixed', 'the bubble is decoration: outside page content, hidden from assistive tech, not selectable or clickable');
+        assert(bubble.classList.contains('show') && /PDF/.test(bubble.textContent), 'a long task shows its chatter');
+        const inner = play.busy('load');
+        assert(/仓库/.test(bubble.textContent), 'a nested wait takes over the bubble');
+        inner.hide();
+        assert(/PDF/.test(bubble.textContent) && bubble.classList.contains('show'), 'the outer task resumes when the nested wait ends');
+        job.done('压完了，瘦了 62%');
+        assert(bubble.textContent === '压完了，瘦了 62%' && d.querySelectorAll('.luyu-confetti i').length > 10 && d.querySelector('.luyu-confetti').getAttribute('aria-hidden') === 'true', 'finishing says the result and throws confetti');
+        job.fail();
+        assert(bubble.textContent === '压完了，瘦了 62%', 'a finished task cannot be closed twice');
+        const failing = play.busy('image');
+        failing.fail();
+        assert(/没成/.test(bubble.textContent) && d.querySelectorAll('.luyu-confetti').length === 1, 'a failure points at the page message without confetti');
+        play.cheer('没什么可减的', { confetti: false });
+        assert(d.querySelectorAll('.luyu-confetti').length === 1, 'confetti can be skipped when nothing was gained');
+
+        w = await open('../pdf-compress.html');
+        d = w.document;
+        const toolMark = d.querySelector('.tool-brand .brand-mark');
+        assert(clickMark(w, toolMark) === false && !toolMark.dataset.face, 'on tool pages the mark stays a link to the home page');
+        assert(typeof w.LuyuPlayful.busy === 'function' && !d.querySelector('.luyu-bubble'), 'tool pages load the helper and show nothing until a task runs');
+
+        w = await open('../image-compress.html');
+        const load = w.ToolDependencies.load;
+        assert(load('zip', 'missing-library').catch(() => {}) instanceof w.Promise, 'wrapped dependency loading still returns a promise');
+        assert(await load('missing-library').then(() => false, error => /未知依赖/.test(error.message)) && !w.document.querySelector('.luyu-bubble.show'), 'a failed quick load rejects as before and shows no bubble');
+
+        w = await open('../404.html');
+        d = w.document;
+        const pick = d.querySelector('#lost-pick');
+        assert(/不如试试「.+」/.test(pick.textContent) && w.NAV_ITEMS === undefined, 'the lost page suggests a tool without loading the tool navigation');
+        assert((await fetch(pick.href, { method: 'HEAD' })).ok, 'the suggested tool exists');
+        const lostMark = d.querySelector('.lost-mark');
+        lostMark.click();
+        assert(lostMark.dataset.face === 'cool' && w.getComputedStyle(d.querySelector('h1')).fontFamily.includes('Allo'), 'the lost robot changes face and the title uses the display font');
+        await wait(0);
+        document.querySelector('#result').textContent = 'PASS: ' + checks + ' playful checks';
+    } catch (error) {
+        document.querySelector('#result').textContent = 'FAIL: ' + error.message;
+    }
+})();
+</script>

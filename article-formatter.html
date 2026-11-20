@@ -386,6 +386,7 @@
             const $btn = $('button[onclick="importArticle()"]');
             const originalHtml = $btn.html();
             $btn.html('<span class="spinner"></span> 导入中').prop('disabled', true);
+            const mood = window.LuyuPlayful?.busy('article');
 
             try {
                 // Call Vercel API
@@ -400,10 +401,12 @@
                 protectEditorDiagrams();
                 setArticleMetadata(article);
                 showToast(`导入成功 (代理 ${article.images} 张图片)`);
+                mood?.done(article.images ? `取回来了，带了 ${article.images} 张图` : '取回来了');
 
             } catch (err) {
                 console.error('Import Error:', err);
                 showToast('导入失败: ' + err.message);
+                mood?.fail('没取回来，原因在页面提示里。');
             } finally {
                 $btn.html(originalHtml).prop('disabled', false);
             }
@@ -473,6 +476,7 @@
             $editor.html($temp.html());
             protectEditorDiagrams();
             showToast('排版完成');
+            window.LuyuPlayful?.cheer('排好了，清爽多了');
         }
 
         // Helper: Traverse and process text nodes only
@@ -553,6 +557,7 @@
                 showToast(compatible
                     ? `已兼容复制：${clipboard.images} 张图片，${clipboard.protocolsChanged} 处网址文本；请在后台核对图片`
                     : '已复制 (保留格式)');
+                window.LuyuPlayful?.cheer('复制好了，去粘贴吧');
             } catch (e) {
                 showToast('图文复制失败，请保持页面在前台并重试；未退回纯文本');
             } finally {
@@ -593,6 +598,7 @@
       });
     </script>
     <script src="js/workspace.js"></script>
+    <script src="js/playful.js" defer></script>
 </body>
 
 </html>

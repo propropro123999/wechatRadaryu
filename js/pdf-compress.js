@@ -3,6 +3,7 @@ let currentPDFData = null;
 let currentPageIndex = 0;
 let compressedPDFData = null;
 let pdfWorker = null;
+let pdfMood = null;
 let previewTask = null;
 let loadingTask = null;
 let loadVersion = 0;
@@ -101,6 +102,7 @@ function setStrength(strength) {
 }
 
 function stopCompression() {
+  pdfMood?.hide();
   pdfWorker?.terminate();
   pdfWorker = null;
   document.getElementById('progress-card').style.display = 'none';
@@ -119,7 +121,8 @@ function compressPDF() {
   document.getElementById('progress-bar').style.width = '0%';
   document.getElementById('progress-percent').textContent = '0%';
   document.getElementById('progress-detail').textContent = '加载压缩组件…';
-  const fail = message => { stopCompression(); pdfStatus('压缩失败：' + message + '。原文件未改变，可重试。'); };
+  pdfMood = window.LuyuPlayful?.busy('pdf');
+  const fail = message => { pdfMood?.fail(); stopCompression(); pdfStatus('压缩失败：' + message + '。原文件未改变，可重试。'); };
   try {
     const worker = pdfWorker = new Worker('js/pdf-compress-worker.js');
     worker.onerror = () => { if (pdfWorker === worker) fail('压缩组件加载或运行出错，请检查网络'); };
@@ -133,6 +136,8 @@ function compressPDF() {
       }
       if (data.type === 'complete') {
         compressedPDFData = data.data;
+        const saved = Math.round((1 - data.data.byteLength / currentPDFData.byteLength) * 100);
+        pdfMood?.done(data.unchanged || saved <= 0 ? '这份已经很瘦了，没什么可减的' : '压完了，瘦了 ' + saved + '%', { confetti: !data.unchanged && saved > 0 });
         stopCompression();
         document.getElementById('result-card').style.display = 'block';
         document.getElementById('result-original').textContent = formatFileSize(currentPDFData.byteLength);

@@ -6,7 +6,7 @@ import { once } from 'node:events';
 
 const base = process.env.TEST_BASE_URL || 'http://127.0.0.1:3000';
 const paths = process.argv.slice(2);
-if (!paths.length) paths.push('article-import', 'article-metadata', 'article-clipboard', 'word-to-html', 'display-font', 'toolbox', 'lazy-loading', 'site-nav');
+if (!paths.length) paths.push('article-import', 'article-metadata', 'article-clipboard', 'word-to-html', 'display-font', 'toolbox', 'lazy-loading', 'site-nav', 'playful');
 const profile = await mkdtemp(join(tmpdir(), 'toolbox-browser-tests-'));
 const browser = spawn(process.env.CHROME_BIN || 'google-chrome', ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--remote-debugging-port=0', `--user-data-dir=${profile}`, 'about:blank']);
 let socket;

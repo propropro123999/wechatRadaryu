@@ -781,6 +781,7 @@
         btnCompress.disabled = true;
         showStatus('<span class="loading"></span> 压缩中...', "info");
         results = {};
+        const mood = window.LuyuPlayful?.busy("image");
 
         try {
           for (const f of files) {
@@ -788,8 +789,12 @@
           }
           showStatus(`✓ 压缩完成，共 ${files.length} 个文件`, "success");
           renderTable();
+          const before = files.reduce((total, f) => total + f.size, 0);
+          const saved = Math.round((1 - Object.values(results).reduce((total, r) => total + r.size, 0) / before) * 100);
+          mood?.done(saved > 0 ? `压完了，${files.length} 张图一共瘦了 ${saved}%` : "压完了，不过这批图本来就很瘦", { confetti: saved > 0 });
         } catch (e) {
           console.error(e);
+          mood?.fail();
           showStatus(`✗ 压缩失败: ${e.message}`, "error");
         } finally {
           btnCompress.disabled = false;
@@ -820,6 +825,7 @@
           a.click();
           setTimeout(() => URL.revokeObjectURL(url), 1000);
           showStatus("✓ 已下载 ZIP 文件", "success");
+          window.LuyuPlayful?.cheer("打包好了，查收一下");
         } catch (e) {
           showStatus("下载失败：" + e.message, "error");
         } finally {
@@ -885,6 +891,7 @@
     });
   </script>
     <script src="js/workspace.js"></script>
+    <script src="js/playful.js" defer></script>
 </body>
 
 </html>
