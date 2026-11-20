@@ -27,8 +27,11 @@
       for (const attribute of [...node.attributes]) {
         const name = attribute.name.toLowerCase();
         const value = attribute.value.replace(/[\s\u0000-\u001f]/g, '');
+        const imageSource = (node.localName === 'img' && name === 'src') ||
+          (node.localName === 'image' && ['href', 'xlink:href'].includes(name));
+        const dataImage = imageSource && /^data:image\/[a-z0-9.+-]+(?:;base64,|(?:;charset=[^;,]+)?,)/i.test(value);
         if (name.startsWith('on') || ['srcdoc', 'srcset', 'formaction'].includes(name) ||
-            (['src', 'href', 'xlink:href'].includes(name) && !/^(https?:|mailto:|tel:|\/(?!\/)|\.\.?\/|#|data:image\/(png|jpeg|gif|webp);base64,)/i.test(value))) node.removeAttribute(attribute.name);
+            (['src', 'href', 'xlink:href'].includes(name) && !dataImage && !/^(https?:|mailto:|tel:|\/(?!\/)|\.\.?\/|#)/i.test(value))) node.removeAttribute(attribute.name);
       }
     }
     return template.innerHTML;
