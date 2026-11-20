@@ -6,6 +6,8 @@ self.onmessage = async ({ data: { pdfData, quality, maxWidth, removeMetadata } }
     const doc = await PDFDocument.load(pdfData, { updateMetadata: false });
     const images = doc.context.enumerateIndirectObjects().filter(([, object]) =>
       object instanceof PDFRawStream && object.dict.get(PDFName.of('Subtype')) === PDFName.of('Image'));
+    const masks = new Set(images.flatMap(([, image]) => ['SMask', 'Mask']
+      .map(key => image.dict.lookup(PDFName.of(key))).filter(object => object instanceof PDFRawStream)));
     let optimized = 0;
     let skipped = 0;
     for (let index = 0; index < images.length; index++) {
@@ -14,7 +16,7 @@ self.onmessage = async ({ data: { pdfData, quality, maxWidth, removeMetadata } }
       let bitmap;
       try {
         // Other encodings, masks and custom decode arrays must keep their original decoder.
-        if (String(value('Filter')) !== '/DCTDecode' ||
+        if (masks.has(image) || String(value('Filter')) !== '/DCTDecode' ||
             !['/DeviceRGB', '/DeviceGray'].includes(String(value('ColorSpace'))) ||
             ['SMask', 'Mask', 'Decode', 'DecodeParms'].some(key => image.dict.has(PDFName.of(key)))) {
           skipped++;
@@ -35,10 +37,14 @@ self.onmessage = async ({ data: { pdfData, quality, maxWidth, removeMetadata } }
         canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
         const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: quality / 100 });
         if (blob.size < original.byteLength) {
-          doc.context.assign(ref, doc.context.stream(new Uint8Array(await blob.arrayBuffer()), {
+          const replacement = doc.context.stream(new Uint8Array(await blob.arrayBuffer()), {
             Type: 'XObject', Subtype: 'Image', Width: canvas.width, Height: canvas.height,
             ColorSpace: 'DeviceRGB', BitsPerComponent: 8, Filter: 'DCTDecode'
-          }));
+          });
+          for (const [key, value] of image.dict.entries()) {
+            if (!replacement.dict.has(key) && key !== PDFName.of('Length')) replacement.dict.set(key, value);
+          }
+          doc.context.assign(ref, replacement);
           optimized++;
         }
         canvas.width = canvas.height = 1;
