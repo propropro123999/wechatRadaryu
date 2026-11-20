@@ -19,7 +19,7 @@
   }
   async function record(id, value) {
     const db = await new Promise((resolve, reject) => {
-      const request = indexedDB.open('icviews-local-drafts', 1);
+      const request = indexedDB.open('luyu-toolbox-local-drafts', 1);
       request.onupgradeneeded = () => request.result.createObjectStore('drafts', { keyPath: 'id' });
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
@@ -58,7 +58,7 @@
   }
   try {
     await record('word', null); await record('article', null);
-    localStorage.removeItem('icviews-draft-word'); localStorage.removeItem('icviews-draft-article');
+    localStorage.removeItem('luyu-toolbox-draft-word'); localStorage.removeItem('luyu-toolbox-draft-article');
     let element = await frame('word-to-html.html');
     let w = element.contentWindow, d = w.document;
     await w.wordDraft.ready;

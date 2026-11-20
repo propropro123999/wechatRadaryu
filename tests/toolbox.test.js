@@ -91,7 +91,7 @@ await uploadContext.window.uploadAllToCloud();
 assert.match(fields['cloud-upload-list'].children[0].textContent, /上传超时/);
 assert.equal(fields['btn-cloud-upload'].disabled, false);
 
-for (const page of ['bandao-ops-dashboard.html', 'content-dashboard.html', 'page-traffic-dashboard.html', 'yiban-dashboard.html', 'youmeng.html']) {
+for (const page of ['community-dashboard.html', 'content-dashboard.html', 'page-traffic-dashboard.html', 'yiban-dashboard.html', 'youmeng.html']) {
   const html = read(page);
   assert.match(html, /src="js\/dependencies.js"/);
   assert.match(html, /await ToolDependencies.load\("xlsx", "plotly"\)/);

@@ -3,7 +3,7 @@
   let database;
   function open() {
     if (!database) database = new Promise((resolve, reject) => {
-      const request = indexedDB.open('icviews-local-drafts', 1);
+      const request = indexedDB.open('luyu-toolbox-local-drafts', 1);
       request.onupgradeneeded = () => request.result.createObjectStore('drafts', { keyPath: 'id' });
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
@@ -54,7 +54,7 @@
     let saved = '';
     let queue = Promise.resolve();
     const enqueue = action => (queue = queue.catch(() => {}).then(action));
-    try { checkbox.checked = localStorage.getItem('icviews-draft-' + id) !== 'off'; } catch (_) {}
+    try { checkbox.checked = localStorage.getItem('luyu-toolbox-draft-' + id) !== 'off'; } catch (_) {}
     const snapshot = () => JSON.stringify(capture());
     const meaningful = value => !!value?.html && /\S/.test(value.html.replace(/<[^>]*>/g, '')) || /<(img|svg|table)\b/i.test(value?.html || '');
     function changed() {
@@ -106,7 +106,7 @@
     host.querySelector('.draft-clear').onclick = async () => {
       if (!confirm('清除此工具的本机草稿并关闭自动保存？当前页面内容不会被清空。')) return;
       clearTimeout(timer); revision++; pending = null; recovery.hidden = true; checkbox.checked = false;
-      try { localStorage.setItem('icviews-draft-' + id, 'off'); } catch (_) {}
+      try { localStorage.setItem('luyu-toolbox-draft-' + id, 'off'); } catch (_) {}
       try {
         await enqueue(() => storage('readwrite', store => store.delete(id)));
         saved = ''; dirty = true;
@@ -114,7 +114,7 @@
       } catch (_) { status.textContent = '清除失败，请检查浏览器存储设置后重试。'; }
     };
     checkbox.onchange = () => {
-      try { localStorage.setItem('icviews-draft-' + id, checkbox.checked ? 'on' : 'off'); } catch (_) {}
+      try { localStorage.setItem('luyu-toolbox-draft-' + id, checkbox.checked ? 'on' : 'off'); } catch (_) {}
       if (checkbox.checked) { changed(); save(); }
       else { clearTimeout(timer); status.textContent = '已关闭自动保存；已有草稿可点击清除。'; }
     };
