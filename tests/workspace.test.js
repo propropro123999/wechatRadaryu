@@ -35,6 +35,31 @@ assert.doesNotMatch(home, /href="https?:/);
 for (const [, id] of home.matchAll(/href="#([^"]+)"/g)) {
   assert.ok(home.includes('id="' + id + '"'), 'home anchor: ' + id);
 }
+const siteNavPage = readFileSync(resolve(root, 'site-nav.html'), 'utf8');
+assert.match(siteNavPage, /<title>网址导航 - Luyu的工具箱<\/title>/);
+assert.match(siteNavPage, /name="referrer" content="no-referrer"/);
+assert.match(home, /class="sidebar-link sidebar-link-nav" href="site-nav.html"/);
+assert.match(home, /class="nav-banner" href="site-nav.html"/);
+for (const [, href] of home.matchAll(/class="wall-word" href="([^"]+)"/g)) {
+  assert.ok(href === 'site-nav.html' || tools.some(tool => tool.href === href), 'home wall: ' + href);
+}
+assert.equal([...home.matchAll(/class="wall-word"/g)].length, tools.length + 1);
+const siteNavContext = { window: {} };
+vm.runInNewContext(readFileSync(resolve(root, 'js/site-nav-data.js'), 'utf8'), siteNavContext);
+const siteNav = siteNavContext.window.SITE_NAV;
+assert.equal(siteNav.sites.length, 105);
+assert.equal(siteNav.categories.length, 14);
+assert.equal(new Set(siteNav.sites.map(site => site[2])).size, siteNav.sites.length);
+assert.equal(new Set(siteNav.categories.map(category => category.id)).size, siteNav.categories.length);
+for (const [category, name, url, desc] of siteNav.sites) {
+  assert.ok(siteNav.categories[category] && name && desc, name);
+  assert.match(new URL(url).protocol, /^https?:$/, url);
+  assert.doesNotMatch(name + url + desc, /icviews|半导纵横/i);
+}
+for (const category of siteNav.categories) {
+  assert.match(category.color, /^#[0-9a-f]{6}$/);
+  assert.ok(siteNav.sites.some(site => siteNav.categories[site[0]] === category), category.id);
+}
 let navMarkup = '';
 const navElement = { addEventListener() {}, querySelector() { return this; }, contains() { return false; } };
 context.location = { pathname: '/community-dashboard' };
@@ -46,6 +71,7 @@ context.window.renderNav();
 assert.match(navMarkup, /aria-label="Luyu的工具箱 首页"/);
 assert.match(navMarkup, /<strong>Luyu的工具箱<\/strong>/);
 assert.match(navMarkup, /community-dashboard.html" class="nav-app-item current"/);
+assert.match(navMarkup, /href="site-nav.html" class="nav-app-item nav-app-extra"/);
 const styles = readFileSync(resolve(root, 'workspace.css'), 'utf8');
 assert.match(styles, /--font-display: "Allo Display", var\(--font-sans\)/);
 assert.doesNotMatch(styles.match(/--font-sans:[^;]+;/)[0], /Allo/);
