@@ -83,6 +83,7 @@ assert.match(readFileSync(resolve(root, 'favicon.svg'), 'utf8'), /^<svg /);
 for (const page of readdirSync(root).filter(name => name.endsWith('.html'))) {
   assert.match(readFileSync(resolve(root, page), 'utf8'), /<link rel="icon" type="image\/svg\+xml" href="favicon\.svg">/, page);
 }
+assert.match(tools.find(tool => tool.href === 'image-compress.html').keywords, /体积/);
 let navMarkup = '';
 const navElement = { addEventListener() {}, querySelector() { return this; }, contains() { return false; } };
 context.location = { pathname: '/community-dashboard' };

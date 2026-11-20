@@ -57,7 +57,7 @@ const NAV_ITEMS = [
   { href: 'community-dashboard.html', icon: 'community', label: '专栏 / 帖子分析', category: 'analytics', desc: '发帖频次、作者分层、高频词，一张表摸清家底。', formats: 'CSV / XLSX', keywords: '作者 内容 运营', local: true },
   { href: 'page-traffic-dashboard.html', icon: 'traffic', label: '页面流量分析', category: 'analytics', desc: '谁来了、看了啥、在哪走的，漏斗里见分晓。', formats: 'CSV / XLSX', keywords: '访问 页面 PV UV', local: true },
   { href: 'word-to-html.html', icon: 'word', label: 'Word 转 HTML', category: 'documents', desc: 'Word 文档原样搬上网页，图文一个不落。', formats: 'DOCX → HTML', keywords: '文档 网页 转换 知乎 公众号', local: false },
-  { href: 'image-compress.html', icon: 'image-down', label: '图片压缩', category: 'media', desc: '给图片批量瘦身，画质和尺寸你说了算。', formats: 'JPG / PNG / WebP', keywords: '图片 批量 质量 大小', local: true },
+  { href: 'image-compress.html', icon: 'image-down', label: '图片压缩', category: 'media', desc: '给图片批量瘦身，画质和尺寸你说了算。', formats: 'JPG / PNG / WebP', keywords: '图片 批量 质量 大小 体积 压缩', local: true },
   { href: 'article-formatter.html', icon: 'edit', label: '文章排版', category: 'documents', desc: '清掉乱七八糟的样式，标点空格各归各位。', formats: 'TEXT / HTML', keywords: '文本 清洗 编辑 格式化', local: false },
   { href: 'yiban-dashboard.html', icon: 'sources', label: '阅读来源分析', category: 'analytics', desc: '读者从哪儿来的？按来源拆开看互动和转化。', formats: 'CSV / XLSX', keywords: '公众号 微信 报表', local: true },
   { href: 'youmeng.html', icon: 'sheets', label: '多表流量分析', category: 'analytics', desc: '多个 Sheet 合成一张，不用再手动复制粘贴。', formats: 'XLSX / XLS', keywords: '多表 Sheet 合并 趋势', local: true },
