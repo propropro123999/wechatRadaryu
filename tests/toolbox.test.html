@@ -1,0 +1,241 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Toolbox reliability regression fixtures</title>
+<pre id="result">Running…</pre>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script>
+(async () => {
+  let checks = 0;
+  const assert = (value, message) => { if (!value) throw new Error(message); checks++; };
+  const tick = () => new Promise(resolve => setTimeout(resolve, 0));
+  async function frame(path) {
+    const element = document.createElement('iframe');
+    const loaded = new Promise(resolve => element.onload = resolve);
+    element.src = '../' + path;
+    element.width = 1200; element.height = 800;
+    document.body.append(element);
+    await loaded;
+    return element;
+  }
+  async function record(id, value) {
+    const db = await new Promise((resolve, reject) => {
+      const request = indexedDB.open('luyu-toolbox-local-drafts', 1);
+      request.onupgradeneeded = () => request.result.createObjectStore('drafts', { keyPath: 'id' });
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      return await new Promise((resolve, reject) => {
+        const tx = db.transaction('drafts', value === undefined ? 'readonly' : 'readwrite');
+        const store = tx.objectStore('drafts');
+        const request = value === undefined ? store.get(id) : value === null ? store.delete(id) : store.put({ ...value, id });
+        tx.oncomplete = () => resolve(request.result);
+        tx.onerror = () => reject(tx.error);
+      });
+    } finally { db.close(); }
+  }
+  function protectedLeave(w) {
+    const event = new w.Event('beforeunload', { cancelable: true });
+    w.dispatchEvent(event);
+    return event.defaultPrevented;
+  }
+  async function workerRun(bytes, removeMetadata = false) {
+    const worker = new Worker('../js/pdf-compress-worker.js');
+    try {
+      return await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('PDF worker timed out')), 60000);
+        worker.onerror = error => { clearTimeout(timeout); reject(new Error(error.message)); };
+        worker.onmessage = ({ data }) => {
+          if (data.type === 'progress') return;
+          clearTimeout(timeout);
+          if (data.type === 'error') reject(new Error(data.message));
+          else resolve(data);
+        };
+        const copy = bytes.slice();
+        worker.postMessage({ pdfData: copy, quality: 50, maxWidth: 640, removeMetadata }, [copy.buffer]);
+      });
+    } finally { worker.terminate(); }
+  }
+  try {
+    await record('word', null); await record('article', null);
+    localStorage.removeItem('luyu-toolbox-draft-word'); localStorage.removeItem('luyu-toolbox-draft-article');
+    let element = await frame('word-to-html.html');
+    let w = element.contentWindow, d = w.document;
+    await w.wordDraft.ready;
+    assert(!w.mammoth && !w.JSZip, 'Word starts without its heavy libraries');
+    await w.ToolDependencies.load('zip');
+    const zip = new w.JSZip();
+    zip.file('[Content_Types].xml', '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+    zip.file('_rels/.rels', '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+    zip.file('word/document.xml', '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Word regression first paragraph</w:t></w:r></w:p><w:p><w:r><w:t>Second paragraph</w:t></w:r></w:p></w:body></w:document>');
+    const bytes = await zip.generateAsync({ type: 'uint8array' });
+    await w.handleFiles([new w.File([bytes], 'fixture.docx')]);
+    assert(!!w.mammoth, 'Word import loads Mammoth on demand');
+    assert(d.querySelectorAll('#preview-content p').length === 2, 'awaited DOCX import retains both paragraphs');
+    assert(d.querySelector('#word-operation-status').textContent.includes('转换完成'), 'Word waits until conversion completes');
+    await tick(); await w.wordDraft.save();
+    assert((await record('word')).filename === 'fixture.docx', 'Word filename and content are saved locally');
+    const before = d.querySelector('#preview-content').innerHTML;
+    await w.handleFiles([new w.File(['invalid zip'], 'broken.docx')]);
+    assert(d.querySelector('#preview-content').innerHTML === before, 'failed DOCX import retains the previous preview');
+    assert(d.querySelector('#file-name-display').textContent === 'fixture.docx', 'failed import retains the previous filename');
+    assert(!d.querySelector('#btn-cloud-upload').disabled, 'failed import unlocks the interface');
+    w.wordDraft.setBusy(true);
+    assert(protectedLeave(w), 'in-progress Word work has a leave warning');
+    w.wordDraft.setBusy(false);
+    element.remove();
+
+    element = await frame('article-formatter.html');
+    w = element.contentWindow; d = w.document;
+    await w.articleDraft.ready;
+    w.confirm = () => true;
+    const editor = d.querySelector('#editor-content');
+    editor.innerHTML = '<h2>本机草稿</h2><p>Second paragraph</p>';
+    d.querySelector('#articleUrl').value = 'https://mp.weixin.qq.com/s/fixture';
+    w.setArticleMetadata({ title: '草稿标题', author: '草稿作者' });
+    await tick();
+    assert(protectedLeave(w), 'unsaved article edits have a leave warning');
+    await w.articleDraft.save();
+    const saved = await record('article');
+    assert(saved.html.includes('本机草稿') && saved.title === '草稿标题' && saved.author === '草稿作者', 'article HTML and metadata saved in IndexedDB');
+    assert(!protectedLeave(w), 'saved edits do not warn unnecessarily');
+    await d.querySelector('.draft-clear').onclick();
+    assert(!(await record('article')), 'clear removes the persisted draft');
+    assert(!d.querySelector('.draft-bar input').checked, 'clear also disables automatic saving');
+    assert(editor.innerHTML.includes('本机草稿'), 'clear does not erase the visible work');
+    d.querySelector('.draft-bar input').checked = true;
+    d.querySelector('.draft-bar input').onchange();
+    await w.articleDraft.save();
+    assert((await record('article')).html === saved.html, 're-enabling autosave without editing recreates the cleared draft');
+    await d.querySelector('.draft-clear').onclick();
+    editor.innerHTML = '<p>not automatically saved after clear</p>';
+    await tick(); await w.articleDraft.save();
+    assert(!(await record('article')), 'cleared drafts are not silently recreated');
+    assert(protectedLeave(w), 'disabled autosave still protects unsaved work');
+    const transaction = w.IDBDatabase.prototype.transaction;
+    w.IDBDatabase.prototype.transaction = () => { throw new Error('fixture: storage full'); };
+    d.querySelector('.draft-bar input').checked = true;
+    await w.articleDraft.save();
+    assert(d.querySelector('.draft-status').textContent.includes('保存失败') && protectedLeave(w), 'storage failures are reported without losing leave protection');
+    w.IDBDatabase.prototype.transaction = transaction;
+    await d.querySelector('.draft-clear').onclick();
+    element.remove();
+
+    const image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lYQAAAAASUVORK5CYII=';
+    const embeddedSvg = 'data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22/%3E';
+    const embeddedBmp = 'data:image/bmp;base64,Qk0=';
+    const unsafe = '<p onclick="window.draftXSS=1">Recovered</p><scr' + 'ipt>window.draftXSS=1</scr' + 'ipt><iframe srcdoc="bad"></iframe><a href="javascript:alert(1)">link</a><img src="' + image + '" onload="window.draftXSS=1"><svg viewBox="0 0 10 10"><path d="M0 0L10 10"/></svg><img data-test-svg src="' + embeddedSvg + '"><img data-test-bmp src="' + embeddedBmp + '"><a data-test-svg-link href="' + embeddedSvg + '">unsafe navigation</a>';
+    await record('article', { ...saved, html: unsafe });
+    element = await frame('article-formatter.html');
+    w = element.contentWindow; d = w.document;
+    await w.articleDraft.ready;
+    assert(!d.querySelector('.draft-recovery').hidden, 'saved draft is offered, never restored automatically');
+    assert(!d.querySelector('#editor-content').textContent.includes('Recovered'), 'pending draft does not overwrite the editor');
+    w.confirm = () => false;
+    assert(!w.articleDraft.allowReplace(), 'pending draft cannot be overwritten without approval');
+    w.articleDraft.setBusy(true);
+    await d.querySelector('.draft-restore').onclick();
+    assert(!d.querySelector('.draft-recovery').hidden, 'restore is blocked while the tool is busy');
+    w.articleDraft.setBusy(false);
+    await d.querySelector('.draft-restore').onclick();
+    await tick();
+    const restored = d.querySelector('#editor-content');
+    assert(restored.textContent.includes('Recovered'), 'draft restores with explicit action');
+    assert(!restored.querySelector('script,iframe,[onclick],[onload]'), 'restored HTML removes active content');
+    assert(!restored.querySelector('a').hasAttribute('href') && !w.draftXSS, 'unsafe URLs and event execution are blocked');
+    assert(restored.querySelector('img').src === image && !!restored.querySelector('svg path'), 'raster images and safe SVG survive restoration');
+    assert(restored.querySelector('[data-test-svg]').getAttribute('src') === embeddedSvg && restored.querySelector('[data-test-bmp]').getAttribute('src') === embeddedBmp, 'embedded SVG and BMP sources survive restoration');
+    assert(!restored.querySelector('[data-test-svg-link]').hasAttribute('href'), 'data image URLs are allowed only in image contexts, never navigation');
+    assert(d.querySelector('#article-title').textContent === '草稿标题', 'article metadata restored independently of markup');
+    element.remove();
+    await record('article', { ...saved, savedAt: Date.now() - 8 * 86400000 });
+    element = await frame('article-formatter.html');
+    w = element.contentWindow; d = w.document;
+    await w.articleDraft.ready;
+    assert(d.querySelector('.draft-recovery').hidden && !(await record('article')), 'expired drafts are removed, not restored');
+    element.remove();
+
+    const { PDFDocument, PDFName, PDFString, rgb } = PDFLib;
+    const pdf = await PDFDocument.create();
+    pdf.setTitle('Original metadata');
+    const canvas = document.createElement('canvas');
+    canvas.width = 1400; canvas.height = 1000;
+    const context = canvas.getContext('2d');
+    const pixels = context.createImageData(canvas.width, canvas.height);
+    let seed = 12345;
+    for (let i = 0; i < pixels.data.length; i += 4) {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      pixels.data[i] = seed & 255; pixels.data[i + 1] = (seed >>> 8) & 255;
+      pixels.data[i + 2] = (seed >>> 16) & 255; pixels.data[i + 3] = 255;
+    }
+    context.putImageData(pixels, 0, 0);
+    const jpg = await pdf.embedJpg(canvas.toDataURL('image/jpeg', 1));
+    const png = await pdf.embedPng(image);
+    const page = pdf.addPage([600, 500]);
+    page.drawImage(jpg, { x: 0, y: 0, width: 600, height: 430 });
+    page.drawImage(png, { x: 10, y: 10, width: 10, height: 10 });
+    page.drawText('Selectable text remains', { x: 20, y: 450, size: 16 });
+    page.drawRectangle({ x: 570, y: 450, width: 20, height: 20, color: rgb(0, 0, 1) });
+    page.node.set(PDFName.of('Annots'), pdf.context.obj([{ Type: 'Annot', Subtype: 'Link', Rect: [20, 450, 250, 475], Border: [0, 0, 0], A: { S: 'URI', URI: PDFString.of('https://example.com/') } }]));
+    const original = await pdf.save();
+    const output = await workerRun(original, true);
+    assert(output.type === 'complete' && output.optimized === 1 && output.skipped >= 1, 'worker recompresses JPEG and skips special/PNG images');
+    assert(output.data.length < original.length && original.buffer.byteLength > 0, 'real JPEG output is smaller and source bytes stay intact');
+    const optimized = await PDFDocument.load(output.data, { updateMetadata: false });
+    assert(optimized.getPageCount() === 1 && !optimized.getTitle(), 'result is a valid PDF with metadata removed');
+    const jpgs = optimized.context.enumerateIndirectObjects().map(([, value]) => value).filter(value => value.dict?.get(PDFName.of('Filter')) === PDFName.of('DCTDecode'));
+    assert(jpgs.length === 1 && jpgs[0].dict.lookup(PDFName.of('Width')).asNumber() === 640, 'image resolution is genuinely reduced');
+    const maskBytes = new Uint8Array(await (await fetch('fixtures/gray-mask.jpg')).arrayBuffer());
+    const mask = await pdf.embedJpg(maskBytes);
+    pdf.context.lookup(jpg.ref).dict.set(PDFName.of('SMask'), mask.ref);
+    const masked = await workerRun(await pdf.save());
+    const maskedDoc = await PDFDocument.load(masked.data, { updateMetadata: false });
+    const preservedMask = maskedDoc.context.lookup(mask.ref);
+    assert(String(preservedMask.dict.lookup(PDFName.of('ColorSpace'))) === '/DeviceGray', 'JPEG soft masks retain their required grayscale decoder');
+    assert(preservedMask.getContents().length === maskBytes.length && masked.optimized === 0, 'parent images and their soft-mask streams are preserved byte-for-byte');
+
+    element = await frame('pdf-compress.html');
+    w = element.contentWindow; d = w.document;
+    assert(!w.PDFLib && !w.JSZip, 'PDF initial page does not load unnecessary libraries');
+    await w.loadPDF(new w.File([output.data], 'optimized.pdf'));
+    assert(d.querySelector('#pdf-status').textContent.includes('预览已就绪'), 'PDF.js module and worker render the recompressed PDF');
+    assert(d.querySelector('#preview-canvas').width > 0 && !d.querySelector('#compress-pdf').disabled, 'preview is rendered and controls are ready');
+    async function checkPreviewLayout(orientation) {
+      const preview = d.querySelector('#preview-canvas');
+      for (const width of [1200, 375]) {
+        element.width = width;
+        await tick();
+        const bounds = preview.getBoundingClientRect();
+        const style = w.getComputedStyle(preview);
+        const contentWidth = bounds.width - parseFloat(style.borderLeftWidth) - parseFloat(style.borderRightWidth);
+        const contentHeight = bounds.height - parseFloat(style.borderTopWidth) - parseFloat(style.borderBottomWidth);
+        assert(Math.abs(contentWidth / contentHeight - preview.width / preview.height) < 0.01, `${orientation} preview preserves its page ratio at ${width}px`);
+        assert(bounds.width <= preview.parentElement.clientWidth && bounds.height <= 402, `${orientation} preview fits its container and height limit at ${width}px`);
+      }
+    }
+    await checkPreviewLayout('landscape');
+    const parsedPage = await w.eval('currentPDF.getPage(1)');
+    const text = await parsedPage.getTextContent();
+    assert(text.items.some(item => item.str.includes('Selectable text remains')), 'text is still selectable, not flattened');
+    const links = await parsedPage.getAnnotations();
+    assert(links.some(link => link.url === 'https://example.com/'), 'hyperlinks remain intact');
+    const portrait = await PDFDocument.create(); portrait.addPage([400, 800]);
+    await w.loadPDF(new w.File([await portrait.save()], 'portrait.pdf'));
+    await checkPreviewLayout('portrait');
+    w.compressPDF(); w.cancelCompression();
+    assert(w.eval('pdfWorker === null') && d.querySelector('#progress-card').style.display === 'none', 'cancel terminates the compression worker and progress');
+    assert(!d.querySelector('#compress-pdf').disabled && d.querySelector('#pdf-status').textContent.includes('取消'), 'cancel keeps the original ready for retry');
+    w.resetTool(); element.remove();
+    const simple = await PDFDocument.create(); simple.addPage([200, 200]);
+    const simpleBytes = await simple.save();
+    const unchanged = await workerRun(simpleBytes);
+    assert(unchanged.data.length <= simpleBytes.length, 'non-image PDFs never grow on download');
+    assert(unchanged.unchanged && unchanged.data.every((byte, index) => byte === simpleBytes[index]), 'no-benefit compression returns the exact original');
+    window.testResult = { passed: true, checks };
+    document.getElementById('result').textContent = `PASS: ${checks} Word import, local drafts, sanitization and real PDF worker/rendering checks`;
+  } catch (error) {
+    window.testResult = { passed: false, checks, error: error.stack };
+    document.getElementById('result').textContent = 'FAIL: ' + error.stack;
+  }
+})();
+</script>

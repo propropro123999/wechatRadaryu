@@ -6,8 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>多表流量分析 - Luyu的工具箱</title>
   <link rel="stylesheet" href="ui.css" />
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 
   <style>
     #app {
@@ -74,6 +72,7 @@
     }
   </style>
     <link rel="stylesheet" href="workspace.css" />
+  <script src="js/dependencies.js"></script>
 </head>
 
 <body>
@@ -511,6 +510,7 @@
       function handleFile(event) {
         const file = event.target.files[0];
         if (!file) return;
+        event.target.value = '';
 
         mergedData = [];
         perSheetData = {};
@@ -526,8 +526,9 @@
           .forEach(id => document.getElementById(id).style.display = "none");
 
         const reader = new FileReader();
-        reader.onload = function (evt) {
+        reader.onload = async function (evt) {
           try {
+            await ToolDependencies.load("xlsx", "plotly");
             const wb = XLSX.read(evt.target.result, { type: "binary" });
             let totalSheets = 0, totalRows = 0, skipped = [];
 

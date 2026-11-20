@@ -6,8 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>公众号内容分析 - Luyu的工具箱</title>
   <link rel="stylesheet" href="ui.css" />
-  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     #app {
       display: block;
@@ -84,6 +82,7 @@
     }
   </style>
     <link rel="stylesheet" href="workspace.css" />
+  <script src="js/dependencies.js"></script>
 </head>
 
 <body>
@@ -249,20 +248,22 @@
     function handleFile(e) {
       const file = e.target.files[0];
       if (!file) return;
+      e.target.value = '';
 
       loadingEl.textContent = "解析中，请稍候…";
       errorEl.textContent = "";
 
       const reader = new FileReader();
-      reader.onload = evt => {
+      reader.onload = async evt => {
         try {
+          await ToolDependencies.load("xlsx", "plotly");
           const workbook = XLSX.read(evt.target.result, { type: "array" });
           const sheet = workbook.Sheets[workbook.SheetNames[0]];
           const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
           process(rows);
         } catch (err) {
           console.error(err);
-          errorEl.textContent = "文件解析失败，请检查格式或另存为 UTF-8 后再试。";
+          errorEl.textContent = err.message + "；" + "文件解析失败，请检查格式或另存为 UTF-8 后再试。";
         }
         loadingEl.textContent = "";
       };
