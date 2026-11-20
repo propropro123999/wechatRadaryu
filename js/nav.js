@@ -1,4 +1,4 @@
-// 图标路径来自 Lucide（ISC），授权见 THIRD-PARTY-NOTICES.md。
+// 图标路径来自 Lucide（ISC），授权见 THIRD-PARTY-NOTICES.md；brand 是本站自绘的标志。
 const WORKSPACE_ICONS = {
   grid: '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
   chart: '<path d="M12 16v5"/><path d="M16 14v7"/><path d="M20 10v11"/><path d="m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15"/><path d="M4 18v3"/><path d="M8 14v7"/>',
@@ -43,7 +43,7 @@ const WORKSPACE_ICONS = {
   pdf: '<path d="M10 12v-1"/><path d="M10 18v-2"/><path d="M10 7V6"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M15.5 22H18a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v16a2 2 0 0 0 .274 1.01"/><circle cx="10" cy="20" r="2"/>',
   stitch: '<path d="M7 2h10"/><path d="M5 6h14"/><rect width="18" height="12" x="3" y="10" rx="2"/>',
   terminal: '<path d="m7 11 2-2-2-2"/><path d="M11 13h4"/><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>',
-  brand: '<rect width="7" height="7" x="14" y="3" rx="1"/><path d="M10 21V8a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H3"/>',
+  brand: '<circle cx="8" cy="10" r="1.6" fill="currentColor" stroke="none"/><path d="M13 10.6q2.2-2.8 4.4 0"/><path d="M8.4 15.2q3.6 2.9 7.2 0"/>',
   user: '<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
   history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>'
 };
@@ -53,16 +53,16 @@ function workspaceIcon(name) {
 }
 
 const NAV_ITEMS = [
-  { href: 'content-dashboard.html', icon: 'chart', label: '内容数据分析', category: 'analytics', desc: '读懂阅读、分享与完读表现，发现值得复用的好内容。', formats: 'CSV / XLSX', keywords: '公众号 微信 四象限 榜单', local: true },
-  { href: 'community-dashboard.html', icon: 'community', label: '专栏 / 帖子分析', category: 'analytics', desc: '拆解发布频次、作者分层与高频词，掌握运营全貌。', formats: 'CSV / XLSX', keywords: '作者 内容 运营', local: true },
-  { href: 'page-traffic-dashboard.html', icon: 'traffic', label: '页面流量分析', category: 'analytics', desc: '从页面访问到流量漏斗，看清用户行为与转化路径。', formats: 'CSV / XLSX', keywords: '访问 页面 PV UV', local: true },
-  { href: 'word-to-html.html', icon: 'word', label: 'Word 转 HTML', category: 'documents', desc: '保留文档图文结构，快速生成可发布的网页内容。', formats: 'DOCX → HTML', keywords: '文档 网页 转换 知乎 公众号', local: false },
-  { href: 'image-compress.html', icon: 'image-down', label: '图片压缩', category: 'media', desc: '批量减小图片体积，自定义画质与尺寸，轻巧不将就。', formats: 'JPG / PNG / WebP', keywords: '图片 批量 质量 大小', local: true },
-  { href: 'article-formatter.html', icon: 'edit', label: '文章排版', category: 'documents', desc: '清理冗余样式，规范标点与空格，让每一段更易读。', formats: 'TEXT / HTML', keywords: '文本 清洗 编辑 格式化', local: false },
-  { href: 'yiban-dashboard.html', icon: 'sources', label: '阅读来源分析', category: 'analytics', desc: '把文章报表变成直观洞察，深度分析互动与转化。', formats: 'CSV / XLSX', keywords: '公众号 微信 报表', local: true },
-  { href: 'youmeng.html', icon: 'sheets', label: '多表流量分析', category: 'analytics', desc: '合并多 Sheet 报表，对比流量趋势，告别重复汇总。', formats: 'XLSX / XLS', keywords: '多表 Sheet 合并 趋势', local: true },
-  { href: 'pdf-compress.html', icon: 'pdf', label: 'PDF 压缩', category: 'media', desc: '按需平衡文件大小与清晰度，让文档分享更轻松。', formats: 'PDF', keywords: '文档 减小 大小 质量', local: true },
-  { href: 'image-stitch.html', icon: 'stitch', label: '长图拼接', category: 'media', desc: '多张图片自由排序、无缝拼接，一张长图完整表达。', formats: 'JPG / PNG', keywords: '图片 合并 排序 长图', local: true },
+  { href: 'content-dashboard.html', icon: 'chart', label: '内容数据分析', category: 'analytics', desc: '看阅读、分享和完读，哪篇能打一目了然。', formats: 'CSV / XLSX', keywords: '公众号 微信 四象限 榜单', local: true },
+  { href: 'community-dashboard.html', icon: 'community', label: '专栏 / 帖子分析', category: 'analytics', desc: '发帖频次、作者分层、高频词，一张表摸清家底。', formats: 'CSV / XLSX', keywords: '作者 内容 运营', local: true },
+  { href: 'page-traffic-dashboard.html', icon: 'traffic', label: '页面流量分析', category: 'analytics', desc: '谁来了、看了啥、在哪走的，漏斗里见分晓。', formats: 'CSV / XLSX', keywords: '访问 页面 PV UV', local: true },
+  { href: 'word-to-html.html', icon: 'word', label: 'Word 转 HTML', category: 'documents', desc: 'Word 文档原样搬上网页，图文一个不落。', formats: 'DOCX → HTML', keywords: '文档 网页 转换 知乎 公众号', local: false },
+  { href: 'image-compress.html', icon: 'image-down', label: '图片压缩', category: 'media', desc: '给图片批量瘦身，画质和尺寸你说了算。', formats: 'JPG / PNG / WebP', keywords: '图片 批量 质量 大小 体积 压缩', local: true },
+  { href: 'article-formatter.html', icon: 'edit', label: '文章排版', category: 'documents', desc: '清掉乱七八糟的样式，标点空格各归各位。', formats: 'TEXT / HTML', keywords: '文本 清洗 编辑 格式化', local: false },
+  { href: 'yiban-dashboard.html', icon: 'sources', label: '阅读来源分析', category: 'analytics', desc: '读者从哪儿来的？按来源拆开看互动和转化。', formats: 'CSV / XLSX', keywords: '公众号 微信 报表', local: true },
+  { href: 'youmeng.html', icon: 'sheets', label: '多表流量分析', category: 'analytics', desc: '多个 Sheet 合成一张，不用再手动复制粘贴。', formats: 'XLSX / XLS', keywords: '多表 Sheet 合并 趋势', local: true },
+  { href: 'pdf-compress.html', icon: 'pdf', label: 'PDF 压缩', category: 'media', desc: '给 PDF 减减肥，清晰度留多少你定。', formats: 'PDF', keywords: '文档 减小 大小 质量', local: true },
+  { href: 'image-stitch.html', icon: 'stitch', label: '长图拼接', category: 'media', desc: '多张图排好队，拼成一张长图。', formats: 'JPG / PNG', keywords: '图片 合并 排序 长图', local: true },
   { href: 'orc-log-parser.html', icon: 'terminal', label: 'ORC 日志解析', category: 'developer', desc: '批量解析 ORC 数据，筛选、合并并导出 Excel 报表。', formats: 'ORC → XLSX', keywords: '日志 大数据 开发 Excel', local: false }
 ];
 

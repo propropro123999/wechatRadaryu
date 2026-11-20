@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import vm from 'node:vm';
@@ -76,6 +76,14 @@ for (const page of [home, siteNavPage]) {
   assert.doesNotMatch(page, /class="(brand-mark|user-avatar|topbar-avatar)"[^>]*>[^<]/);
 }
 assert.match(readFileSync(resolve(root, 'THIRD-PARTY-NOTICES.md'), 'utf8'), /ISC License[\s\S]+CC0 1\.0/);
+assert.equal([...home.matchAll(/class="wall-ghost" aria-hidden="true"/g)].length, tools.length + 1);
+assert.equal([...home.matchAll(/class="wall-text"/g)].length, tools.length + 1);
+assert.doesNotMatch(home + readFileSync(resolve(root, 'js/workspace.js'), 'utf8') + readFileSync(resolve(root, 'js/nav.js'), 'utf8'), /好工具|更从容|每一次创造|每一天|不将就|发现洞察/);
+assert.match(readFileSync(resolve(root, 'favicon.svg'), 'utf8'), /^<svg /);
+for (const page of readdirSync(root).filter(name => name.endsWith('.html'))) {
+  assert.match(readFileSync(resolve(root, page), 'utf8'), /<link rel="icon" type="image\/svg\+xml" href="favicon\.svg">/, page);
+}
+assert.match(tools.find(tool => tool.href === 'image-compress.html').keywords, /体积/);
 let navMarkup = '';
 const navElement = { addEventListener() {}, querySelector() { return this; }, contains() { return false; } };
 context.location = { pathname: '/community-dashboard' };
