@@ -562,12 +562,13 @@
             }
 
             // Ensure DB is ready
-            if (!db) {
+            if (!conn) {
                 updateFileStatus(fileId, '初始化DB...', 'running');
                 try {
                     await window.initDuckDB();
                 } catch (err) {
-                    updateFileStatus(fileId, 'DB初始化失败', 'error');
+                    log('本地组件初始化失败，尝试云端解析…', 'warning');
+                    await window.fallbackToServer(file, fileId);
                     return;
                 }
             }
