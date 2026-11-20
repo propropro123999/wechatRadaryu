@@ -1,6 +1,7 @@
 (function () {
   'use strict';
   const { categories, sites } = window.SITE_NAV;
+  const icons = window.SITE_NAV_ICONS;
   const weights = [300, 800, 500, 200, 900, 400, 700, 100, 600, 900, 300, 800, 200, 700];
   const glyphs = [
     '<path d="M12 2.5l2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L12 17.4l-5.9 3.3 1.3-6.6L2.5 9.5l6.6-.8z" fill="currentColor"/>',
@@ -41,7 +42,7 @@
     (index < categories.length - 1 ? '<svg class="sn-glyph" viewBox="0 0 24 24" aria-hidden="true" style="--c:' + categories[(index + 5) % categories.length].color + '">' + glyphs[index % glyphs.length] + '</svg>' : '')
   ).join('');
   function chip(id, label, count, color) {
-    return '<button type="button" class="sn-chip" data-cat="' + id + '" aria-pressed="false"' + (color ? ' style="--c:' + color + '"' : '') + '>' + escapeHtml(label) + (count === '' ? '' : ' <b>' + count + '</b>') + '</button>';
+    return '<button type="button" class="sn-chip" data-cat="' + id + '" aria-pressed="false"' + (color ? ' style="--c:' + color + '"' : '') + '>' + lineIcon(icons.categories[id]) + escapeHtml(label) + (count === '' ? '' : ' <b>' + count + '</b>') + '</button>';
   }
   chips.innerHTML = chip('all', '全部', sites.length) + chip('favorites', '收藏', 0) + chip('recent', '最近访问', '') +
     categories.map((cat, index) => chip(cat.id, cat.name.split(/[ 、/]/)[0], counts[index], cat.color)).join('');
@@ -58,11 +59,18 @@
     }
     return html + escapeHtml(value.slice(last));
   }
+  function lineIcon(name) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + icons.lucide[name] + '</svg>';
+  }
+  function siteIcon(index) {
+    const key = icons.sites[index];
+    return key.startsWith('b:') ? '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="' + icons.brands[key.slice(2)] + '"/></svg>' : lineIcon(key);
+  }
   function card(item, order, terms) {
     const favorite = favorites.includes(item.url);
     return '<article class="sn-card" data-cat="' + item.cat.id + '" style="--c:' + item.cat.color + ';--i:' + order + '">' +
       '<a class="sn-link" href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer" data-site="' + item.index + '">' +
-      '<span class="sn-avatar" aria-hidden="true">' + escapeHtml([...item.name][0]) + '</span>' +
+      '<span class="sn-avatar" aria-hidden="true">' + siteIcon(item.index) + '</span>' +
       '<span class="sn-name">' + highlight(item.name, terms) + '</span><span class="sn-host">' + highlight(item.host, terms) + '</span>' +
       '<span class="sn-desc">' + highlight(item.desc, terms) + '</span>' +
       '<svg class="sn-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>' +

@@ -60,6 +60,22 @@ for (const category of siteNav.categories) {
   assert.match(category.color, /^#[0-9a-f]{6}$/);
   assert.ok(siteNav.sites.some(site => siteNav.categories[site[0]] === category), category.id);
 }
+const iconContext = { window: {} };
+vm.runInNewContext(readFileSync(resolve(root, 'js/site-nav-icons.js'), 'utf8'), iconContext);
+const siteIcons = iconContext.window.SITE_NAV_ICONS;
+assert.equal(siteIcons.sites.length, siteNav.sites.length);
+for (const key of siteIcons.sites) {
+  assert.ok(key.startsWith('b:') ? siteIcons.brands[key.slice(2)] : siteIcons.lucide[key], key);
+}
+for (const id of ['all', 'favorites', 'recent', ...siteNav.categories.map(category => category.id)]) {
+  assert.ok(siteIcons.lucide[siteIcons.categories[id]], id);
+}
+assert.ok(siteNavPage.indexOf('js/site-nav-icons.js') < siteNavPage.indexOf('js/site-nav.js"'));
+assert.equal(new Set(tools.map(tool => tool.icon)).size, tools.length);
+for (const page of [home, siteNavPage]) {
+  assert.doesNotMatch(page, /class="(brand-mark|user-avatar|topbar-avatar)"[^>]*>[^<]/);
+}
+assert.match(readFileSync(resolve(root, 'THIRD-PARTY-NOTICES.md'), 'utf8'), /ISC License[\s\S]+CC0 1\.0/);
 let navMarkup = '';
 const navElement = { addEventListener() {}, querySelector() { return this; }, contains() { return false; } };
 context.location = { pathname: '/community-dashboard' };
