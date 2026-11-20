@@ -81,8 +81,14 @@ assert.equal([...home.matchAll(/class="wall-text"/g)].length, tools.length + 1);
 assert.doesNotMatch(home + readFileSync(resolve(root, 'js/workspace.js'), 'utf8') + readFileSync(resolve(root, 'js/nav.js'), 'utf8'), /好工具|更从容|每一次创造|每一天|不将就|发现洞察/);
 assert.match(readFileSync(resolve(root, 'favicon.svg'), 'utf8'), /^<svg /);
 for (const page of readdirSync(root).filter(name => name.endsWith('.html'))) {
-  assert.match(readFileSync(resolve(root, page), 'utf8'), /<link rel="icon" type="image\/svg\+xml" href="favicon\.svg">/, page);
+  const markup = readFileSync(resolve(root, page), 'utf8');
+  assert.match(markup, /<link rel="icon" type="image\/svg\+xml" href="\/?favicon\.svg">/, page);
+  assert.match(markup, /<script src="\/?js\/playful\.js" defer><\/script>/, page);
 }
+const lostPage = readFileSync(resolve(root, '404.html'), 'utf8');
+assert.match(lostPage, /<meta name="robots" content="noindex">/);
+for (const tool of tools) assert.ok(lostPage.includes(JSON.stringify([tool.href, tool.label])), tool.href);
+assert.doesNotMatch(lostPage, /(?:href|src)="(?!\/|#)/);
 assert.match(tools.find(tool => tool.href === 'image-compress.html').keywords, /体积/);
 let navMarkup = '';
 const navElement = { addEventListener() {}, querySelector() { return this; }, contains() { return false; } };

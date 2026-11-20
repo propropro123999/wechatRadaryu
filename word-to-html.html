@@ -355,8 +355,9 @@
                 document.getElementById('preview-content').innerHTML = '<div style="text-align:center; padding: 40px; color: #666;">正在转换中...</div>';
                 document.getElementById('preview-container').style.display = 'block';
 
-                try { await convertDocxToHtml(await file.arrayBuffer()); }
-                catch (error) { handleError(error); }
+                const mood = window.LuyuPlayful?.busy('word');
+                try { await convertDocxToHtml(await file.arrayBuffer()); mood?.done('搬好了，图文都在'); }
+                catch (error) { mood?.fail(); handleError(error); }
                 finally { wordImportBusy = false; window.wordDraft?.setBusy(false); }
 
             }
@@ -710,6 +711,7 @@
     </script>
     <script src="js/nav.js"></script>
     <script src="js/workspace.js"></script>
+    <script src="js/playful.js" defer></script>
 </body>
 
 </html>

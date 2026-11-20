@@ -88,6 +88,7 @@
 .brand-mark,
 .workspace-home :is(.eyebrow, .workspace-version, .welcome-row h1, .hero-wall, .nav-banner-tag, .toolbox-heading h2, .catalog-card h3, .footer-brand),
 .workspace-home .catalog-card-bottom > span:first-child,
+.lost-page :is(h1, .lost-code),
 .workspace-tool #nav-container + .tool-intro :is(.eyebrow, h1, .tool-format-badge) {
   font-family: var(--font-display);
   font-optical-sizing: auto;
@@ -569,4 +570,24 @@ a:hover > .brand-mark { background: #ff3b3b; transform: rotate(-8deg) scale(1.06
   .wall-word::after { display: none; }
   .nav-banner-track { display: none; }
   .nav-banner-go { margin-left: auto; }
+}
+
+/* 机器人标志、结果气泡和彩纸：只是页面装饰，不进入编辑器、复制和导出内容。 */
+.brand-mark svg > * { transform-box: fill-box; transform-origin: center; translate: var(--look-x, 0px) var(--look-y, 0px); transition: translate .18s ease-out; }
+.brand-mark svg > :nth-child(-n+2) { animation: luyu-blink 5.6s infinite; }
+.brand-mark svg > :last-child { translate: calc(var(--look-x, 0px) * .5) calc(var(--look-y, 0px) * .5); }
+.brand-mark.pop { animation: luyu-pop .45s cubic-bezier(.2,.8,.2,1); }
+@keyframes luyu-blink { 0%, 93%, 100% { scale: 1 1; } 96% { scale: 1 .12; } }
+@keyframes luyu-pop { 40% { transform: scale(1.2) rotate(-10deg); } }
+.luyu-bubble { position: fixed; right: 22px; bottom: 22px; z-index: 2147483000; display: flex; align-items: center; gap: 10px; max-width: min(340px, calc(100vw - 44px)); padding: 8px 16px 8px 8px; border-radius: 999px; background: #111; color: #fff; font-size: 13px; font-weight: 500; line-height: 1.45; box-shadow: 0 12px 32px rgba(0,0,0,.22); pointer-events: none; user-select: none; opacity: 0; transform: translateY(14px) scale(.96); transition: opacity .25s, transform .35s cubic-bezier(.2,.8,.2,1); }
+.luyu-bubble.show { opacity: 1; transform: none; }
+.luyu-bubble-face { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 10px; background: #fff; color: #111; }
+.luyu-bubble-face svg { width: 72%; height: 72%; }
+.luyu-confetti { position: fixed; right: 64px; bottom: 46px; z-index: 2147483000; width: 0; height: 0; pointer-events: none; }
+.luyu-confetti i { position: absolute; width: 8px; height: 12px; border-radius: 2px; background: var(--c); opacity: 0; animation: luyu-confetti 1.15s cubic-bezier(.15,.7,.3,1) var(--d) forwards; }
+@keyframes luyu-confetti { 0% { opacity: 1; transform: none; } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)); } }
+@media (prefers-reduced-motion: reduce) {
+  .brand-mark svg > * { animation: none; transition: none; }
+  .brand-mark.pop { animation: none; }
+  .luyu-bubble { transform: none; transition: opacity .2s; }
 }

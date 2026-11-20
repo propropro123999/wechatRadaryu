@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/png" sizes="180x180" href="/favicon.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/favicon.png">
+  <title>这页被我弄丢了 · Luyu的工具箱</title>
+  <link rel="stylesheet" href="/ui.css">
+  <link rel="stylesheet" href="/workspace.css">
+  <style>
+    .lost-page { margin: 0; min-height: 100dvh; display: grid; place-items: center; background: #fff; color: var(--ink); }
+    .lost { width: min(560px, calc(100vw - 48px)); padding: 56px 0; text-align: center; }
+    .lost-mark { position: relative; width: 132px; height: 132px; margin-top: 40px; padding: 0; border: 0; border-radius: 38px; cursor: pointer; animation: lost-float 3.6s ease-in-out infinite; }
+    .lost-mark svg { flex: none; width: 84px; height: 84px; }
+    .lost-mark::before { content: ""; position: absolute; left: 50%; top: -24px; width: 8px; height: 28px; margin-left: -4px; border-radius: 4px; background: var(--ink); }
+    .lost-mark::after { content: ""; position: absolute; left: 50%; top: -40px; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%; background: #ff3b3b; }
+    .lost-mark:hover { background: #ff3b3b; }
+    .lost-mark:focus-visible { outline: 3px solid #0a84ff; outline-offset: 6px; }
+    .lost-code { margin: 34px 0 0; color: #ff3b3b; font-size: 15px; font-weight: 800; letter-spacing: .28em; }
+    .lost h1 { margin: 8px 0 0; color: var(--ink); font-size: clamp(34px, 7vw, 56px); font-weight: 800; letter-spacing: -.03em; line-height: 1.15; }
+    .lost h1 span { color: #ff3b3b; }
+    .lost-sub { margin: 16px 0 0; color: #666; font-size: 15px; line-height: 1.8; }
+    .lost-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 30px; }
+    .lost-actions a { padding: 11px 20px; border: 1.5px solid var(--ink); border-radius: 999px; color: var(--ink); font-size: 14px; font-weight: 600; text-decoration: none; transition: transform .25s cubic-bezier(.2,.8,.2,1), background .2s, color .2s; }
+    .lost-actions a:first-child, .lost-actions a:hover { background: var(--ink); color: #fff; }
+    .lost-actions a:hover { transform: translateY(-2px); }
+    .lost-tip { margin: 26px 0 0; color: #999; font-size: 12px; }
+    @keyframes lost-float { 50% { transform: translateY(-8px) rotate(-3deg); } }
+    @media (prefers-reduced-motion: reduce) { .lost-mark { animation: none; } .lost-actions a { transition: none; } }
+  </style>
+</head>
+<body class="lost-page">
+  <main class="lost">
+    <button type="button" class="brand-mark lost-mark" data-face="wow" aria-label="换个表情"><svg viewBox="4.5 5.5 15 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.2" cy="9.9" r="1.6" fill="currentColor" stroke="none"/><circle cx="15.8" cy="9.9" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="15.6" r="1.6"/></svg></button>
+    <p class="lost-code">404</p>
+    <h1>这页被我弄丢了<span>。</span></h1>
+    <p class="lost-sub">也可能它从来就没存在过。核对一下地址，或者让我带你去个有用的地方。</p>
+    <div class="lost-actions">
+      <a id="lost-pick" href="/index.html">随便给我一个工具</a>
+      <a href="/index.html">回首页</a>
+      <a href="/site-nav.html">网址导航</a>
+    </div>
+    <p class="lost-tip">点一下机器人，它会换个表情安慰你。</p>
+  </main>
+  <script>
+    (function () {
+      const tools = [["content-dashboard.html","内容数据分析"],["community-dashboard.html","专栏 / 帖子分析"],["page-traffic-dashboard.html","页面流量分析"],["word-to-html.html","Word 转 HTML"],["image-compress.html","图片压缩"],["article-formatter.html","文章排版"],["yiban-dashboard.html","阅读来源分析"],["youmeng.html","多表流量分析"],["pdf-compress.html","PDF 压缩"],["image-stitch.html","长图拼接"],["orc-log-parser.html","ORC 日志解析"]];
+      const [href, label] = tools[Math.floor(Math.random() * tools.length)];
+      const pick = document.getElementById('lost-pick');
+      pick.href = '/' + href;
+      pick.textContent = '不如试试「' + label + '」';
+    })();
+  </script>
+  <script src="/js/playful.js" defer></script>
+</body>
+</html>
