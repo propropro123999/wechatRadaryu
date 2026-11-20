@@ -27,6 +27,12 @@ for (const tool of tools) {
 }
 assert.deepEqual(counts, { analytics: 5, documents: 2, media: 3, developer: 1 });
 const home = readFileSync(resolve(root, 'index.html'), 'utf8');
+const styles = readFileSync(resolve(root, 'workspace.css'), 'utf8');
+assert.match(styles, /--font-display: "Allo Display", var\(--font-sans\)/);
+assert.doesNotMatch(styles.match(/--font-sans:[^;]+;/)[0], /Allo/);
+assert.equal((styles.match(/font-family: var\(--font-display\)/g) || []).length, 1);
+assert.equal(readFileSync(resolve(root, 'fonts/AlloVariableFriendly.woff2')).subarray(0, 4).toString(), 'wOF2');
+assert.match(readFileSync(resolve(root, 'fonts/OFL.txt'), 'utf8'), /SIL OPEN FONT LICENSE Version 1\.1/);
 for (const id of ['tool-grid', 'tool-search', 'catalog-empty', 'grid-view', 'list-view', 'mobile-menu', 'workspace-sidebar', 'sidebar-backdrop']) {
   assert.match(home, new RegExp('id="' + id + '"'));
 }
