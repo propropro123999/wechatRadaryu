@@ -200,11 +200,28 @@
     await w.loadPDF(new w.File([output.data], 'optimized.pdf'));
     assert(d.querySelector('#pdf-status').textContent.includes('预览已就绪'), 'PDF.js module and worker render the recompressed PDF');
     assert(d.querySelector('#preview-canvas').width > 0 && !d.querySelector('#compress-pdf').disabled, 'preview is rendered and controls are ready');
+    async function checkPreviewLayout(orientation) {
+      const preview = d.querySelector('#preview-canvas');
+      for (const width of [1200, 375]) {
+        element.width = width;
+        await tick();
+        const bounds = preview.getBoundingClientRect();
+        const style = w.getComputedStyle(preview);
+        const contentWidth = bounds.width - parseFloat(style.borderLeftWidth) - parseFloat(style.borderRightWidth);
+        const contentHeight = bounds.height - parseFloat(style.borderTopWidth) - parseFloat(style.borderBottomWidth);
+        assert(Math.abs(contentWidth / contentHeight - preview.width / preview.height) < 0.01, `${orientation} preview preserves its page ratio at ${width}px`);
+        assert(bounds.width <= preview.parentElement.clientWidth && bounds.height <= 402, `${orientation} preview fits its container and height limit at ${width}px`);
+      }
+    }
+    await checkPreviewLayout('landscape');
     const parsedPage = await w.eval('currentPDF.getPage(1)');
     const text = await parsedPage.getTextContent();
     assert(text.items.some(item => item.str.includes('Selectable text remains')), 'text is still selectable, not flattened');
     const links = await parsedPage.getAnnotations();
     assert(links.some(link => link.url === 'https://example.com/'), 'hyperlinks remain intact');
+    const portrait = await PDFDocument.create(); portrait.addPage([400, 800]);
+    await w.loadPDF(new w.File([await portrait.save()], 'portrait.pdf'));
+    await checkPreviewLayout('portrait');
     w.compressPDF(); w.cancelCompression();
     assert(w.eval('pdfWorker === null') && d.querySelector('#progress-card').style.display === 'none', 'cancel terminates the compression worker and progress');
     assert(!d.querySelector('#compress-pdf').disabled && d.querySelector('#pdf-status').textContent.includes('取消'), 'cancel keeps the original ready for retry');
