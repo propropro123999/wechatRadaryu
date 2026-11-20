@@ -1,0 +1,100 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Word preview and clipboard tests</title>
+<pre id="result">Running…</pre>
+<iframe id="converter" src="../word-to-html.html" title="Word converter under test" style="width: 1100px; height: 800px;"></iframe>
+<script>
+document.querySelector('#converter').addEventListener('load', async function () {
+    try {
+        const w = this.contentWindow;
+        const d = w.document;
+        let checks = 0;
+        const assert = (condition, message) => {
+            if (!condition) throw new Error(message);
+            checks++;
+        };
+        const preview = d.querySelector('#preview-content');
+        const helper = d.querySelector('#clipboard-helper');
+        d.querySelector('#preview-container').style.display = 'block';
+        const image = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+        const fixture = '<h1>Word 标题</h1><p>第一段 <strong>粗体</strong> &amp; 英文</p><p>第二段<br>下一行</p><h2>列表</h2><ul><li>项目一</li><li>项目二</li></ul><table><tr><td>单元格一</td><td>单元格二</td></tr></table><p style="font-family: Georgia, serif">原文字体</p><div class="img-wrapper"><img src="' + image + '"><div class="img-controls"><button>复制图片</button></div></div>';
+        preview.innerHTML = fixture;
+        const headingStyle = w.getComputedStyle(preview.querySelector('h1'));
+        assert(headingStyle.webkitTextFillColor === headingStyle.color, 'Word H1 uses a visible text fill');
+        assert(headingStyle.backgroundImage === 'none' && headingStyle.display === 'block', 'Word H1 is a normal block heading without the marketing gradient');
+        assert(!headingStyle.fontFamily.includes('Allo'), 'Word content retains functional typography');
+        const original = preview.innerHTML;
+        const expectedHtml = original.replace(/<div class="img-wrapper">(.*?)<div class="img-controls">.*?<\/div><\/div>/, '$1');
+        const expectedText = preview.innerText.replace(/\s*复制图片\s*$/, '');
+        const alerts = [];
+        w.alert = message => alerts.push(message);
+        let clipboard;
+        const dispatchCopy = () => {
+            assert(helper.contains(w.getSelection().anchorNode), 'copy selection belongs to the rendered helper');
+            assert(d.querySelectorAll('#preview-content').length === 1, 'helper has no duplicate preview ID');
+            const event = new w.Event('copy', {cancelable: true});
+            clipboard = {};
+            event.clipboardData = {setData: (type, value) => { clipboard[type] = value; }};
+            d.dispatchEvent(event);
+            assert(event.defaultPrevented, 'copy handler provides explicit payloads');
+            return true;
+        };
+        const assertPayload = () => {
+            assert(clipboard['text/plain'] === expectedText, 'plain text matches the rendered paragraph, line, list and table structure');
+            assert(/英文\n\n第二段\n下一行/.test(clipboard['text/plain']), 'paragraph and explicit line breaks survive copying');
+            assert(/单元格一\t单元格二/.test(clipboard['text/plain']), 'table cells remain separated');
+            assert(clipboard['text/html'] === expectedHtml, 'rich HTML preserves headings, bold, images and source fonts without controls');
+            assert(!/Allo|woff2|--font-display|clipboard-helper|img-controls|img-wrapper/.test(clipboard['text/html']), 'clipboard has no display typography or copy-helper markup');
+        };
+        const assertCleanup = () => {
+            assert(!helper.childNodes.length && !w.getSelection().rangeCount, 'helper and selection cleaned up');
+            assert(preview.innerHTML === original, 'copy leaves the visible preview unchanged');
+            const event = new w.Event('copy', {cancelable: true});
+            d.dispatchEvent(event);
+            assert(!event.defaultPrevented, 'no copy listener leaks after the attempt');
+        };
+
+        d.execCommand = dispatchCopy;
+        await w.copyRichText();
+        assertPayload();
+        assertCleanup();
+
+        d.execCommand = () => false;
+        w.ClipboardItem = class { constructor(data) { this.data = data; } };
+        Object.defineProperty(w.navigator, 'clipboard', {configurable: true, value: {
+            write: async items => {
+                clipboard = {};
+                for (const [type, blob] of Object.entries(items[0].data)) clipboard[type] = await blob.text();
+            },
+            writeText: async text => { clipboard = {'text/plain': text}; }
+        }});
+        await w.copyRichText();
+        assertPayload();
+        assertCleanup();
+
+        let attempts = 0;
+        d.execCommand = () => ++attempts === 1 ? false : dispatchCopy();
+        w.navigator.clipboard.write = async () => { throw new Error('permission denied'); };
+        await w.copyRichText();
+        assertPayload();
+        assertCleanup();
+
+        d.execCommand = () => { throw new Error('copy unsupported'); };
+        await w.copyRichText();
+        assert(alerts.at(-1).includes('自动复制失败'), 'clipboard failure is reported instead of false success');
+        assertCleanup();
+        d.execCommand = () => false;
+        await w.copyRichText();
+        assert(alerts.at(-1).includes('自动复制失败'), 'false copy result is not reported as success');
+        assertCleanup();
+
+        w.copyHTML();
+        await Promise.resolve();
+        assert(clipboard['text/plain'] === original, 'raw HTML copy remains unchanged');
+        document.querySelector('#result').textContent = `PASS: ${checks} Word preview and clipboard checks`;
+    } catch (error) {
+        document.querySelector('#result').textContent = 'FAIL: ' + error.stack;
+        throw error;
+    }
+});
+</script>

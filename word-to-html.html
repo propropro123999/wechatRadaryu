@@ -126,6 +126,12 @@
         }
 
         /* Word Content Styles for Preview */
+        .word-content h1 {
+            background: none;
+            -webkit-text-fill-color: currentColor;
+            display: block;
+        }
+
         .word-content img {
             max-width: 100%;
             height: auto;
@@ -267,7 +273,7 @@
             </div>
 
             <!-- Hidden container for clipboard operations -->
-            <div id="clipboard-helper" contenteditable="true" style="position: absolute; left: -9999px;"></div>
+            <div id="clipboard-helper" contenteditable="true" aria-hidden="true" style="position: absolute; left: -9999px;"></div>
 
         </div>
 
@@ -587,73 +593,70 @@
                 });
 
                 const content = contentClone;
+                content.removeAttribute('id');
+                const helper = document.getElementById('clipboard-helper');
+                // innerText needs a rendered tree to preserve paragraph and line breaks.
+                helper.replaceChildren(content);
+                const html = content.innerHTML;
+                const text = content.innerText;
+                const copyHandler = (e) => {
+                    e.preventDefault();
+                    e.clipboardData.setData('text/html', html);
+                    e.clipboardData.setData('text/plain', text);
+                };
 
-                // Note: Images are already handled (local base64 OR cloud url)
-                // If user clicked "Convert to Cloud", images are already URLs.
-                // If not, they are Base64.
-                // No auto-upload logic here anymore, explicit action only.
-
-                try {
-                    // 方案1: 使用 copy 事件监听器 - 最可靠的方法
-                    const copyHandler = (e) => {
-                        e.preventDefault();
-                        e.clipboardData.setData('text/html', content.innerHTML);
-                        e.clipboardData.setData('text/plain', content.innerText);
-                        document.removeEventListener('copy', copyHandler);
-                    };
-
-                    document.addEventListener('copy', copyHandler);
-
-                    // 选中内容并触发复制
+                const copyWithSelection = () => {
                     const range = document.createRange();
                     range.selectNodeContents(content);
                     const selection = window.getSelection();
                     selection.removeAllRanges();
                     selection.addRange(range);
-
-                    const success = document.execCommand('copy');
-                    selection.removeAllRanges();
-
-                    if (success) {
-                        alert('图文内容已复制！现在可以粘贴到微信公众号、Word 等编辑器中。');
-                        return;
+                    document.addEventListener('copy', copyHandler);
+                    try {
+                        return document.execCommand('copy');
+                    } finally {
+                        document.removeEventListener('copy', copyHandler);
+                        selection.removeAllRanges();
                     }
-                } catch (err) {
-                    console.warn('Copy event method failed:', err);
-                }
+                };
 
-                // 方案2: 使用现代 Clipboard API
                 try {
-                    if (navigator.clipboard && navigator.clipboard.write) {
-                        const htmlBlob = new Blob([content.innerHTML], { type: 'text/html' });
-                        const textBlob = new Blob([content.innerText], { type: 'text/plain' });
-
-                        const clipboardItem = new ClipboardItem({
-                            'text/html': htmlBlob,
-                            'text/plain': textBlob
-                        });
-
-                        await navigator.clipboard.write([clipboardItem]);
-                        alert('图文内容已复制！现在可以粘贴到编辑器中。');
-                        return;
+                    try {
+                        if (copyWithSelection()) {
+                            alert('图文内容已复制！现在可以粘贴到微信公众号、Word 等编辑器中。');
+                            return;
+                        }
+                    } catch (err) {
+                        console.warn('Copy event method failed:', err);
                     }
-                } catch (err) {
-                    console.warn('Clipboard API failed:', err);
-                }
 
-                // 方案3: 最后的兜底方案
-                try {
-                    const range = document.createRange();
-                    range.selectNodeContents(content);
-                    window.getSelection().removeAllRanges();
-                    window.getSelection().addRange(range);
+                    try {
+                        if (navigator.clipboard && navigator.clipboard.write) {
+                            const htmlBlob = new Blob([html], { type: 'text/html' });
+                            const textBlob = new Blob([text], { type: 'text/plain' });
 
-                    document.execCommand('copy');
-                    window.getSelection().removeAllRanges();
-                    alert('内容已复制！如果图片未显示，请尝试在浏览器中手动选中内容后按 Ctrl+C (或 Cmd+C) 复制。');
-                } catch (err) {
-                    console.error('All copy methods failed:', err);
-                    alert('自动复制失败。请手动选中内容后按 Ctrl+C (或 Cmd+C) 复制。');
+                            const clipboardItem = new ClipboardItem({
+                                'text/html': htmlBlob,
+                                'text/plain': textBlob
+                            });
+
+                            await navigator.clipboard.write([clipboardItem]);
+                            alert('图文内容已复制！现在可以粘贴到编辑器中。');
+                            return;
+                        }
+                    } catch (err) {
+                        console.warn('Clipboard API failed:', err);
+                    }
+
+                    try {
+                        if (!copyWithSelection()) throw new Error('Copy command failed');
+                        alert('内容已复制！如果图片未显示，请尝试在浏览器中手动选中内容后按 Ctrl+C (或 Cmd+C) 复制。');
+                    } catch (err) {
+                        console.error('All copy methods failed:', err);
+                        alert('自动复制失败。请手动选中内容后按 Ctrl+C (或 Cmd+C) 复制。');
+                    }
+                } finally {
+                    helper.replaceChildren();
                 }
             }
 
