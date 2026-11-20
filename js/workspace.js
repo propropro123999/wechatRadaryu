@@ -89,6 +89,7 @@
   if (current) {
     document.body.classList.add('workspace-tool');
     document.body.dataset.tool = current.href.replace('.html', '');
+    document.body.dataset.toolCategory = current.category;
     markVisited(current.href);
     let nav = document.getElementById('nav-container');
     if (!nav) {

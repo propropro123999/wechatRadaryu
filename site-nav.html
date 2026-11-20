@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="硬件工程师常用网站导航：资讯、论坛、规格书、元器件采购、PCB 打样、EDA、原厂与测试仪器，一页直达。">
+  <meta name="referrer" content="no-referrer">
+  <title>网址导航 - Luyu的工具箱</title>
+  <link rel="preload" href="fonts/AlloVariableFriendly.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="ui.css">
+  <link rel="stylesheet" href="workspace.css">
+  <link rel="stylesheet" href="site-nav.css">
+  <script src="js/site-nav-data.js" defer></script>
+  <script src="js/site-nav.js" defer></script>
+</head>
+<body class="site-nav-page">
+  <header class="sn-topbar">
+    <a class="sn-brand" href="index.html" aria-label="Luyu的工具箱 首页"><span class="brand-mark" aria-hidden="true">L</span><strong>Luyu的工具箱</strong></a>
+    <span class="sn-crumb" aria-hidden="true">/</span><span class="sn-crumb-current">网址导航</span>
+    <a class="sn-pill" href="index.html">返回工具箱</a>
+  </header>
+  <main class="sn-main" id="main-content">
+    <section class="sn-hero" aria-labelledby="sn-title">
+      <p class="sn-eyebrow">HARDWARE ENGINEER'S BOOKMARKS</p>
+      <h1 id="sn-title">网址导航<span class="sn-count" id="sn-total">0</span></h1>
+      <p class="sn-lead">硬件工程师常用的站点，按用途排好。点一个词筛选分类，或直接输入关键词。</p>
+      <div class="sn-wall" id="sn-wall" role="group" aria-label="按分类筛选"></div>
+    </section>
+    <div class="sn-toolbar" id="sn-toolbar">
+      <label class="sn-search"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="sn-search" type="search" placeholder="搜索站点、用途或域名" autocomplete="off" spellcheck="false" aria-label="搜索站点"><kbd>/</kbd></label>
+      <div class="sn-chips" id="sn-chips" role="group" aria-label="分类"></div>
+      <button class="sn-lucky" id="sn-lucky" type="button">随便逛逛</button>
+    </div>
+    <p class="sn-status" id="sn-status" aria-live="polite"></p>
+    <div id="sn-results"></div>
+    <div class="sn-empty" id="sn-empty" hidden><strong>没有匹配的站点</strong><p>换个关键词，或回到全部分类。</p><button class="sn-pill" id="sn-reset" type="button">查看全部</button></div>
+    <noscript><p class="sn-lead">开启 JavaScript 后可浏览和搜索站点。</p></noscript>
+    <footer class="sn-footer"><span>站点整理于 2026 年 11 月。外部网站在新标签页打开，内容由各站点负责。</span><span class="sn-keys"><kbd>/</kbd> 搜索 <kbd>↑↓←→</kbd> 移动 <kbd>F</kbd> 收藏 <kbd>Esc</kbd> 清空</span></footer>
+  </main>
+</body>
+</html>

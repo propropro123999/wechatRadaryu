@@ -62,6 +62,7 @@ function renderNav(config = {}) {
     (showFileInput ? '<label class="nav-btn nav-btn-primary">' + workspaceIcon('upload') + '<span>' + fileLabel.replace(/^[^\p{L}\p{N}]+/u, '') + '</span><input type="file" id="nav-file-input" accept="' + fileAccept + '" class="nav-file-input"></label>' : '') +
     '<div class="nav-switcher"><button class="nav-switcher-btn" type="button" aria-label="切换工具" aria-expanded="false">' + workspaceIcon('grid') + '</button><div class="nav-switcher-menu" hidden>' +
     NAV_ITEMS.map(item => '<a href="' + item.href + '" class="nav-app-item' + (item.href === current ? ' current' : '') + '" ' + (item.href === current ? 'aria-current="page"' : '') + '>' + workspaceIcon(item.icon) + '<span>' + item.label + '</span></a>').join('') +
+    '<a href="site-nav.html" class="nav-app-item nav-app-extra">' + workspaceIcon('globe') + '<span>网址导航</span></a>' +
     '</div></div><a href="index.html" class="nav-btn nav-btn-secondary tool-home-link">' + workspaceIcon('home') + '<span>返回首页</span></a></div></nav>';
   const switcher = container.querySelector('.nav-switcher');
   const toggle = switcher.querySelector('button');
