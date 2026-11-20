@@ -1,0 +1,87 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Site navigation tests</title>
+<pre id="result">Running…</pre>
+<iframe id="page" src="../site-nav.html" title="Site navigation under test" style="width:1200px;height:900px"></iframe>
+<script>
+document.querySelector('#page').addEventListener('load', async function () {
+    try {
+        const w = this.contentWindow;
+        const d = w.document;
+        let checks = 0;
+        const assert = (condition, message) => { if (!condition) throw new Error(message); checks++; };
+        const links = () => [...d.querySelectorAll('.sn-link')];
+        const search = d.querySelector('#sn-search');
+        const type = value => { search.value = value; search.dispatchEvent(new w.Event('input', { bubbles: true })); };
+        const key = (target, name, init = {}) => target.dispatchEvent(new w.KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true, ...init }));
+        w.localStorage.removeItem('luyu-toolbox-site-favorites');
+        w.localStorage.removeItem('luyu-toolbox-site-recent');
+
+        assert(links().length === 105 && d.querySelectorAll('.sn-section').length === 14, 'all 105 sites render in 14 groups');
+        assert(d.querySelectorAll('.sn-word').length === 14 && d.querySelectorAll('.sn-chip').length === 17, 'category words and chips render');
+        assert(links().every(link => /^https?:\/\//.test(link.href) && link.target === '_blank' && link.rel === 'noopener noreferrer'), 'sites open in a new tab without referrer');
+        assert(!/icviews|半导纵横/i.test(d.body.innerHTML), 'no company identifiers');
+        assert(!d.querySelector('img'), 'no third-party images are requested');
+        const allo = element => w.getComputedStyle(element).fontFamily.includes('Allo Display');
+        assert(allo(d.querySelector('.sn-word')) && allo(d.querySelector('.sn-section-word')), 'category words use the display font');
+        assert(!allo(d.querySelector('.sn-name')) && !allo(d.querySelector('.sn-desc')) && !allo(search), 'site text and search keep the system font');
+
+        d.querySelector('.sn-word[data-cat="pcb"]').click();
+        assert(links().length === 6 && d.querySelectorAll('.sn-card[data-cat="pcb"]').length === 6, 'word filters one category');
+        assert(d.querySelector('.sn-chip[data-cat="pcb"]').getAttribute('aria-pressed') === 'true' && d.querySelector('#sn-wall').classList.contains('filtered'), 'chip and wall stay in sync');
+        d.querySelector('.sn-word[data-cat="pcb"]').click();
+        assert(links().length === 105, 'clicking the active word clears the filter');
+
+        type('stm32');
+        assert(links().length > 0 && links().length < 20 && d.querySelector('.sn-card mark'), 'search narrows results and highlights matches');
+        assert(d.querySelector('#sn-status').textContent.includes('找到 ' + links().length + ' 个站点'), 'result count announced');
+        type('<img src=x onerror=alert(1)>');
+        assert(links().length === 0 && !d.querySelector('#sn-empty').hidden && !d.querySelector('#sn-status img'), 'no-match state is shown and the query is escaped');
+        key(d.body, 'Escape');
+        assert(search.value === '' && links().length === 105, 'Escape clears search');
+        type('a.b(c');
+        assert(d.querySelector('#sn-status'), 'regex characters in a query do not throw');
+        type('');
+
+        key(d.body, '/');
+        assert(d.activeElement === search, 'slash focuses search');
+        key(search, 'ArrowDown');
+        assert(d.activeElement === links()[0], 'ArrowDown enters the grid');
+        key(d.activeElement, 'ArrowRight');
+        assert(d.activeElement === links()[1], 'ArrowRight moves to the next site');
+        key(d.activeElement, 'ArrowDown');
+        assert(d.activeElement !== links()[1] && links().includes(d.activeElement), 'ArrowDown moves to the row below');
+        key(links()[0], 'f');
+        assert(JSON.parse(w.localStorage.getItem('luyu-toolbox-site-favorites')).length === 1 && d.querySelector('.sn-fav').getAttribute('aria-pressed') === 'true', 'F saves a favourite locally');
+        d.querySelector('.sn-chip[data-cat="favorites"]').click();
+        assert(links().length === 1, 'favourites view lists saved sites');
+        d.querySelector('.sn-fav').click();
+        assert(links().length === 0 && d.querySelector('#sn-empty strong').textContent === '还没有收藏', 'removing the last favourite shows guidance');
+        d.querySelector('#sn-reset').click();
+        assert(links().length === 105, 'reset returns to all sites');
+
+        links()[3].addEventListener('click', event => event.preventDefault());
+        links()[3].click();
+        d.querySelector('.sn-chip[data-cat="recent"]').click();
+        assert(links().length === 1 && links()[0].href === JSON.parse(w.localStorage.getItem('luyu-toolbox-site-recent'))[0], 'opened sites appear under recent');
+        d.querySelector('.sn-chip[data-cat="all"]').click();
+        links()[5].dispatchEvent(new w.MouseEvent('auxclick', { bubbles: true, button: 1 }));
+        assert(JSON.parse(w.localStorage.getItem('luyu-toolbox-site-recent'))[0] === links()[5].href, 'middle-click visits are remembered');
+        w.localStorage.setItem('luyu-toolbox-site-favorites', JSON.stringify([links()[8].href]));
+        d.querySelectorAll('.sn-fav')[9].click();
+        assert(JSON.parse(w.localStorage.getItem('luyu-toolbox-site-favorites')).length === 2, 'favourites saved in another tab are kept');
+        type('电源');
+        const composing = new w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true, isComposing: true });
+        search.dispatchEvent(composing);
+        assert(search.value === '电源' && !composing.defaultPrevented, 'keys pressed while composing are left to the input method');
+        type('');
+        d.querySelector('#sn-lucky').click();
+        assert(d.querySelector('.sn-card.lucky') && d.activeElement.classList.contains('sn-link'), 'random pick highlights and focuses a site');
+        w.localStorage.removeItem('luyu-toolbox-site-favorites');
+        w.localStorage.removeItem('luyu-toolbox-site-recent');
+        document.querySelector('#result').textContent = 'PASS: ' + checks + ' site navigation checks';
+    } catch (error) {
+        document.querySelector('#result').textContent = 'FAIL: ' + error.message;
+    }
+});
+</script>
