@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>壹伴数据分析工具（本地版）</title>
+  <title>阅读来源分析 - Luyu的工具箱</title>
   <link rel="stylesheet" href="ui.css" />
   <style>
     /* ===== 页面特定样式 ===== */
@@ -172,11 +172,11 @@
 
     <div class="container">
       <div class="mb-6">
-        <h1>壹伴数据分析</h1>
-        <p class="text-muted">支持壹伴插件导出的 Excel 表格，自动识别阅读、分享、互动等字段</p>
+        <h1>阅读来源分析</h1>
+        <p class="text-muted">支持文章数据 Excel 表格，自动识别阅读、分享、互动等字段</p>
       </div>
       <div id="dateRange" class="flex items-center gap-3 mb-6 text-sm text-muted">
-        请先在上方选择壹伴导出的 Excel 文件
+        请先在上方选择文章数据 Excel 文件
         <span class="badge badge-primary">离线本地分析</span>
       </div>
 
@@ -414,7 +414,7 @@
       const allCols = Object.keys(rows[0]);
       console.log("检测到的表头字段:", allCols);
 
-      // 根据壹伴表格字段进行匹配
+      // 根据文章数据表格字段进行匹配
       const colMap = {
         title: findCol(["标题", "文章标题", "内容标题"], allCols) || allCols[0],
         date: findCol(["日期", "阅读", "发布时间", "发表时间"], allCols),
@@ -1074,7 +1074,7 @@
   <script>
     // 初始化导航
     renderNav({
-      title: '壹伴数据分析',
+      title: '阅读来源分析',
       icon: 'chart',
       showFileInput: true,
       fileAccept: '.xlsx,.xls,.csv',

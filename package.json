@@ -1,8 +1,8 @@
 {
-  "name": "wechat-radar-tools",
+  "name": "luyu-toolbox",
   "version": "1.0.0",
   "type": "module",
-  "description": "WeChat data analysis tools",
+  "description": "Luyu的工具箱",
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'No build required'"

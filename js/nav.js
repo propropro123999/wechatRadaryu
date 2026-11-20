@@ -41,13 +41,13 @@ function workspaceIcon(name) {
 
 const NAV_ITEMS = [
   { href: 'content-dashboard.html', icon: 'chart', label: '内容数据分析', category: 'analytics', desc: '读懂阅读、分享与完读表现，发现值得复用的好内容。', formats: 'CSV / XLSX', keywords: '公众号 微信 四象限 榜单', local: true },
-  { href: 'bandao-ops-dashboard.html', icon: 'compass', label: '专栏 / 帖子分析', category: 'analytics', desc: '拆解发布频次、作者分层与高频词，掌握运营全貌。', formats: 'CSV / XLSX', keywords: '作者 内容 运营', local: true },
+  { href: 'community-dashboard.html', icon: 'compass', label: '专栏 / 帖子分析', category: 'analytics', desc: '拆解发布频次、作者分层与高频词，掌握运营全貌。', formats: 'CSV / XLSX', keywords: '作者 内容 运营', local: true },
   { href: 'page-traffic-dashboard.html', icon: 'globe', label: '页面流量分析', category: 'analytics', desc: '从页面访问到流量漏斗，看清用户行为与转化路径。', formats: 'CSV / XLSX', keywords: '访问 页面 PV UV', local: true },
   { href: 'word-to-html.html', icon: 'document', label: 'Word 转 HTML', category: 'documents', desc: '保留文档图文结构，快速生成可发布的网页内容。', formats: 'DOCX → HTML', keywords: '文档 网页 转换 知乎 公众号', local: false },
   { href: 'image-compress.html', icon: 'compress', label: '图片压缩', category: 'media', desc: '批量减小图片体积，自定义画质与尺寸，轻巧不将就。', formats: 'JPG / PNG / WebP', keywords: '图片 批量 质量 大小', local: true },
   { href: 'article-formatter.html', icon: 'edit', label: '文章排版', category: 'documents', desc: '清理冗余样式，规范标点与空格，让每一段更易读。', formats: 'TEXT / HTML', keywords: '文本 清洗 编辑 格式化', local: false },
-  { href: 'yiban-dashboard.html', icon: 'chart', label: '壹伴数据分析', category: 'analytics', desc: '把壹伴报表变成直观洞察，深度分析互动与转化。', formats: 'CSV / XLSX', keywords: '公众号 微信 报表', local: true },
-  { href: 'youmeng.html', icon: 'layers', label: '友盟多表流量', category: 'analytics', desc: '合并多 Sheet 报表，对比流量趋势，告别重复汇总。', formats: 'XLSX / XLS', keywords: '多表 Sheet 合并 趋势', local: true },
+  { href: 'yiban-dashboard.html', icon: 'chart', label: '阅读来源分析', category: 'analytics', desc: '把文章报表变成直观洞察，深度分析互动与转化。', formats: 'CSV / XLSX', keywords: '公众号 微信 报表', local: true },
+  { href: 'youmeng.html', icon: 'layers', label: '多表流量分析', category: 'analytics', desc: '合并多 Sheet 报表，对比流量趋势，告别重复汇总。', formats: 'XLSX / XLS', keywords: '多表 Sheet 合并 趋势', local: true },
   { href: 'pdf-compress.html', icon: 'document', label: 'PDF 压缩', category: 'media', desc: '按需平衡文件大小与清晰度，让文档分享更轻松。', formats: 'PDF', keywords: '文档 减小 大小 质量', local: true },
   { href: 'image-stitch.html', icon: 'image', label: '长图拼接', category: 'media', desc: '多张图片自由排序、无缝拼接，一张长图完整表达。', formats: 'JPG / PNG', keywords: '图片 合并 排序 长图', local: true },
   { href: 'orc-log-parser.html', icon: 'code', label: 'ORC 日志解析', category: 'developer', desc: '批量解析 ORC 数据，筛选、合并并导出 Excel 报表。', formats: 'ORC → XLSX', keywords: '日志 大数据 开发 Excel', local: false }
@@ -58,7 +58,7 @@ function renderNav(config = {}) {
   const container = document.getElementById(containerId);
   if (!container) return;
   const current = location.pathname.split('/').pop().replace(/\.html$/, '') + '.html';
-  container.innerHTML = '<nav class="nav-bar workspace-tool-nav" aria-label="工具导航"><div class="tool-nav-leading"><a href="index.html" class="tool-brand" aria-label="ICviews Tools 首页"><span class="brand-mark">i<span>c</span></span><strong>ICviews <span>Tools</span></strong></a><span class="tool-nav-separator">/</span><span class="nav-title">' + title + '</span></div><div class="nav-actions">' +
+  container.innerHTML = '<nav class="nav-bar workspace-tool-nav" aria-label="工具导航"><div class="tool-nav-leading"><a href="index.html" class="tool-brand" aria-label="Luyu的工具箱 首页"><span class="brand-mark" aria-hidden="true">L</span><strong>Luyu的工具箱</strong></a><span class="tool-nav-separator">/</span><span class="nav-title">' + title + '</span></div><div class="nav-actions">' +
     (showFileInput ? '<label class="nav-btn nav-btn-primary">' + workspaceIcon('upload') + '<span>' + fileLabel.replace(/^[^\p{L}\p{N}]+/u, '') + '</span><input type="file" id="nav-file-input" accept="' + fileAccept + '" class="nav-file-input"></label>' : '') +
     '<div class="nav-switcher"><button class="nav-switcher-btn" type="button" aria-label="切换工具" aria-expanded="false">' + workspaceIcon('grid') + '</button><div class="nav-switcher-menu" hidden>' +
     NAV_ITEMS.map(item => '<a href="' + item.href + '" class="nav-app-item' + (item.href === current ? ' current' : '') + '" ' + (item.href === current ? 'aria-current="page"' : '') + '>' + workspaceIcon(item.icon) + '<span>' + item.label + '</span></a>').join('') +

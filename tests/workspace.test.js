@@ -17,6 +17,7 @@ for (const tool of tools) {
   assert.match(context.window.workspaceIcon(tool.icon), /<svg/);
   counts[tool.category] = (counts[tool.category] || 0) + 1;
   const page = readFileSync(resolve(root, tool.href), 'utf8');
+  assert.match(page, /<title>[^<]* - Luyu的工具箱<\/title>/, tool.href);
   assert.match(page, /href="workspace.css"/, tool.href);
   assert.match(page, /src="js\/workspace.js"/, tool.href);
   assert.doesNotMatch(page, /\p{Extended_Pictographic}/u, tool.href);
@@ -27,6 +28,24 @@ for (const tool of tools) {
 }
 assert.deepEqual(counts, { analytics: 5, documents: 2, media: 3, developer: 1 });
 const home = readFileSync(resolve(root, 'index.html'), 'utf8');
+assert.match(home, /<title>Luyu的工具箱<\/title>/);
+assert.match(home, /aria-label="Luyu的工具箱 首页"/);
+assert.match(home, /class="footer-brand">Luyu的工具箱<\/span>/);
+assert.doesNotMatch(home, /href="https?:/);
+for (const [, id] of home.matchAll(/href="#([^"]+)"/g)) {
+  assert.ok(home.includes('id="' + id + '"'), 'home anchor: ' + id);
+}
+let navMarkup = '';
+const navElement = { addEventListener() {}, querySelector() { return this; }, contains() { return false; } };
+context.location = { pathname: '/community-dashboard' };
+context.document = {
+  getElementById: () => ({ set innerHTML(value) { navMarkup = value; }, querySelector: () => navElement }),
+  addEventListener() {}
+};
+context.window.renderNav();
+assert.match(navMarkup, /aria-label="Luyu的工具箱 首页"/);
+assert.match(navMarkup, /<strong>Luyu的工具箱<\/strong>/);
+assert.match(navMarkup, /community-dashboard.html" class="nav-app-item current"/);
 const styles = readFileSync(resolve(root, 'workspace.css'), 'utf8');
 assert.match(styles, /--font-display: "Allo Display", var\(--font-sans\)/);
 assert.doesNotMatch(styles.match(/--font-sans:[^;]+;/)[0], /Allo/);
@@ -39,6 +58,14 @@ for (const id of ['tool-grid', 'tool-search', 'catalog-empty', 'grid-view', 'lis
 assert.match(home, /aria-live="polite"/);
 assert.match(home, /name="viewport"/);
 const workspace = readFileSync(resolve(root, 'js/workspace.js'), 'utf8');
+const samplesSource = workspace.slice(workspace.indexOf('  const sampleRows'), workspace.indexOf('  const analyticsCopy'));
+const samples = vm.runInNewContext(samplesSource + 'sampleRows');
+for (const [path, row] of Object.entries(samples)) {
+  assert.ok(tools.some(tool => tool.href === path), path);
+  for (const value of Object.values(row)) {
+    if (String(value).startsWith('https://')) assert.equal(new URL(value).hostname, 'example.com');
+  }
+}
 const hydrationSource = workspace.slice(workspace.indexOf('function hydrateIcons'), workspace.indexOf('  const sampleRows'));
 const decoration = { dataset: { icon: 'copy' }, closest: () => null, hasChildNodes: () => false, innerHTML: '' };
 const importedParagraph = { dataset: { icon: 'copy' }, closest: () => null, hasChildNodes: () => true, innerHTML: 'Article text' };
@@ -96,4 +123,22 @@ assert.equal(trafficFields.error.textContent, '');
 assert.equal(trafficFields.totalPV.textContent, 300);
 assert.equal(trafficFields.avgStayTime.textContent, '80.00');
 assert.ok(trafficFields.detailTable.innerHTML.includes('https://example.com'));
+const multiTraffic = readFileSync(resolve(root, 'youmeng.html'), 'utf8');
+const classifier = multiTraffic.slice(multiTraffic.indexOf('function detectPageType'), multiTraffic.indexOf('// CSV 导出'));
+const classifierContext = { URL };
+vm.runInNewContext(classifier, classifierContext);
+for (const [path, label] of [
+  ['/', '网站首页'], ['/community/latest', '社区-首页'],
+  ['/appCommunity/column', '社区-专栏集合页'], ['/community/writePost', '社区-创作发布页'],
+  ['/appCommunity/postDetail/123', '社区-专栏内容页'], ['/community/other', '社区-其他'],
+  ['/news/123', '资讯文章'], ['/news/recommend', '资讯推荐页'],
+  ['/conference/2026', '会议活动'], ['/specialActivity/123', '活动页面'],
+  ['/product/123', '产品页面'], ['/video/123', '视频内容'], ['/userCenter/123', '作者主页'],
+  ['/other?next=/community/latest', '其他页面']
+]) {
+  assert.equal(classifierContext.detectPageType('https://example.com' + path), label, path);
+}
+assert.equal(classifierContext.detectPageType('https://conference.example.com/events'), '会议活动');
+assert.equal(classifierContext.detectPageType(''), '其他');
+assert.equal(classifierContext.detectPageType('http://['), '其他');
 console.log('Workspace catalog, shared assets, category counts, and entry points passed.');

@@ -13,7 +13,7 @@
   }
   function markVisited(path) {
     if (!knownPaths.has(path)) return;
-    saveList('icviews-recent', [path, ...readList('icviews-recent').filter(item => item !== path)].slice(0, 11));
+    saveList('luyu-toolbox-recent', [path, ...readList('luyu-toolbox-recent').filter(item => item !== path)].slice(0, 11));
   }
   function hydrateIcons(root = document) {
     const icons = [...root.querySelectorAll('[data-icon]')];
@@ -27,17 +27,17 @@
 
   const sampleRows = {
     'content-dashboard.html': { 内容标题: '示例：一次内容复盘', 发表时间: '2026-01-15', 总阅读人数: 1200, 总阅读次数: 1800, 总分享次数: 86, 阅读完成率: 62, 送达人数: 5000 },
-    'bandao-ops-dashboard.html': { 动态ID: 'demo-001', 动态标题: '示例：行业观察', 发布者: '内容团队', 点赞数: 28, 评论数: 9, 创建时间: '2026-01-15' },
-    'page-traffic-dashboard.html': { 受访页面: 'https://www.icviews.cn/news/recommend', 浏览次数: 1800, 独立访客: 1200, IP: 1000, 人均浏览页数: 1.5, 平均页面停留时间: '00:01:20' },
+    'community-dashboard.html': { 动态ID: 'demo-001', 动态标题: '示例：行业观察', 发布者: '内容团队', 点赞数: 28, 评论数: 9, 创建时间: '2026-01-15' },
+    'page-traffic-dashboard.html': { 受访页面: 'https://example.com/news/recommend', 浏览次数: 1800, 独立访客: 1200, IP: 1000, 人均浏览页数: 1.5, 平均页面停留时间: '00:01:20' },
     'yiban-dashboard.html': { 标题: '示例：内容运营周报', 日期: '2026-01-15', 阅读人数: 1200, 阅读量: 1800, 分享量: 86, 点赞数: 36, 朋友圈: 180 },
-    'youmeng.html': { 受访页面: 'https://www.icviews.cn/news/recommend', 浏览次数: 1800, 独立访客: 1200, IP: 1000, 人均浏览页数: 1.5, 平均页面停留时间: '00:01:20' }
+    'youmeng.html': { 受访页面: 'https://example.com/news/recommend', 浏览次数: 1800, 独立访客: 1200, IP: 1000, 人均浏览页数: 1.5, 平均页面停留时间: '00:01:20' }
   };
   const analyticsCopy = {
     'content-dashboard.html': ['看清阅读、分享与完读表现。', '导入公众号后台的内容明细，对比阅读、分享与完读率，找到真正值得复用的选题。'],
-    'bandao-ops-dashboard.html': ['发现专栏与帖子的增长线索。', '导入帖子报表，串联发布趋势、互动表现与作者贡献，定位高潜内容与活跃作者。'],
+    'community-dashboard.html': ['发现专栏与帖子的增长线索。', '导入帖子报表，串联发布趋势、互动表现与作者贡献，定位高潜内容与活跃作者。'],
     'page-traffic-dashboard.html': ['找到真正带来访问的页面。', '导入页面流量明细，汇总 PV、UV 与停留时长，识别最受关注的页面。'],
-    'yiban-dashboard.html': ['拆解公众号内容的阅读来源。', '导入壹伴导出的文章数据，比较阅读、分享与来源分布，找到内容传播的关键渠道。'],
-    'youmeng.html': ['把多张流量报表，汇成全局。', '导入包含多个工作表的友盟报表，合并季度数据、识别页面类型，查看整体访问表现与榜单。']
+    'yiban-dashboard.html': ['拆解公众号内容的阅读来源。', '导入文章数据，比较阅读、分享与来源分布，找到内容传播的关键渠道。'],
+    'youmeng.html': ['把多张流量报表，汇成全局。', '导入包含多个工作表的流量报表，合并季度数据、识别页面类型，查看整体访问表现与榜单。']
   };
   function setupAnalytics(tool) {
     const container = document.querySelector('.container');
@@ -136,13 +136,13 @@
   if (!grid) return;
   const search = document.getElementById('tool-search');
   let category = 'all';
-  let favorites = readList('icviews-favorites');
+  let favorites = readList('luyu-toolbox-favorites');
   let listView = false;
-  try { listView = localStorage.getItem('icviews-view') === 'list'; } catch (_) {}
+  try { listView = localStorage.getItem('luyu-toolbox-view') === 'list'; } catch (_) {}
 
   function render() {
     const terms = search.value.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
-    const recent = readList('icviews-recent');
+    const recent = readList('luyu-toolbox-recent');
     let tools = NAV_ITEMS.filter(tool => {
       const inCategory = category === 'all' || tool.category === category || (category === 'favorites' && favorites.includes(tool.href)) || (category === 'recent' && recent.includes(tool.href));
       const haystack = [tool.label, tool.desc, tool.formats, tool.keywords, categoryNames[tool.category]].join(' ').toLocaleLowerCase();
@@ -203,7 +203,7 @@
       const index = favorites.indexOf(href);
       if (index === -1) favorites.push(href);
       else favorites.splice(index, 1);
-      saveList('icviews-favorites', favorites);
+      saveList('luyu-toolbox-favorites', favorites);
       render();
       const next = grid.querySelector('[data-favorite="' + href + '"]');
       if (next) next.focus();
@@ -216,7 +216,7 @@
   document.getElementById('reset-filters').addEventListener('click', () => { search.value = ''; category = 'all'; render(); search.focus(); });
   ['grid', 'list'].forEach(view => document.getElementById(view + '-view').addEventListener('click', () => {
     listView = view === 'list';
-    try { localStorage.setItem('icviews-view', view); } catch (_) {}
+    try { localStorage.setItem('luyu-toolbox-view', view); } catch (_) {}
     render();
   }));
   document.getElementById('search-shortcut').textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
