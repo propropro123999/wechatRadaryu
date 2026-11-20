@@ -357,10 +357,12 @@
 
             }
 
-            function convertDocxToHtml(arrayBuffer) {
-                mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
-                    .then(displayResult)
-                    .catch(handleError);
+            async function convertDocxToHtml(arrayBuffer) {
+                document.getElementById('word-operation-status').textContent = '正在加载 Word 处理组件…';
+                await ToolDependencies.load('mammoth');
+                document.getElementById('word-operation-status').textContent = '正在转换文档与图片…';
+                const result = await mammoth.convertToHtml({ arrayBuffer });
+                await displayResult(result);
             }
 
             async function displayResult(result) {
