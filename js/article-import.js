@@ -277,7 +277,7 @@
         return {html: wrapper.outerHTML, title, author, images: wrapper.querySelectorAll('img, image').length};
     }
 
-    function clipboardContent(editor) {
+    function clipboardContent(editor, {compatible = false} = {}) {
         const wrapper = document.createElement('div');
         wrapper.style.cssText = 'width:578px;max-width:100%;margin:0 auto;background:#fff;';
         wrapper.innerHTML = editor.innerHTML;
@@ -313,7 +313,12 @@
             }
             img.setAttribute(attr, src.href);
         });
-        return {html: wrapper.outerHTML, text: editor.innerText};
+        let protocolsChanged = 0;
+        const text = compatible ? editor.innerText.replace(/(https?|ftp):\/\//gi, (_, scheme) => {
+            protocolsChanged++;
+            return scheme + ' ://';
+        }) : editor.innerText;
+        return {html: wrapper.outerHTML, text, images: wrapper.querySelectorAll('img, image').length, protocolsChanged};
     }
 
     window.WeChatArticle = {articleUrl, extract, clipboardContent};

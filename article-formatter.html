@@ -125,6 +125,15 @@
         .article-metadata-row p { margin: 4px 0 0; color: var(--color-text); overflow-wrap: anywhere; }
         .article-metadata-row button { flex-shrink: 0; }
 
+        .copy-help {
+            margin: 0;
+            padding: 8px 24px;
+            border-bottom: 1px solid var(--color-border);
+            color: var(--color-text-secondary);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
         .native-editor p {
             margin-bottom: 1em;
             min-height: 1em;
@@ -252,12 +261,16 @@
 
                 <!-- Main Actions -->
                 <div class="editor-main-actions">
-                <button class="action-btn"
+                <button class="action-btn" data-article-copy
                     style="background-color: white; color: #333; border: 1px solid #ddd; box-shadow:none;"
                     onclick="copyToClipboard()"><span data-icon="copy"></span> 复制结果</button>
+                <button class="action-btn" data-article-copy aria-describedby="copy-help"
+                    onclick="copyToClipboard('compatible')"><span data-icon="copy"></span> 兼容复制</button>
                 <button class="action-btn" onclick="formatText()"><span data-icon="sparkles"></span> 一键排版</button>
                 </div>
             </div>
+
+            <p class="copy-help" id="copy-help">粘贴到半导纵横 / 旧版 wangEditor 只剩文字？请用「兼容复制」。仅将剪贴板纯文本中的 https:// 等改为 https ://，原稿、图文和真实图片 / 链接地址不变；不会上传或转存图片。</p>
 
             <!-- Native Editor Content -->
             <section id="article-metadata" hidden aria-label="导入文章信息">
@@ -478,35 +491,68 @@
             }
         }
 
-        function copyToClipboard() {
+        let articleCopyPending = false;
+
+        async function copyToClipboard(mode = 'standard') {
+            if (articleCopyPending) return;
             const $content = document.getElementById('editor-content');
-            const clipboard = WeChatArticle.clipboardContent($content);
-            const copy = document.createElement('div');
-            copy.innerHTML = clipboard.html;
-            copy.style.cssText = 'position:fixed;left:-10000px;top:0;width:578px;';
-            document.body.append(copy);
-
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            const range = document.createRange();
-            range.selectNodeContents(copy);
-            selection.addRange(range);
-            const writeClipboard = event => {
-                event.clipboardData.setData('text/html', clipboard.html);
-                event.clipboardData.setData('text/plain', clipboard.text);
-                event.preventDefault();
-            };
-            document.addEventListener('copy', writeClipboard);
-
+            if (!$content.textContent.trim() && !$content.querySelector('img, svg, table')) {
+                return showToast('暂无可复制的正文');
+            }
+            const buttons = document.querySelectorAll('[data-article-copy]');
+            articleCopyPending = true;
+            buttons.forEach(button => button.disabled = true);
             try {
-                if (!document.execCommand('copy')) throw new Error('copy failed');
-                showToast('已复制 (保留格式)');
+                const compatible = mode === 'compatible';
+                const clipboard = WeChatArticle.clipboardContent($content, {compatible});
+                let written = false;
+                if (window.isSecureContext && navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
+                    try {
+                        await navigator.clipboard.write([new ClipboardItem({
+                            'text/html': new Blob([clipboard.html], {type: 'text/html'}),
+                            'text/plain': new Blob([clipboard.text], {type: 'text/plain'})
+                        })]);
+                        written = true;
+                    } catch {}
+                }
+                if (!written) {
+                    const copy = document.createElement('div');
+                    copy.innerHTML = clipboard.html;
+                    copy.style.cssText = 'position:fixed;left:-10000px;top:0;width:578px;';
+                    const selection = window.getSelection();
+                    const ranges = Array.from({length: selection.rangeCount}, (_, i) => selection.getRangeAt(i).cloneRange());
+                    const writeClipboard = event => {
+                        if (!event.clipboardData) return;
+                        event.clipboardData.setData('text/html', clipboard.html);
+                        event.clipboardData.setData('text/plain', clipboard.text);
+                        event.preventDefault();
+                        written = true;
+                    };
+                    try {
+                        document.body.append(copy);
+                        selection.removeAllRanges();
+                        const range = document.createRange();
+                        range.selectNodeContents(copy);
+                        selection.addRange(range);
+                        document.addEventListener('copy', writeClipboard);
+                        if (!document.execCommand('copy') || !written) throw new Error('copy failed');
+                    } finally {
+                        document.removeEventListener('copy', writeClipboard);
+                        selection.removeAllRanges();
+                        copy.remove();
+                        ranges.forEach(range => {
+                            if (range.commonAncestorContainer.isConnected) selection.addRange(range);
+                        });
+                    }
+                }
+                showToast(compatible
+                    ? `已兼容复制：${clipboard.images} 张图片，${clipboard.protocolsChanged} 处网址文本；请在后台核对图片`
+                    : '已复制 (保留格式)');
             } catch (e) {
-                showToast('复制失败');
+                showToast('图文复制失败，请保持页面在前台并重试；未退回纯文本');
             } finally {
-                document.removeEventListener('copy', writeClipboard);
-                selection.removeAllRanges();
-                copy.remove();
+                articleCopyPending = false;
+                buttons.forEach(button => button.disabled = false);
             }
         }
 

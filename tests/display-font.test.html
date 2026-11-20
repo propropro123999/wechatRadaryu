@@ -46,11 +46,12 @@
         };
         w.alert = () => {};
         if (path === 'article-formatter.html') {
+          Object.defineProperty(w.navigator, 'clipboard', {configurable: true, value: undefined});
           for (const clearStyles of [false, true]) {
             target.innerHTML = content;
             d.querySelector('#clearAttr').checked = clearStyles;
             w.formatText();
-            w.copyToClipboard();
+            await w.copyToClipboard();
             assert(payload['text/html'] && !/Allo|woff2|--font-display/i.test(payload['text/html']), path + ': copied rich HTML has no display-font dependency');
             assert(payload['text/plain'].includes('English'), path + ': plain text retained');
           }

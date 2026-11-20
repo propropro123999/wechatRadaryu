@@ -1,0 +1,130 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Article clipboard compatibility tests</title>
+<pre id="result">Running…</pre>
+<iframe id="formatter" src="../article-formatter.html" title="Formatter under test"></iframe>
+<script>
+document.querySelector('#formatter').addEventListener('load', async function () {
+    let checks = 0;
+    try {
+        const w = this.contentWindow;
+        const d = w.document;
+        const editor = d.querySelector('#editor-content');
+        const assert = (condition, message) => {
+            if (!condition) throw new Error(message);
+            checks++;
+        };
+        const parse = html => new DOMParser().parseFromString(html, 'text/html').body;
+        const clipboardAPI = value => Object.defineProperty(w.navigator, 'clipboard', {configurable: true, value});
+        const fixture = `<h2 style="font-family:Georgia,serif">图文 English</h2>
+            <p>第一段 https://example.com/a?x=1&amp;y=2</p><p>HTTP://example.com ftp://files.example.com prefixhttps://example.com</p>
+            <p>http 请求不是网址<br>第二行 <b>加粗</b> <a href="https://example.com/original?a=1&amp;b=2">真实链接</a></p>
+            <ul><li>列表项</li></ul><table><tr><td>表格</td><td>https://example.com/cell</td></tr></table>
+            <img src="/api/proxy-image?url=https%3A%2F%2Fmmbiz.qpic.cn%2Fphoto.png%3Fa%3D1%26b%3D2" alt="图片 https://example.com/alt">
+            <img src="/api/proxy-image?url=https%3A%2Fexample.com%2Fphoto.png">
+            <svg viewBox="0 0 100 50"><text x="0" y="20">SVG 原稿</text><image href="/api/proxy-image?url=https%3A%2F%2Fmmbiz.qlogo.cn%2Fphoto.png" width="10" height="10"/></svg>`;
+        editor.innerHTML = fixture;
+        const original = editor.innerHTML;
+        const normal = w.WeChatArticle.clipboardContent(editor);
+        const compatible = w.WeChatArticle.clipboardContent(editor, {compatible: true});
+        assert(normal.text === editor.innerText && normal.protocolsChanged === 0, 'ordinary copy preserves exact plain text');
+        assert(normal.html === compatible.html, 'compatibility never changes HTML, image URLs, links, formatting or SVG');
+        assert(compatible.protocolsChanged === 5 && compatible.images === 3, 'counts schemes and image nodes, including SVG images');
+        assert(!/(?:https?|ftp):\/\//i.test(compatible.text), 'all supported schemes neutralized, including uppercase and embedded URLs');
+        assert(compatible.text.includes('https ://example.com/a?x=1&y=2') && compatible.text.includes('HTTP ://example.com'), 'plain URL characters and original scheme casing retained');
+        assert(compatible.text.includes('http 请求不是网址') && compatible.text.includes('\n第二行'), 'unrelated text and manual breaks preserved');
+        const html = parse(compatible.html);
+        assert(html.querySelector('img').getAttribute('src') === 'https://mmbiz.qpic.cn/photo.png?a=1&b=2', 'WeChat image uses its unmodified absolute CDN address');
+        assert(html.querySelectorAll('img')[1].src.startsWith(w.location.origin + '/api/proxy-image?'), 'other image uses an absolute proxy address');
+        assert(html.querySelector('a').getAttribute('href') === 'https://example.com/original?a=1&b=2', 'real hyperlink remains clickable and complete');
+        assert(html.querySelector('svg image').getAttribute('href') === 'https://mmbiz.qlogo.cn/photo.png', 'SVG image URL remains complete');
+        assert(html.querySelector('h2').style.fontFamily === 'Georgia, serif' && html.querySelector('b, strong') && html.querySelector('table') && html.querySelector('li'), 'source font, bold, list and table retained');
+        assert(!/Allo|woff2|--font-display/.test(compatible.html), 'display font not leaked into clipboard');
+        assert(editor.innerHTML === original, 'compatibility does not mutate article');
+
+        // Model the owner's reported URL-triggered branch, not a verified backend implementation.
+        const legacyPaste = payload => /(?:https?|ftp):\/\//i.test(payload.text) ? {text: payload.text} : {html: payload.html};
+        assert(!legacyPaste(normal).html, 'reported failure reproduced: a plain URL takes the text-only branch');
+        assert(parse(legacyPaste(compatible).html).querySelectorAll('img').length === 2, 'compatible payload keeps both images through that branch');
+
+        let modernWrites = 0;
+        let item;
+        w.ClipboardItem = class { constructor(data) { this.data = data; } };
+        clipboardAPI({write: async items => { modernWrites++; item = items[0]; }});
+        d.execCommand = () => { throw new Error('unexpected fallback'); };
+        await w.copyToClipboard('compatible');
+        assert(modernWrites === 1, 'modern API writes one multi-format item');
+        assert(await item.data['text/html'].text() === compatible.html && await item.data['text/plain'].text() === compatible.text, 'modern API receives the same full HTML and compatible plain text');
+        assert(d.querySelector('#toast').textContent.includes('3 张图片，5 处网址文本'), 'success reports actual payload counts');
+        await w.copyToClipboard();
+        assert(await item.data['text/plain'].text() === normal.text, 'ordinary button does not apply compatibility mode');
+        assert(editor.innerHTML === original, 'both modern copy modes leave article unchanged');
+
+        let fallbackWrites = 0;
+        let fallback = {};
+        const legacyCopy = () => {
+            fallbackWrites++;
+            fallback = {};
+            const event = new w.Event('copy', {bubbles: true, cancelable: true});
+            Object.defineProperty(event, 'clipboardData', {value: {setData: (type, value) => { fallback[type] = value; }}});
+            d.dispatchEvent(event);
+            return event.defaultPrevented;
+        };
+        clipboardAPI(undefined);
+        d.execCommand = legacyCopy;
+        const selection = w.getSelection();
+        selection.selectAllChildren(editor.querySelector('p'));
+        const selected = selection.toString();
+        await w.copyToClipboard('compatible');
+        assert(fallbackWrites === 1 && fallback['text/html'] === compatible.html && fallback['text/plain'] === compatible.text, 'unsupported API falls back with both formats, never text-only');
+        assert(selection.toString() === selected, 'fallback restores original selection');
+        assert(![...d.body.children].some(el => el.style.left === '-10000px'), 'fallback removes its temporary helper');
+        const event = new w.Event('copy');
+        Object.defineProperty(event, 'clipboardData', {value: {setData: () => { throw new Error('copy listener leaked'); }}});
+        d.dispatchEvent(event);
+        assert(!event.defaultPrevented && editor.innerHTML === original, 'fallback copy listener removed and article intact');
+
+        clipboardAPI({write: async () => { throw new Error('permission denied'); }});
+        await w.copyToClipboard('compatible');
+        assert(fallbackWrites === 2 && fallback['text/html'] === compatible.html, 'modern API rejection retries the same rich-text payload');
+        d.execCommand = () => false;
+        await w.copyToClipboard('compatible');
+        assert(d.querySelector('#toast').textContent.includes('复制失败') && d.querySelector('#toast').textContent.includes('未退回纯文本'), 'both APIs failing does not report success or downgrade silently');
+        assert([...d.querySelectorAll('[data-article-copy]')].every(button => !button.disabled), 'failure restores buttons');
+        assert(![...d.body.children].some(el => el.style.left === '-10000px') && selection.toString() === selected, 'failed fallback restores selection and removes helper');
+        d.execCommand = () => true;
+        await w.copyToClipboard('compatible');
+        assert(d.querySelector('#toast').textContent.includes('复制失败'), 'missing copy event is not reported as a successful rich copy');
+
+        let finish;
+        let pendingWrites = 0;
+        clipboardAPI({write: () => { pendingWrites++; return new Promise(resolve => { finish = resolve; }); }});
+        const pending = w.copyToClipboard('compatible');
+        await w.copyToClipboard();
+        assert(pendingWrites === 1 && [...d.querySelectorAll('[data-article-copy]')].every(button => button.disabled), 'concurrent copies cannot overwrite an in-progress payload');
+        finish();
+        await pending;
+        assert([...d.querySelectorAll('[data-article-copy]')].every(button => !button.disabled), 'completed copy restores both buttons');
+        clipboardAPI({write: async items => { item = items[0]; }});
+        editor.innerHTML = '<p>新稿 https://new.example.com</p><img src="https://mmbiz.qpic.cn/new.png">';
+        await w.copyToClipboard('compatible');
+        assert((await item.data['text/html'].text()).includes('new.png') && await item.data['text/plain'].text() === '新稿 https ://new.example.com', 'repeat copy reads newest article, not a stale payload');
+        editor.innerHTML = '<p>无网址正文</p>';
+        const noURL = w.WeChatArticle.clipboardContent(editor, {compatible: true});
+        assert(noURL.text === '无网址正文' && noURL.protocolsChanged === 0 && noURL.images === 0, 'articles without URLs are unchanged');
+        editor.innerHTML = '<img src="https://mmbiz.qpic.cn/only.png">';
+        await w.copyToClipboard('compatible');
+        assert(parse(await item.data['text/html'].text()).querySelector('img').src.endsWith('/only.png'), 'image-only article still writes rich HTML');
+        const lastItem = item;
+        editor.innerHTML = '<p><br></p>';
+        await w.copyToClipboard('compatible');
+        assert(item === lastItem && d.querySelector('#toast').textContent.includes('暂无'), 'empty article cannot overwrite clipboard');
+        assert(d.querySelector('[onclick="copyToClipboard(\'compatible\')"]').getAttribute('aria-describedby') === 'copy-help' && d.querySelector('#copy-help').textContent.includes('不会上传'), 'compatibility action explains text changes and no image uploads');
+        document.querySelector('#result').textContent = `PASS: ${checks} article clipboard compatibility assertions`;
+        window.testResult = {passed: true, checks};
+    } catch (error) {
+        document.querySelector('#result').textContent = 'FAIL: ' + error.stack;
+        window.testResult = {passed: false, checks, error: error.stack};
+    }
+});
+</script>
