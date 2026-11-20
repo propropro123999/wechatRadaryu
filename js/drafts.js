@@ -106,6 +106,7 @@
       try { localStorage.setItem('icviews-draft-' + id, 'off'); } catch (_) {}
       try {
         await enqueue(() => storage('readwrite', store => store.delete(id)));
+        saved = ''; dirty = true;
         status.textContent = '本机草稿已清除，自动保存已关闭';
       } catch (_) { status.textContent = '清除失败，请检查浏览器存储设置后重试。'; }
     };
