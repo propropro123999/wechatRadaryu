@@ -51,8 +51,8 @@ assert.match(decoration.innerHTML, /<svg/);
 assert.equal(importedParagraph.innerHTML, 'Article text');
 assert.equal(importedDecoration.innerHTML, '');
 
-const pdf = readFileSync(resolve(root, 'pdf-compress.html'), 'utf8');
-const presetSource = pdf.slice(pdf.indexOf('function setStrength('), pdf.indexOf('// ===== 压缩处理'));
+const pdf = readFileSync(resolve(root, 'js/pdf-compress.js'), 'utf8');
+const presetSource = pdf.slice(pdf.indexOf('function setStrength('), pdf.indexOf('function stopCompression('));
 const buttons = ['fast', 'medium', 'maximum'].map(strength => ({
   dataset: { strength },
   classList: { toggle: (_name, selected) => { buttons.find(button => button.dataset.strength === strength).active = selected; } },
@@ -83,6 +83,7 @@ const trafficContext = {
     addEventListener() {}
   },
   window: {},
+  ToolDependencies: { load: async () => {} },
   FileReader: class { readAsArrayBuffer() { this.onload({ target: { result: new ArrayBuffer(0) } }); } },
   XLSX: { read: () => ({ SheetNames: ['Sheet1'], Sheets: { Sheet1: {} } }), utils: { sheet_to_json: () => [{ 受访页面: 'https://example.com', 浏览次数: 300, 独立访客: 200, 平均页面停留时间: '00:01:20' }] } },
   Plotly: { newPlot() {} },

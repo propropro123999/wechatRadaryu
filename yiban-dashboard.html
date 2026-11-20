@@ -330,6 +330,7 @@
     function handleFile(e) {
       const file = e.target.files[0];
       if (!file) return;
+      e.target.value = '';
       loadingEl.textContent = "正在读取并解析 Excel 数据，请稍候…";
       errorEl.textContent = "";
 

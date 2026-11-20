@@ -1,0 +1,70 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Lazy dependency regression fixtures</title>
+<pre id="result">Running…</pre>
+<script>
+(async () => {
+  let checks = 0;
+  const assert = (condition, message) => { if (!condition) throw new Error(message); checks++; };
+  const waitFor = async check => {
+    for (let i = 0; i < 1200; i++) {
+      if (check()) return;
+      await new Promise(resolve => setTimeout(resolve, 25));
+    }
+    throw new Error('Timed out waiting for fixture');
+  };
+  async function frame(path) {
+    const element = document.createElement('iframe');
+    const loaded = new Promise(resolve => element.onload = resolve);
+    element.src = '../' + path;
+    element.width = 1200; element.height = 900;
+    document.body.append(element);
+    await loaded;
+    return element;
+  }
+  const samples = {
+    'content-dashboard.html': { 内容标题: '示例：一次内容复盘', 发表时间: '2026-01-15', 总阅读人数: 1200, 总阅读次数: 1800, 总分享次数: 86, 阅读完成率: 62, 送达人数: 5000 },
+    'bandao-ops-dashboard.html': { 动态ID: 'demo-001', 动态标题: '示例：行业观察', 发布者: '内容团队', 点赞数: 28, 评论数: 9, 创建时间: '2026-01-15' },
+    'page-traffic-dashboard.html': { 受访页面: 'https://www.icviews.cn/news/recommend', 浏览次数: 1800, 独立访客: 1200, IP: 1000, 人均浏览页数: 1.5, 平均页面停留时间: '00:01:20' },
+    'yiban-dashboard.html': { 标题: '示例：内容运营周报', 日期: '2026-01-15', 阅读人数: 1200, 阅读量: 1800, 分享量: 86, 点赞数: 36, 朋友圈: 180 },
+    'youmeng.html': { 受访页面: 'https://www.icviews.cn/news/recommend', 浏览次数: 1800, 独立访客: 1200, IP: 1000, 人均浏览页数: 1.5, 平均页面停留时间: '00:01:20' }
+  };
+  try {
+    for (const [path, sample] of Object.entries(samples)) {
+      const element = await frame(path);
+      const w = element.contentWindow, d = w.document;
+      assert(!w.XLSX && !w.Plotly, path + ': no heavy globals before use');
+      assert(!w.performance.getEntriesByType('resource').some(entry => /plotly|xlsx|wordcloud/i.test(entry.name)), path + ': no eager library requests');
+      await w.ToolDependencies.load('xlsx');
+      const book = w.XLSX.utils.book_new();
+      w.XLSX.utils.book_append_sheet(book, w.XLSX.utils.json_to_sheet([sample]), 'fixture');
+      assert(!w.Plotly, path + ': example generation does not load charts');
+      const bytes = w.XLSX.write(book, { type: 'array', bookType: 'xlsx' });
+      let ready = false;
+      const onReady = w.workspaceDataReady;
+      w.workspaceDataReady = () => { ready = true; onReady(); };
+      w.handleFile({ target: { files: [new w.File([bytes], 'fixture.xlsx')] } });
+      await waitFor(() => ready || (d.getElementById('error')?.textContent || '').trim());
+      assert(ready && !!w.Plotly, path + ': import loads charts and exposes results');
+      await waitFor(() => d.querySelectorAll('.js-plotly-plot').length > 0);
+      assert(!(d.getElementById('error')?.textContent || '').trim(), path + ': import completes without parse errors');
+      assert(!d.querySelector('.workspace-results').hidden, path + ': result container is visible');
+      element.remove();
+    }
+    const element = await frame('orc-log-parser.html');
+    const w = element.contentWindow;
+    assert(!w.duckdb && !w.XLSX && !w.JSZip, 'ORC page does not initialize heavy libraries before input');
+    assert(!w.performance.getEntriesByType('resource').some(entry => /duckdb|xlsx|jszip/i.test(entry.name)), 'ORC initially has no Wasm or library requests');
+    let fallback = 0;
+    w.initDuckDB = async () => { throw new Error('fixture: blocked CDN'); };
+    w.fallbackToServer = async (_file, fileId) => { fallback++; assert(!!fileId, 'ORC fallback retains the file identity'); };
+    w.handleFiles([new w.File(['fixture'], 'fixture.orc')]);
+    await waitFor(() => fallback > 0);
+    assert(fallback === 1, 'failed local dependency initialization invokes cloud fallback once');
+    element.remove();
+    document.getElementById('result').textContent = `PASS: ${checks} lazy-load, real spreadsheet/chart and ORC initialization-fallback checks`;
+  } catch (error) {
+    document.getElementById('result').textContent = 'FAIL: ' + error.stack;
+  }
+})();
+</script>

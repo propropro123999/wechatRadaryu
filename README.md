@@ -58,9 +58,7 @@ Railway 仅作为兼容后备：`Dockerfile` 使用独立的 Flask/Gunicorn 安�
 
 Allo 不含中文字形，中文沿用系统字体。展示字体仅通过 `workspace.css` 的明确区域选择器启用；不修改正文 `--font-sans`，也不应用于编辑器、Word 预览、输入控件、数据表、图表或复制/导出内容。新增展示位置时应保持这一边界，勿将 Allo 设为全局字体。
 
-## 检查
-
-### 首轮可靠性与速度优化
+## 可靠性、本机草稿与按需加载
 
 数据页在选择报表时才加载 XLSX 和固定版本 Plotly，示例下载只加载 XLSX；Word 在导入时加载 Mammoth，图片打包时才加载 JSZip。ORC 的 DuckDB 模块与 Wasm 在本地解析开始时初始化。依赖加载失败可重试，不增加构建或后台服务。
 
@@ -70,12 +68,27 @@ Word 图片上传仍使用 Catbox，仅在明确点击后上传图片。逐项�
 
 文章与 Word 草稿（包含图片）存入浏览器 IndexedDB，不上传、不跨设备同步；7 天后不再提供恢复并在下次访问时清理。旧草稿需明确选择恢复或替换。清除会同时关闭该工具的自动保存，避免页面内容立即重新写回；可手动重新开启。浏览器禁用存储、空间不足或草稿过大时会提示未保存，并保留离开提醒。共享电脑请清除草稿。
 
+## 检查
+
 ```sh
 node tests/api.test.js
 node tests/orc-fallback.test.js
 node tests/workspace.test.js
-uv run --python 3.12 --with pyorc==0.11.0 python tests/orc_smoke.py
+node tests/toolbox.test.js
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python tests/orc_smoke.py
 ```
+
+无需额外测试包，Node.js 24 + Chrome 可运行全部浏览器回归（先在另一终端运行 `python3 -m http.server 3000 --bind 127.0.0.1`）：
+
+```sh
+node tests/run-browser-tests.js
+# 也可只跑新增的测试
+node tests/run-browser-tests.js toolbox lazy-loading
+```
+
+`CHROME_BIN` 可指定 Chrome 路径，`TEST_BASE_URL` 可指定本地静态服务地址。测试使用独立临时浏览器配置，不操作日常浏览器登录；CDN 依赖需要联网。新增夹具生成真实 DOCX、JPEG / PNG / 灰度软蒙版 PDF，检查草稿清除/恢复/过期/安全性、PDF 预览/重编码/取消/原件回退、五个报表页的实际 XLSX/Plotly 加载与渲染，以及 DuckDB 初始化失败的云端回退。上传错误与重试使用模拟 API，不会把测试图片上传 Catbox。
 
 静态服务启动后打开 `tests/display-font.test.html`，可检查全部 12 页的展示字体加载、功能区域隔离和文章 / Word 的复制结果。
 

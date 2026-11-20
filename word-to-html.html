@@ -331,8 +331,9 @@
                 if (wordImportBusy || window.WordUploads?.busy) return alert("文档或图片正在处理，请等待当前任务结束。");
                 if (files.length === 0) return;
                 const file = files[0];
+                document.querySelectorAll('input[type="file"]').forEach(input => { input.value = ''; });
 
-                if (!file.name.endsWith('.docx')) {
+                if (!/\.docx$/i.test(file.name)) {
                     alert('仅支持 .docx 格式的 Word 文档');
                     return;
                 }
@@ -455,7 +456,7 @@
                     // If it fails, use Proxy
                     let blob;
                     try {
-                        const resp = await fetch(url);
+                        const resp = await fetch(url, { signal: AbortSignal.timeout(15000) });
                         if (!resp.ok) throw new Error('Direct fetch failed');
                         blob = await resp.blob();
                     } catch (e) {

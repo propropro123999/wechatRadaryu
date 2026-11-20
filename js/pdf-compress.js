@@ -122,7 +122,7 @@ function compressPDF() {
   const fail = message => { stopCompression(); pdfStatus('压缩失败：' + message + '。原文件未改变，可重试。'); };
   try {
     const worker = pdfWorker = new Worker('js/pdf-compress-worker.js');
-    worker.onerror = () => fail('压缩组件加载或运行出错，请检查网络');
+    worker.onerror = () => { if (pdfWorker === worker) fail('压缩组件加载或运行出错，请检查网络'); };
     worker.onmessage = ({ data }) => {
       if (pdfWorker !== worker) return;
       if (data.type === 'error') return fail(data.message);

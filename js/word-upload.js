@@ -31,6 +31,7 @@
     const pending = images.filter(image => !isCloud(image));
     if (!pending.length) { status.textContent = `全部 ${images.length} 张图片已是 Catbox 链接；请在目标编辑器核对图片。`; return; }
     busy = true;
+    window.wordDraft?.setBusy(true);
     button.disabled = true;
     list.replaceChildren();
     const rows = new Map();
@@ -59,6 +60,7 @@
       }
     } finally {
       busy = false;
+      window.wordDraft?.setBusy(false);
       button.disabled = false;
       button.textContent = failed ? '重试未完成图片' : '检查云端图片';
       status.textContent = failed
