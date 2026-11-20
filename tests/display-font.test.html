@@ -1,0 +1,75 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Display font isolation tests</title>
+<pre id="result">Running…</pre>
+<script src="../js/nav.js"></script>
+<script>
+(async () => {
+  const assert = (condition, message) => { if (!condition) throw new Error(message); };
+  const usesAllo = element => element.ownerDocument.defaultView.getComputedStyle(element).fontFamily.includes('Allo');
+  const content = '<h1>中文 English 2026</h1><h2>Word / HTML</h2><p class="eyebrow">Text 123 -&gt; test</p><p style="font-family:Georgia,serif">Original font</p><svg viewBox="0 0 120 24"><text x="0" y="18">SVG labels</text></svg><table><tbody><tr><td>Data 123</td></tr></tbody></table>';
+  const checked = [];
+  try {
+    for (const path of ['index.html', ...NAV_ITEMS.map(tool => tool.href)]) {
+      const frame = document.createElement('iframe');
+      frame.width = 1280;
+      frame.height = 900;
+      frame.title = path;
+      const loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once: true}));
+      frame.src = '../' + path;
+      document.body.append(frame);
+      await loaded;
+      const w = frame.contentWindow;
+      const d = w.document;
+      await d.fonts.ready;
+      const display = d.querySelector(path === 'index.html' ? '.workspace-brand > span:last-child' : '.tool-intro h1');
+      assert(display && usesAllo(display), path + ': display text opts into Allo');
+      assert([...d.fonts].some(font => font.family.includes('Allo') && font.status === 'loaded'), path + ': self-hosted font loaded');
+      assert(!usesAllo(d.body), path + ': body keeps system font');
+      for (const node of d.querySelectorAll('input, textarea, select, button, table, .native-editor, .word-content, #clipboard-helper, .workspace-results')) {
+        assert(!usesAllo(node), path + ': functional surface retains its original font: ' + node.tagName + '#' + node.id);
+      }
+      const target = d.querySelector('#editor-content, #preview-content');
+      if (target) {
+        target.innerHTML = content;
+        for (const node of [target, ...target.querySelectorAll('*')]) {
+          assert(!usesAllo(node), path + ': imported headings, labels and SVG do not inherit Allo');
+        }
+        assert(target.querySelector('[style]').style.fontFamily === 'Georgia, serif', path + ': source font preserved');
+        let payload = {};
+        d.execCommand = command => {
+          assert(command === 'copy', path + ': expected copy command');
+          const event = new w.Event('copy', {cancelable: true});
+          Object.defineProperty(event, 'clipboardData', {value: {setData: (type, value) => { payload[type] = value; }}});
+          d.dispatchEvent(event);
+          return true;
+        };
+        w.alert = () => {};
+        if (path === 'article-formatter.html') {
+          for (const clearStyles of [false, true]) {
+            target.innerHTML = content;
+            d.querySelector('#clearAttr').checked = clearStyles;
+            w.formatText();
+            w.copyToClipboard();
+            assert(payload['text/html'] && !/Allo|woff2|--font-display/i.test(payload['text/html']), path + ': copied rich HTML has no display-font dependency');
+            assert(payload['text/plain'].includes('English'), path + ': plain text retained');
+          }
+        } else {
+          await w.copyRichText();
+          assert(payload['text/html'] === content, path + ': rich HTML unchanged');
+          Object.defineProperty(w.navigator, 'clipboard', {configurable: true, value: {writeText: async value => { payload.raw = value; }}});
+          w.copyHTML();
+          assert(payload.raw === content, path + ': raw HTML unchanged');
+        }
+      }
+      checked.push(path);
+      frame.remove();
+    }
+    window.testResult = {passed: true, checked};
+    document.querySelector('#result').textContent = 'PASS: Allo loads only on display surfaces across ' + checked.length + ' pages; editors, source fonts, SVG, forms, tables and clipboard HTML stay isolated.';
+  } catch (error) {
+    window.testResult = {passed: false, checked, error: error.stack};
+    document.querySelector('#result').textContent = 'FAIL: ' + error.stack;
+  }
+})();
+</script>

@@ -46,10 +46,19 @@ DuckDB-Wasm 本地路径保持不变。云端优先调用同源 `/api/parse-orc`
 
 Railway 仅作为兼容后备：`Dockerfile` 使用独立的 Flask/Gunicorn 安装和 `app.py`，`railway.json` 指定 Docker 构建。后备服务保持原有公开行为。云端解析会上传文件；Word 图片上传会发送到 Catbox。
 
+## 展示字体
+
+品牌、展示标题和格式标签使用 [Allo by Josh Puckett](https://allo.joshpuckett.me/) 1.0.3，字体与 SIL Open Font License 1.1 授权保存在 `fonts/`。仅自托管一份约 241 KiB 的 Friendly WOFF2 可变字体（字重 100–900、自动光学尺寸、固定圆润度 50），无需字体 CDN 或额外构建步骤。
+
+Allo 不含中文字形，中文沿用系统字体。展示字体仅通过 `workspace.css` 的明确区域选择器启用；不修改正文 `--font-sans`，也不应用于编辑器、Word 预览、输入控件、数据表、图表或复制/导出内容。新增展示位置时应保持这一边界，勿将 Allo 设为全局字体。
+
 ## 检查
 
 ```sh
 node tests/api.test.js
 node tests/orc-fallback.test.js
+node tests/workspace.test.js
 uv run --python 3.12 --with pyorc==0.11.0 python tests/orc_smoke.py
 ```
+
+静态服务启动后打开 `tests/display-font.test.html`，可检查全部 12 页的展示字体加载、功能区域隔离和文章 / Word 的复制结果。
