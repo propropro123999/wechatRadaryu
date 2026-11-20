@@ -7,10 +7,7 @@
     <title>Word 转 HTML 工具 - ICviews</title>
     <link rel="stylesheet" href="gemini-ui.css" />
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Mammoth.js for DOCX parsing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-    <!-- JSZip for Download -->
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="js/dependencies.js"></script>
     <style>
         /* Auth Overlay Styles */
         .auth-overlay {
@@ -229,6 +226,8 @@
             <input type="file" id="file-input" accept=".docx" style="display: none;">
         </div>
 
+        <div id="word-draft"></div>
+        <p class="operation-status" id="word-operation-status" role="status"></p>
         <!-- Preview Section -->
         <div class="preview-container" id="preview-container">
             <div class="preview-header">
@@ -267,7 +266,9 @@
                         </button>
                     </div>
                 </div>
-                <div class="preview-content word-content" id="preview-content">
+                <p id="cloud-upload-status" class="operation-status" role="status" aria-live="polite">点击云端图才会将图片上传到 Catbox；文档正文不会上传。</p>
+            <ol id="cloud-upload-list" class="upload-results" aria-label="图片上传结果"></ol>
+            <div class="preview-content word-content" id="preview-content">
                     <!-- Converted content will appear here -->
                 </div>
             </div>
@@ -324,7 +325,10 @@
                 handleFiles(files);
             }
 
-            function handleFiles(files) {
+            let wordImportBusy = false;
+            let previousWord = null;
+            async function handleFiles(files) {
+                if (wordImportBusy || window.WordUploads?.busy) return alert("文档或图片正在处理，请等待当前任务结束。");
                 if (files.length === 0) return;
                 const file = files[0];
 
@@ -333,18 +337,24 @@
                     return;
                 }
 
+                if (file.size > 50 * 1024 * 1024) return alert("请选择不超过 50MB 的 Word 文档");
+                if (window.wordDraft && !window.wordDraft.allowReplace()) return;
+                previousWord = { html: document.getElementById('preview-content').innerHTML,
+                    filename: document.getElementById('file-name-display').textContent };
+                wordImportBusy = true;
+                window.wordDraft?.setBusy(true);
+                document.getElementById("btn-cloud-upload").disabled = true;
+                document.getElementById("cloud-upload-status").textContent = "";
+                document.getElementById("cloud-upload-list").replaceChildren();
                 // Update UI
                 document.getElementById('file-name-display').innerText = file.name;
                 document.getElementById('preview-content').innerHTML = '<div style="text-align:center; padding: 40px; color: #666;">正在转换中...</div>';
                 document.getElementById('preview-container').style.display = 'block';
 
-                // Proce ss File
-                const reader = new FileReader();
-                reader.onload = function (loadEvent) {
-                    const arrayBuffer = loadEvent.target.result;
-                    convertDocxToHtml(arrayBuffer);
-                };
-                reader.readAsArrayBuffer(file);
+                try { await convertDocxToHtml(await file.arrayBuffer()); }
+                catch (error) { handleError(error); }
+                finally { wordImportBusy = false; window.wordDraft?.setBusy(false); }
+
             }
 
             function convertDocxToHtml(arrayBuffer) {
@@ -412,11 +422,11 @@
                     const controls = document.createElement('div');
                     controls.className = 'img-controls';
                     controls.innerHTML = `
-                    <button class="img-btn" onclick="copySingleImage(this)" title="复制图片">
+                    <button class="img-btn" data-image-action="copy" title="复制图片">
                         <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
                         复制
                     </button>
-                    <button class="img-btn" onclick="downloadSingleImage(this)" title="下载图片">
+                    <button class="img-btn" data-image-action="download" title="下载图片">
                         <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                         下载
                     </button>
@@ -426,6 +436,11 @@
 
                 document.getElementById('preview-content').innerHTML = tempDiv.innerHTML;
 
+                document.getElementById("btn-cloud-upload").disabled = false;
+                document.getElementById("btn-cloud-upload").textContent = "一键转为云端图";
+                document.getElementById("word-operation-status").textContent = "转换完成，正文与图片仍在本机。";
+                window.wordDraft?.setBusy(false);
+                window.wordDraft?.changed();
                 if (messages.length > 0) {
                     console.log('Conversion messages:', messages);
                 }
@@ -445,7 +460,7 @@
                         console.log('Direct fetch failed, trying proxy...', e);
                         // Fallback to Proxy
                         const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
-                        const resp = await fetch(proxyUrl);
+                        const resp = await fetch(proxyUrl, { signal: AbortSignal.timeout(15000) });
                         if (!resp.ok) throw new Error(`Proxy fetch failed: ${resp.status}`);
                         blob = await resp.blob();
                     }
@@ -523,6 +538,8 @@
 
             // --- Bulk Download ---
             window.downloadAllImages = async () => {
+                try { await ToolDependencies.load("zip"); }
+                catch (error) { return alert(error.message); }
                 const zip = new JSZip();
                 const imgs = document.querySelectorAll('#preview-content img');
                 if (imgs.length === 0) return alert('没有发现图片');
@@ -551,16 +568,16 @@
                 a.href = url;
                 a.download = `word_images_${Date.now()}.zip`;
                 a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
             };
 
             function handleError(err) {
+                window.wordDraft?.setBusy(false);
+                document.getElementById("btn-cloud-upload").disabled = false;
                 console.error(err);
-                document.getElementById('preview-content').innerHTML = `
-                <div style="text-align:center; color: #D32F2F;">
-                    <h3>转换失败</h3>
-                    <p>${err.message}</p>
-                </div>
-            `;
+                document.getElementById('preview-content').innerHTML = previousWord?.html || '';
+                if (previousWord) document.getElementById('file-name-display').textContent = previousWord.filename;
+                document.getElementById('word-operation-status').textContent = '转换失败：' + err.message + '。上一次内容已保留，请重新选择文件重试。';
             }
 
             function copyHTML() {
@@ -660,130 +677,31 @@
                 }
             }
 
-            // Helper to fetch external images and convert to base64
-            async function fetchExternalImage(url) {
-                try {
-                    const response = await fetch(url);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    const blob = await response.blob();
-                    return new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onloadend = () => resolve(reader.result);
-                        reader.onerror = reject;
-                        reader.readAsDataURL(blob);
-                    });
-                } catch (error) {
-                    console.error('Error fetching external image:', url, error);
-                    return null;
-                }
-            }
-
-            // --- Cloud Bridge Actions ---
-
-            async function uploadAllToCloud() {
-                const content = document.getElementById('preview-content');
-                // Select ALL images that are not already on our cloud
-                const imagesToUpload = Array.from(content.querySelectorAll('img'))
-                    .filter(img => !img.src.includes('catbox.moe'));
-
-                if (imagesToUpload.length === 0) {
-                    return alert('没有检测到需要上传的本地图片（或者图片已经上传过了）。');
-                }
-
-                const btn = document.getElementById('btn-cloud-upload');
-                const originalText = btn.innerHTML;
-                btn.disabled = true;
-
-                try {
-                    for (let i = 0; i < imagesToUpload.length; i++) {
-                        const img = imagesToUpload[i];
-                        btn.innerText = `正在上传 ${i + 1}/${imagesToUpload.length}...`;
-
-                        let base64Data = img.src;
-
-                        // If it's a stubborn external URL (not base64), we must fetch it first
-                        if (!base64Data.startsWith('data:image')) {
-                            console.log('Attempting to fix external URL:', base64Data);
-                            try {
-                                // Robust Cleaning Logic
-                                let cleanSrc = base64Data;
-                                try { cleanSrc = decodeURIComponent(cleanSrc); } catch (e) { }
-                                const urlMatch = cleanSrc.match(/(https?:\/\/[^\s"']+)/);
-                                if (urlMatch) cleanSrc = urlMatch[0];
-                                else cleanSrc = cleanSrc.replace(/["']/g, '').split(/\s/)[0];
-
-                                console.log('Cleaned URL:', cleanSrc);
-
-                                // Try to fetch it to get base64
-                                const fetched = await fetchExternalImage(cleanSrc);
-                                if (fetched) {
-                                    base64Data = fetched;
-                                } else {
-                                    console.warn('Could not fetch/convert external image for proxy upload:', cleanSrc);
-                                    // Fallback: just use cleaned URL
-                                    img.src = cleanSrc;
-                                    continue;
-                                }
-                            } catch (err) {
-                                console.error('Error fixing image:', err);
-                                continue;
-                            }
-                        }
-
-                        // Upload 
-                        const cloudUrl = await uploadImageToCloud(base64Data);
-                        console.log(`Image ${i} uploaded:`, cloudUrl);
-
-                        if (cloudUrl && cloudUrl.startsWith('http')) {
-                            img.src = cloudUrl;
-                            img.setAttribute('data-cloud-uploaded', 'true');
-                        } else {
-                            console.error('Invalid Cloud URL received:', cloudUrl);
-                        }
-                    }
-
-                    // Show Success State
-                    btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right: 4px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> 已转为云端图`;
-                    btn.onclick = null; // Disable button effectively
-                    btn.style.background = '#4CAF50';
-
-                    alert('所有图片已成功转为云链接(Catbox)！\n\n现在您可以：\n1. 随意选中任意文字和图片进行复制。\n2. 粘贴到知乎等平台。');
-
-                } catch (e) {
-                    console.error(e);
-                    alert('上传过程中出现错误，请查看控制台。');
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                }
-            }
-
-            async function deleteAllCloudImages() {
-                alert('Telegra.ph 暂不支持删除图片。');
-            }
-
-            async function uploadImageToCloud(base64Data) {
-                try {
-                    // For Telegra.ph, we MUST use the proxy because of CORS
-                    const response = await fetch('/api/upload-image', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ image: base64Data })
-                    });
-
-                    const data = await response.json();
-                    if (data.url && data.url.startsWith('http')) {
-                        return data.url;
-                    }
-                    console.warn('Proxy upload failed:', data);
-                    return null;
-                } catch (e) {
-                    console.error('Proxy upload error:', e);
-                    return null;
-                }
-            }
         </script>
+    <script src="js/word-upload.js"></script>
+    <script src="js/drafts.js"></script>
+    <script>
+        window.wordDraft = LocalDrafts.mount({
+            id: 'word', container: 'word-draft',
+            canRestore: () => !WordUploads.busy && !wordImportBusy,
+            capture: () => ({ html: document.getElementById('preview-content').innerHTML,
+                filename: document.getElementById('file-name-display').textContent }),
+            restore: record => {
+                document.getElementById('preview-content').innerHTML = record.html;
+                document.getElementById('file-name-display').textContent = record.filename || '恢复的文档.docx';
+                document.getElementById('preview-container').style.display = 'block';
+                document.getElementById('cloud-upload-list').replaceChildren();
+                document.getElementById('cloud-upload-status').textContent = '已恢复图片地址；云端图片是否有效仍需核对。';
+                document.getElementById('btn-cloud-upload').textContent = '一键转为云端图';
+            }
+        });
+        document.getElementById('preview-content').addEventListener('click', event => {
+            const button = event.target.closest('[data-image-action]');
+            if (!button) return;
+            if (button.dataset.imageAction === 'copy') copySingleImage(button);
+            if (button.dataset.imageAction === 'download') downloadSingleImage(button);
+        });
+    </script>
     <script src="js/nav.js"></script>
     <script src="js/workspace.js"></script>
 </body>

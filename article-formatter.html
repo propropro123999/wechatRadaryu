@@ -283,6 +283,7 @@
                     <button type="button" class="action-btn" onclick="copyArticleMetadata('author')"><span data-icon="copy"></span>复制作者</button>
                 </div>
             </section>
+            <div id="article-draft"></div>
             <div id="editor-content" class="native-editor" contenteditable="true" data-placeholder="粘贴文章内容，或使用上方导入链接…" aria-label="文章编辑区"></div>
 
         </div>
@@ -377,6 +378,7 @@
             let url;
             try { url = WeChatArticle.articleUrl($('#articleUrl').val().trim()); }
             catch (err) { return showToast(err.message); }
+            if (window.articleDraft && !window.articleDraft.allowReplace()) return;
 
             const $btn = $('button[onclick="importArticle()"]');
             const originalHtml = $btn.html();
@@ -564,6 +566,21 @@
 
     </script>
 
+    <script src="js/drafts.js"></script>
+    <script>
+        window.articleDraft = LocalDrafts.mount({
+            id: 'article', container: 'article-draft', observe: articleEditor,
+            capture: () => ({ html: articleEditor.innerHTML, url: document.getElementById('articleUrl').value,
+                title: document.getElementById('article-title').textContent,
+                author: document.getElementById('article-author').textContent }),
+            restore: record => {
+                articleEditor.innerHTML = record.html;
+                document.getElementById('articleUrl').value = record.url || '';
+                setArticleMetadata(record);
+                protectEditorDiagrams();
+            }
+        });
+    </script>
     <script src="js/utils.js"></script>
     <script src="js/nav.js"></script>
     <script>

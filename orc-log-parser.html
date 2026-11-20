@@ -9,9 +9,9 @@
     <link rel="stylesheet" href="design-system-modern.css" />
     <link rel="stylesheet" href="tool-pages-interactions.css" />
     <!-- SheetJS for Export -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
     <!-- JSZip for Multiple Files Export -->
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
     <style>
         body {
             background-color: var(--gem-color-bg-body);
@@ -105,6 +105,7 @@
         }
     </style>
     <link rel="stylesheet" href="workspace.css" />
+    <script src="js/dependencies.js"></script>
 </head>
 
 <body>
@@ -217,8 +218,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initDropzone();
-            if (window.initDuckDB) window.initDuckDB();
-            else window.appReady = true;
+
         });
 
         // --- 表头显示名称（按列顺序，与 ORC 列一一对应）---
@@ -475,7 +475,9 @@
                 `已加载 ${(window.mergedFileNames || []).length} 个文件，筛选后 ${filtered.length} 行`;
         }
 
-        window.exportMergedExcel = function () {
+        window.exportMergedExcel = async function () {
+            try { await ToolDependencies.load("xlsx"); }
+            catch (error) { return alert(error.message); }
             const data = window.mergedData;
             if (!data || !data.length) return;
             const keys = getOrderedKeys(data[0]);
@@ -506,10 +508,7 @@
     <!-- DuckDB Wasm Scripts -->
     <!-- Recommended CDN setup for DuckDB-Wasm -->
     <script type="module">
-        import * as duckdb from 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/+esm';
-
-        // Global exports
-        window.duckdb = duckdb;
+        let duckdb;
 
         // --- DuckDB Logic ---
         let db = null;
@@ -523,6 +522,8 @@
             initPromise = (async () => {
                 log('Initializing DuckDB-Wasm...');
                 try {
+                    duckdb = await import('https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/+esm');
+                    window.duckdb = duckdb;
                     const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
                     const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
                     const worker_url = URL.createObjectURL(
@@ -541,14 +542,9 @@
                     console.error(err);
                     throw err;
                 }
-            })();
+            })().catch(error => { initPromise = null; throw error; });
 
             return initPromise;
-        }
-
-        // Check if we should init immediately (if auth passed before module loaded)
-        if (window.appReady) {
-            window.initDuckDB();
         }
 
         async function processFile(file, fileId) {

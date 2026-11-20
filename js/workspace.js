@@ -67,12 +67,15 @@
       document.getElementById('usageCard').hidden = true;
     }
     empty.querySelector('[data-upload-action]').addEventListener('click', () => document.getElementById('nav-file-input')?.click());
-    empty.querySelector('[data-sample-action]').addEventListener('click', () => {
-      if (typeof XLSX === 'undefined') {
+    empty.querySelector('[data-sample-action]').addEventListener('click', async () => {
+      const button = empty.querySelector('[data-sample-action]');
+      button.disabled = true;
+      try { await ToolDependencies.load('xlsx'); }
+      catch (err) {
         const error = document.getElementById('error') || document.getElementById('status');
-        if (error) error.textContent = '表格组件未加载，请检查网络后刷新页面。';
+        if (error) error.textContent = err.message;
         return;
-      }
+      } finally { button.disabled = false; }
       const book = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet([sampleRows[tool.href]]), '示例数据');
       XLSX.writeFile(book, tool.label + '-示例.xlsx');

@@ -10,7 +10,7 @@
 
   <!-- JSZip 用于下载 -->
   <!-- JSZip 用于下载 -->
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="js/dependencies.js"></script>
 
   <style>
     /* ===== 页面特定样式 ===== */
@@ -804,6 +804,7 @@
         showStatus('<span class="loading"></span> 打包中...', "info");
 
         try {
+          await ToolDependencies.load("zip");
           const zip = new JSZip();
           Object.entries(results).forEach(([name, r]) => {
             zip.file(r.outputName, r.blob);
@@ -817,7 +818,7 @@
           setTimeout(() => URL.revokeObjectURL(url), 1000);
           showStatus("✓ 已下载 ZIP 文件", "success");
         } catch (e) {
-          showStatus("✗ 下载失败", "error");
+          showStatus("下载失败：" + e.message, "error");
         } finally {
           btnDownloadAll.disabled = false;
         }

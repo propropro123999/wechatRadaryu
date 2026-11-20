@@ -9,13 +9,6 @@
   <!-- 设计系统 -->
   <link rel="stylesheet" href="ui.css" />
 
-  <!-- PDF 处理库 -->
-  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.269/build/pdf.min.js"></script>
-
-  <!-- JSZip 用于下载 -->
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-
   <style>
     /* ===== 页面特定样式 ===== */
     body {
@@ -578,10 +571,11 @@
       <div class="intro-card">
         <div class="intro-title">智能 PDF 压缩</div>
         <div class="intro-desc">
-          在浏览器中实时压缩 PDF 文件，无需上传，数据完全保留在本地。智能降低图片分辨率，移除冗余资源，轻松减小文件体积。
+          在浏览器中实时压缩 PDF 文件，无需上传，数据完全保留在本地。降低常见 JPEG 图片的分辨率，保留可选文字与矢量内容。特殊图片编码保持原样，不保证每份文件都能缩小；修改会使原有数字签名失效，请保留原件。
         </div>
       </div>
 
+      <p id="pdf-status" class="operation-status" role="status" aria-live="polite"></p>
       <!-- 内容网格 -->
       <div class="content-grid">
         <!-- 上传卡片 -->
@@ -674,7 +668,7 @@
               <button class="strength-btn" data-strength="medium" onclick="setStrength('medium')"><span data-icon="scale"></span> 均衡</button>
               <button class="strength-btn" data-strength="maximum" onclick="setStrength('maximum')"><span data-icon="package"></span> 最小</button>
               </div>
-              <small id="strength-hint" style="color: var(--color-text-tertiary);">保留高质量，压缩率 40%</small>
+              <small id="strength-hint" style="color: var(--color-text-tertiary);">较高画质，实际缩减因文件而异</small>
             </div>
           </div>
 
@@ -687,7 +681,7 @@
 
             <!-- 开始压缩按钮 -->
             <div style="margin-top: var(--space-2xl); display: flex; justify-content: flex-end;">
-              <button class="btn btn-primary" onclick="compressPDF()" style="padding: var(--space-md) var(--space-3xl);">
+              <button class="btn btn-primary" id="compress-pdf" disabled onclick="compressPDF()" style="padding: var(--space-md) var(--space-3xl);">
                 <span data-icon="bolt"></span> 开始压缩
               </button>
             </div>
@@ -713,6 +707,7 @@
           <div style="color: var(--color-text-secondary); font-size: var(--text-sm);">
             处理中: <span id="progress-detail">-</span>
           </div>
+          <button type="button" class="btn btn-secondary" onclick="cancelCompression()">取消压缩</button>
         </div>
 
         <!-- 结果卡片 -->
@@ -736,6 +731,7 @@
               </div>
             </div>
 
+            <p id="result-note" class="operation-status" role="status"></p>
             <div class="btn-group" style="justify-content: center;">
               <button class="btn btn-primary" onclick="downloadPDF()">
                 <span data-icon="download"></span> 下载压缩文件
@@ -750,303 +746,7 @@
     </div>
   </div>
 
-  <!-- 工具脚本 -->
-  <script>
-    // ===== 全局变量 =====
-    let currentPDF = null;
-    let currentPDFPages = [];
-    let currentPageIndex = 0;
-    let compressedPDFData = null;
-    let compressionStats = {
-      original: 0,
-      compressed: 0
-    };
-    let pdfWorker = null;
-
-    // ===== 上传处理 =====
-    function handleFileSelect(event) {
-      const file = event.target.files[0];
-      if (file) {
-        loadPDF(file);
-      }
-    }
-
-    function handleDrop(event) {
-      event.preventDefault();
-      event.stopPropagation();
-      document.getElementById('upload-area').classList.remove('dragover');
-
-      const files = event.dataTransfer.files;
-      if (files.length > 0 && files[0].type === 'application/pdf') {
-        loadPDF(files[0]);
-      } else {
-        alert('请上传 PDF 文件');
-      }
-    }
-
-    function handleDragOver(event) {
-      event.preventDefault();
-      event.stopPropagation();
-      document.getElementById('upload-area').classList.add('dragover');
-    }
-
-    function handleDragLeave(event) {
-      event.preventDefault();
-      document.getElementById('upload-area').classList.remove('dragover');
-    }
-
-    async function loadPDF(file) {
-      try {
-        // 检查文件大小
-        if (file.size > 200 * 1024 * 1024) {
-          alert('文件过大（>200MB），请选择较小的 PDF');
-          return;
-        }
-
-        compressionStats.original = file.size;
-
-        const arrayBuffer = await file.arrayBuffer();
-        const { PDFDocument } = PDFLib;
-        currentPDF = await PDFDocument.load(arrayBuffer);
-
-        // 更新文件信息
-        document.getElementById('file-name').textContent = file.name;
-        document.getElementById('file-size').textContent = formatFileSize(file.size);
-        document.getElementById('file-pages').textContent = currentPDF.getPageCount();
-
-        currentPDFPages = currentPDF.getPages();
-        currentPageIndex = 0;
-
-        // 显示预览
-        await renderPreview();
-        document.getElementById('preview-panel').classList.add('show');
-
-        // 显示上传提示
-        document.getElementById('upload-alert').classList.add('show');
-      } catch (error) {
-        alert(' PDF 加载失败：' + error.message);
-        console.error(error);
-      }
-    }
-
-    async function renderPreview() {
-      try {
-        const page = currentPDFPages[currentPageIndex];
-        const canvas = document.getElementById('preview-canvas');
-
-        // 使用 PDF.js 渲染
-        const pdfData = await currentPDF.save();
-        const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
-
-        const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
-        const pdfPage = await pdf.getPage(currentPageIndex + 1);
-
-        const scale = 1.5;
-        const viewport = pdfPage.getViewport({ scale });
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-
-        const context = canvas.getContext('2d');
-        await pdfPage.render({
-          canvasContext: context,
-          viewport: viewport
-        }).promise;
-
-        document.getElementById('page-indicator').textContent = `第 ${currentPageIndex + 1} 页`;
-      } catch (error) {
-        console.error('预览渲染失败：', error);
-      }
-    }
-
-    function previousPage() {
-      if (currentPageIndex > 0) {
-        currentPageIndex--;
-        renderPreview();
-      }
-    }
-
-    function nextPage() {
-      if (currentPageIndex < currentPDFPages.length - 1) {
-        currentPageIndex++;
-        renderPreview();
-      }
-    }
-
-    // ===== 参数控制 =====
-    function updateQualityValue() {
-      const value = document.getElementById('quality-slider').value;
-      document.getElementById('quality-value').textContent = value + '%';
-    }
-
-    function updateMaxWidthValue() {
-      const value = document.getElementById('max-width').value;
-      document.getElementById('max-width-value').textContent = value;
-    }
-
-    function setStrength(strength) {
-      document.querySelectorAll('.strength-btn').forEach(btn => {
-        const selected = btn.dataset.strength === strength;
-        btn.classList.toggle('active', selected);
-        btn.setAttribute('aria-pressed', String(selected));
-      });
-
-      const hints = {
-        'fast': '保留高质量，压缩率 40%',
-        'medium': '中等质量，压缩率 60%',
-        'maximum': '降低质量，压缩率 80%'
-      };
-
-      const settings = {
-        'fast': { quality: 85, maxWidth: 1280 },
-        'medium': { quality: 70, maxWidth: 960 },
-        'maximum': { quality: 50, maxWidth: 640 }
-      };
-
-      const config = settings[strength];
-      document.getElementById('quality-slider').value = config.quality;
-      document.getElementById('max-width').value = config.maxWidth;
-      updateQualityValue();
-      updateMaxWidthValue();
-      document.getElementById('strength-hint').textContent = hints[strength];
-
-      // 保存选择
-      localStorage.setItem('pdf-strength', strength);
-    }
-
-    // ===== 压缩处理 =====
-    async function compressPDF() {
-      if (!currentPDF) {
-        alert('请先上传 PDF 文件');
-        return;
-      }
-
-      // 隐藏预览，显示进度
-      document.getElementById('preview-panel').classList.remove('show');
-      document.getElementById('result-card').style.display = 'none';
-      document.getElementById('progress-card').style.display = 'block';
-
-      const quality = parseInt(document.getElementById('quality-slider').value);
-      const maxWidth = parseInt(document.getElementById('max-width').value);
-      const removeMetadata = document.getElementById('remove-metadata').checked;
-
-      try {
-        // 在主线程中进行压缩（避免 Worker 路径问题）
-        const { PDFDocument } = PDFLib;
-        const pages = currentPDF.getPages();
-        const totalPages = pages.length;
-
-        // 逐页处理
-        for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-          const page = pages[pageIndex];
-          const resources = page.node.Resources;
-
-          if (resources && resources.XObject) {
-            const xobjects = resources.XObject.entries();
-            for (const [name, ref] of xobjects) {
-              try {
-                const xobj = currentPDF.context.lookup(ref);
-                if (xobj.Subtype && xobj.Subtype.toString() === 'Image') {
-                  // 标记处理
-                  xobj.Interpolate = true;
-                }
-              } catch (e) {
-                console.warn('处理图片失败:', e);
-              }
-            }
-          }
-
-          // 更新进度
-          const progress = Math.round(((pageIndex + 1) / totalPages) * 100);
-          document.getElementById('progress-text').textContent = `压缩中...`;
-          document.getElementById('progress-percent').textContent = progress + '%';
-          document.getElementById('progress-bar').style.width = progress + '%';
-          document.getElementById('progress-detail').textContent = `页面 ${pageIndex + 1}/${totalPages}`;
-
-          // 让浏览器有机会重新绘制进度
-          await new Promise(resolve => setTimeout(resolve, 0));
-        }
-
-        // 移除元数据
-        if (removeMetadata) {
-          try {
-            currentPDF.setTitle('');
-            currentPDF.setAuthor('');
-            currentPDF.setSubject('');
-            currentPDF.setKeywords([]);
-            currentPDF.setProducer('');
-            currentPDF.setCreator('');
-          } catch (e) {
-            console.warn('移除元数据失败:', e);
-          }
-        }
-
-        // 保存压缩后的 PDF
-        compressedPDFData = await currentPDF.save();
-        compressionStats.compressed = compressedPDFData.byteLength;
-        showResult();
-      } catch (error) {
-        alert('压缩失败：' + error.message);
-        console.error('压缩错误:', error);
-        document.getElementById('progress-card').style.display = 'none';
-      }
-    }
-
-    function showResult() {
-      document.getElementById('progress-card').style.display = 'none';
-      document.getElementById('result-card').style.display = 'block';
-
-      const original = compressionStats.original;
-      const compressed = compressionStats.compressed;
-      const rate = Math.round((1 - compressed / original) * 100);
-
-      document.getElementById('result-original').textContent = formatFileSize(original);
-      document.getElementById('result-compressed').textContent = formatFileSize(compressed);
-      document.getElementById('result-rate').textContent = rate + '%';
-    }
-
-    function downloadPDF() {
-      if (!compressedPDFData) {
-        alert('没有可下载的文件');
-        return;
-      }
-
-      const fileName = document.getElementById('file-name').textContent;
-      const baseName = fileName.replace('.pdf', '');
-      const downloadName = `${baseName}-压缩.pdf`;
-
-      const blob = new Blob([compressedPDFData], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = downloadName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-
-    function resetTool() {
-      currentPDF = null;
-      currentPDFPages = [];
-      currentPageIndex = 0;
-      compressedPDFData = null;
-
-      document.getElementById('file-input').value = '';
-      document.getElementById('preview-panel').classList.remove('show');
-      document.getElementById('result-card').style.display = 'none';
-      document.getElementById('progress-card').style.display = 'none';
-      document.getElementById('upload-alert').classList.remove('show');
-    }
-
-    // ===== 工具函数 =====
-    function formatFileSize(bytes) {
-      if (bytes === 0) return '0 B';
-      const k = 1024;
-      const sizes = ['B', 'KB', 'MB', 'GB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-    }
-  </script>
+  <script src="js/pdf-compress.js"></script>
 
   <script src="js/utils.js"></script>
   <script src="js/nav.js"></script>

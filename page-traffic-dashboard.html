@@ -8,9 +8,7 @@
   <link rel="stylesheet" href="ui.css" />
   <!-- Plotly 用于画图 -->
   <!-- Plotly 用于画图 -->
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <!-- SheetJS 读取 Excel / CSV -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -217,6 +215,7 @@
     }
   </style>
     <link rel="stylesheet" href="workspace.css" />
+  <script src="js/dependencies.js"></script>
 </head>
 
 <body>
@@ -325,8 +324,9 @@
           errorEl.textContent = "";
 
           const reader = new FileReader();
-          reader.onload = function (evt) {
+          reader.onload = async function (evt) {
             try {
+            await ToolDependencies.load("xlsx", "plotly");
               const data = evt.target.result;
               const workbook = XLSX.read(data, { type: "array" });
               const firstSheet = workbook.SheetNames[0];
@@ -338,7 +338,7 @@
               loadingEl.textContent = "";
             } catch (err) {
               console.error(err);
-              errorEl.textContent = "解析失败，请确认文件为 CSV 或 Excel，编码为 UTF-8 或用 Excel 另存为再试。";
+              errorEl.textContent = err.message + "；" + "解析失败，请确认文件为 CSV 或 Excel，编码为 UTF-8 或用 Excel 另存为再试。";
               loadingEl.textContent = "";
             }
           };

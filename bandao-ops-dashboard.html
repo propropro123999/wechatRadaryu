@@ -7,11 +7,8 @@
   <title>内容运营数据 Dashboard（本地版）</title>
   <link rel="stylesheet" href="ui.css" />
   <!-- Plotly 用于画图 -->
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <!-- SheetJS 读取 Excel -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- 词云 -->
-  <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.js"></script>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -218,6 +215,7 @@
     }
   </style>
     <link rel="stylesheet" href="workspace.css" />
+  <script src="js/dependencies.js"></script>
 </head>
 
 <body>
@@ -385,8 +383,9 @@
         errorEl.textContent = "";
 
         const reader = new FileReader();
-        reader.onload = function (evt) {
+        reader.onload = async function (evt) {
           try {
+            await ToolDependencies.load("xlsx", "plotly");
             const data = evt.target.result;
             const workbook = XLSX.read(data, { type: "array" });
             const firstSheet = workbook.SheetNames[0];
@@ -396,7 +395,7 @@
             loadingEl.textContent = "";
           } catch (err) {
             console.error(err);
-            errorEl.textContent = "解析 Excel 失败，请确认文件格式是否正确。";
+            errorEl.textContent = err.message + "；" + "解析 Excel 失败，请确认文件格式是否正确。";
             loadingEl.textContent = "";
           }
         };
