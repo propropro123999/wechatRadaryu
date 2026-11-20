@@ -1,5 +1,11 @@
 {
   "cleanUrls": true,
   "buildCommand": "echo 'No build required'",
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "functions": {
+    "api/cleanup-word-images.js": { "maxDuration": 60 }
+  },
+  "crons": [
+    { "path": "/api/cleanup-word-images", "schedule": "0 3 * * *" }
+  ]
 }

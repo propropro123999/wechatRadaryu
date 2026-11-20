@@ -145,6 +145,18 @@
             padding: 8px;
         }
 
+        .cloud-storage-notice {
+            padding: 14px 24px;
+            border-bottom: 1px solid #e4ebe6;
+            background: #f5f8f5;
+            color: #526357;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .cloud-storage-notice p { margin: 0; }
+        #cloud-upload-status { margin-top: 6px; font-weight: 500; }
+
         /* Image Controls Overlay */
         .img-wrapper {
             position: relative;
@@ -238,9 +250,8 @@
                                 <path
                                     d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
                             </svg>
-                            一键转为云端图
+                            暂存到 Vercel Blob
                         </button>
-                        <!-- Delete button removed: Telegra.ph does not support deleting images -->
 
                         <button class="gem-button gem-button-secondary" onclick="copyHTML()">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"
@@ -260,6 +271,11 @@
                             复制全文
                         </button>
                     </div>
+                </div>
+                <div class="cloud-storage-notice">
+                    <p><strong>图片仅作 7 天暂存。</strong>上传到本项目的 Vercel Blob，任何持有链接的人都可访问，请勿上传敏感图片。单张限 3 MB；每天清理超过 7 天的图片。</p>
+                    <p>粘贴不代表对方已转存。请确认目标编辑器已将图片存到自己的空间，否则清理后会破图；复制时不会立即删除。</p>
+                    <p id="cloud-upload-status" role="status" aria-live="polite" hidden></p>
                 </div>
                 <div class="preview-content word-content" id="preview-content">
                     <!-- Converted content will appear here -->
@@ -328,6 +344,7 @@
                 }
 
                 // Update UI
+                document.getElementById('cloud-upload-status').hidden = true;
                 document.getElementById('file-name-display').innerText = file.name;
                 document.getElementById('preview-content').innerHTML = '<div style="text-align:center; padding: 40px; color: #666;">正在转换中...</div>';
                 document.getElementById('preview-container').style.display = 'block';
@@ -678,107 +695,70 @@
             }
 
             // --- Cloud Bridge Actions ---
+            const blobUploadedImages = new WeakMap();
 
             async function uploadAllToCloud() {
                 const content = document.getElementById('preview-content');
-                // Select ALL images that are not already on our cloud
-                const imagesToUpload = Array.from(content.querySelectorAll('img'))
-                    .filter(img => !img.src.includes('catbox.moe'));
-
-                if (imagesToUpload.length === 0) {
-                    return alert('没有检测到需要上传的本地图片（或者图片已经上传过了）。');
-                }
-
                 const btn = document.getElementById('btn-cloud-upload');
+                const status = document.getElementById('cloud-upload-status');
+                if (btn.disabled) return;
+                const imagesToUpload = Array.from(content.querySelectorAll('img')).filter(img => blobUploadedImages.get(img) !== img.src);
+                status.hidden = false;
+                if (!imagesToUpload.length) {
+                    status.textContent = '没有待暂存的图片，已有 Blob 链接保持不变。';
+                    return;
+                }
                 const originalText = btn.innerHTML;
                 btn.disabled = true;
-
+                let uploaded = 0;
+                const errors = [];
                 try {
                     for (let i = 0; i < imagesToUpload.length; i++) {
                         const img = imagesToUpload[i];
-                        btn.innerText = `正在上传 ${i + 1}/${imagesToUpload.length}...`;
-
-                        let base64Data = img.src;
-
-                        // If it's a stubborn external URL (not base64), we must fetch it first
-                        if (!base64Data.startsWith('data:image')) {
-                            console.log('Attempting to fix external URL:', base64Data);
-                            try {
-                                // Robust Cleaning Logic
-                                let cleanSrc = base64Data;
-                                try { cleanSrc = decodeURIComponent(cleanSrc); } catch (e) { }
-                                const urlMatch = cleanSrc.match(/(https?:\/\/[^\s"']+)/);
-                                if (urlMatch) cleanSrc = urlMatch[0];
-                                else cleanSrc = cleanSrc.replace(/["']/g, '').split(/\s/)[0];
-
-                                console.log('Cleaned URL:', cleanSrc);
-
-                                // Try to fetch it to get base64
-                                const fetched = await fetchExternalImage(cleanSrc);
-                                if (fetched) {
-                                    base64Data = fetched;
-                                } else {
-                                    console.warn('Could not fetch/convert external image for proxy upload:', cleanSrc);
-                                    // Fallback: just use cleaned URL
-                                    img.src = cleanSrc;
-                                    continue;
-                                }
-                            } catch (err) {
-                                console.error('Error fixing image:', err);
-                                continue;
-                            }
-                        }
-
-                        // Upload 
-                        const cloudUrl = await uploadImageToCloud(base64Data);
-                        console.log(`Image ${i} uploaded:`, cloudUrl);
-
-                        if (cloudUrl && cloudUrl.startsWith('http')) {
+                        if (!content.contains(img)) return;
+                        btn.innerText = `正在暂存 ${i + 1}/${imagesToUpload.length}...`;
+                        status.textContent = `正在上传第 ${i + 1} 张，共 ${imagesToUpload.length} 张…`;
+                        try {
+                            const base64Data = img.src.startsWith('data:image') ? img.src : await fetchExternalImage(img.src);
+                            if (!base64Data) throw new Error('无法读取外链图片，原图已保留');
+                            const cloudUrl = await uploadImageToCloud(base64Data);
+                            if (!content.contains(img)) return;
                             img.src = cloudUrl;
-                            img.setAttribute('data-cloud-uploaded', 'true');
-                        } else {
-                            console.error('Invalid Cloud URL received:', cloudUrl);
+                            blobUploadedImages.set(img, cloudUrl);
+                            uploaded++;
+                        } catch (error) {
+                            errors.push(`第 ${i + 1} 张：${error.message}`);
                         }
                     }
-
-                    // Show Success State
-                    btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right: 4px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> 已转为云端图`;
-                    btn.onclick = null; // Disable button effectively
-                    btn.style.background = '#4CAF50';
-
-                    alert('所有图片已成功转为云链接(Catbox)！\n\n现在您可以：\n1. 随意选中任意文字和图片进行复制。\n2. 粘贴到知乎等平台。');
-
-                } catch (e) {
-                    console.error(e);
-                    alert('上传过程中出现错误，请查看控制台。');
+                    status.textContent = errors.length
+                        ? `已暂存 ${uploaded} 张，${errors.length} 张失败，未成功的图片保持原样，可点击重试。${errors[0]}`
+                        : `已暂存 ${uploaded} 张图片，可复制全文。请在清理前确认目标编辑器已自行转存。`;
+                } finally {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                 }
             }
 
-            async function deleteAllCloudImages() {
-                alert('Telegra.ph 暂不支持删除图片。');
+            function isWordBlobImage(value) {
+                try {
+                    const url = new URL(value);
+                    return url.protocol === 'https:' && /^[a-z0-9-]+\.public\.blob\.vercel-storage\.com$/.test(url.hostname)
+                        && /^\/word-images\/(?:production|preview|development)\/[0-9a-f-]{36}\.(?:png|jpg|gif|webp)$/.test(url.pathname);
+                } catch { return false; }
             }
 
             async function uploadImageToCloud(base64Data) {
-                try {
-                    // For Telegra.ph, we MUST use the proxy because of CORS
-                    const response = await fetch('/api/upload-image', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ image: base64Data })
-                    });
-
-                    const data = await response.json();
-                    if (data.url && data.url.startsWith('http')) {
-                        return data.url;
-                    }
-                    console.warn('Proxy upload failed:', data);
-                    return null;
-                } catch (e) {
-                    console.error('Proxy upload error:', e);
-                    return null;
-                }
+                if (base64Data.length > 4 * 1024 * 1024 + 64) throw new Error('单张图片不能超过 3 MB');
+                const response = await fetch('/api/upload-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64Data }),
+                    signal: AbortSignal.timeout(25000)
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.error || `图片暂存失败（${response.status}）`);
+                if (!isWordBlobImage(data.url)) throw new Error('暂存服务未返回有效的 Blob 图片链接');
+                return data.url;
             }
         </script>
     <script src="js/nav.js"></script>

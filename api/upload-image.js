@@ -1,89 +1,50 @@
-import https from 'node:https';
+import { randomUUID } from 'node:crypto';
+import { put } from '@vercel/blob';
+import { MAX_WORD_IMAGE_BYTES, WORD_IMAGE_PREFIX, imageType } from '../lib/word-images.js';
 
-export default function handler(req, res) {
-    // Set CORS headers
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-    );
-
-    if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
-    }
-
-    // --- HANDLE UPLOAD (POST) ---
-    if (req.method === 'POST') {
-        const { image } = req.body;
-        if (!image) return res.status(400).json({ error: 'No image provided' });
-
-        // Detect MIME type
-        // image string format: "data:image/png;base64,....."
-        const matches = image.match(/^data:(.+);base64,(.+)$/);
-        if (!matches || matches.length !== 3) {
-            return res.status(400).json({ error: 'Invalid base64 string' });
+export function createUploadHandler({ putBlob = put, env = process.env } = {}) {
+    return async function handler(req, res) {
+        res.setHeader('Cache-Control', 'no-store');
+        if (req.method !== 'POST') {
+            res.setHeader('Allow', 'POST');
+            return res.status(405).json({ error: 'Method Not Allowed' });
         }
-        const mimeType = matches[1]; // e.g., 'image/png'
-        const base64Data = matches[2];
-        const buffer = Buffer.from(base64Data, 'base64');
-
-        // Determine filename extension
-        const ext = mimeType.split('/')[1] || 'jpg';
-        const filename = `upload.${ext}`;
-
-        const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
-
-        // Catbox API: reqtype=fileupload, fileToUpload=@file
-        const fieldPart = `--${boundary}\r\nContent-Disposition: form-data; name="reqtype"\r\n\r\nfileupload\r\n`;
-        const fileHeader = `--${boundary}\r\nContent-Disposition: form-data; name="fileToUpload"; filename="${filename}"\r\nContent-Type: ${mimeType}\r\n\r\n`;
-        const postFooter = `\r\n--${boundary}--\r\n`;
-
-        const bodyBuffer = Buffer.concat([
-            Buffer.from(fieldPart, 'utf8'),
-            Buffer.from(fileHeader, 'utf8'),
-            buffer,
-            Buffer.from(postFooter, 'utf8')
-        ]);
-
-        const options = {
-            hostname: 'catbox.moe',
-            path: '/user/api.php',
-            method: 'POST',
-            headers: {
-                'Content-Type': `multipart/form-data; boundary=${boundary}`,
-                'Content-Length': bodyBuffer.length,
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36'
-            }
-        };
-
-        const uploadReq = https.request(options, (upstreamRes) => {
-            let data = '';
-            upstreamRes.on('data', (chunk) => data += chunk);
-            upstreamRes.on('end', () => {
-                try {
-                    // Catbox returns the raw URL as text body on success
-                    const text = data.trim();
-                    console.log('Catbox response:', text);
-
-                    if (text.startsWith('http')) {
-                        res.status(200).json({ url: text });
-                    } else {
-                        res.status(500).json({ error: 'Upload failed', raw: text });
-                    }
-                } catch (e) {
-                    res.status(500).json({ error: e.message, raw: data });
-                }
+        const origin = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`;
+        if (req.headers.origin !== origin) return res.status(403).json({ error: '仅允许同源上传' });
+        if (!/^application\/json(?:;|$)/i.test(req.headers['content-type'] || '')) {
+            return res.status(415).json({ error: '请使用 JSON 格式上传图片' });
+        }
+        const image = req.body?.image;
+        if (typeof image !== 'string') return res.status(400).json({ error: '未提供有效图片' });
+        if (image.length > Math.ceil(MAX_WORD_IMAGE_BYTES / 3) * 4 + 64) {
+            return res.status(413).json({ error: '单张图片不能超过 3 MB' });
+        }
+        const match = image.match(/^data:(image\/(?:png|jpeg|gif|webp));base64,([A-Za-z0-9+/]+={0,2})$/);
+        if (!match) return res.status(400).json({ error: '仅支持 PNG、JPEG、GIF、WebP 图片' });
+        const buffer = Buffer.from(match[2], 'base64');
+        const type = imageType(buffer);
+        if (buffer.toString('base64') !== match[2] || !type || type.mime !== match[1]) {
+            return res.status(400).json({ error: '图片格式或内容无效' });
+        }
+        if (buffer.length > MAX_WORD_IMAGE_BYTES) return res.status(413).json({ error: '单张图片不能超过 3 MB' });
+        if (!env.BLOB_READ_WRITE_TOKEN || !env.CRON_SECRET) {
+            return res.status(503).json({ error: '图片暂存尚未启用，请先配置 Vercel Blob 和 CRON_SECRET' });
+        }
+        const environment = ['production', 'preview'].includes(env.VERCEL_ENV) ? env.VERCEL_ENV : 'development';
+        try {
+            const blob = await putBlob(`${WORD_IMAGE_PREFIX}${environment}/${randomUUID()}.${type.extension}`, buffer, {
+                access: 'public',
+                addRandomSuffix: false,
+                contentType: type.mime,
+                cacheControlMaxAge: 60,
+                token: env.BLOB_READ_WRITE_TOKEN,
+                abortSignal: AbortSignal.timeout(15000)
             });
-        });
+            return res.status(200).json({ url: blob.url });
+        } catch {
+            return res.status(502).json({ error: '图片暂存失败，请检查 Vercel Blob 配置或稍后重试' });
+        }
+    };
+}
 
-        uploadReq.on('error', (e) => res.status(500).json({ error: e.message }));
-        uploadReq.write(bodyBuffer);
-        uploadReq.end();
-        return;
-    }
-
-    res.status(405).json({ error: 'Method Not Allowed' });
-};
+export default createUploadHandler();

@@ -1,0 +1,84 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Word Blob upload UI tests (mock storage)</title>
+<pre id="result">Running…</pre>
+<iframe id="converter" src="../word-to-html.html" title="Word converter under test"></iframe>
+<script>
+document.querySelector('#converter').addEventListener('load', async function () {
+    try {
+        const w = this.contentWindow;
+        const d = w.document;
+        let checks = 0;
+        const assert = (condition, message) => { if (!condition) throw new Error(message); checks++; };
+        const preview = d.querySelector('#preview-content');
+        const button = d.querySelector('#btn-cloud-upload');
+        const status = d.querySelector('#cloud-upload-status');
+        d.querySelector('#preview-container').style.display = 'block';
+        const image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jV5kAAAAASUVORK5CYII=';
+        const blobUrl = id => `https://unit.public.blob.vercel-storage.com/word-images/preview/${String(id).padStart(8, '0')}-0000-4000-8000-000000000000.png`;
+        const fixture = () => { preview.innerHTML = `<p>正文</p><img src="${image}"><p>第二段</p><img src="${image}">`; };
+        const json = (body, code = 200) => new w.Response(JSON.stringify(body), { status: code, headers: { 'Content-Type': 'application/json' } });
+        let calls = 0;
+        w.fetch = async (url, options) => {
+            assert(url === '/api/upload-image' && options.method === 'POST', 'images go only to same-origin upload API');
+            assert(JSON.parse(options.body).image === image, 'original image data is submitted');
+            return json({ url: blobUrl(++calls) });
+        };
+        fixture();
+        await w.uploadAllToCloud();
+        assert(calls === 2 && [...preview.querySelectorAll('img')].every(img => w.isWordBlobImage(img.src)), 'all images replaced with validated Blob links');
+        assert(!button.disabled && status.textContent.includes('已暂存 2 张'), 'success counts are shown and button remains reusable');
+        await w.uploadAllToCloud();
+        assert(calls === 2, 'repeat upload skips existing Blob links');
+
+        fixture();
+        calls = 0;
+        w.fetch = async () => ++calls === 1 ? json({ url: blobUrl(10) }) : json({ error: '图片暂存尚未启用，请配置 Vercel Blob' }, 503);
+        await w.uploadAllToCloud();
+        assert(preview.querySelectorAll('img')[0].src === blobUrl(10) && preview.querySelectorAll('img')[1].src === image, 'partial failure retains failed original image');
+        assert(status.textContent.includes('1 张失败') && status.textContent.includes('尚未启用') && !button.disabled, 'configuration error and partial result are visible');
+        calls = 0;
+        w.fetch = async () => { calls++; return json({ url: blobUrl(11) }); };
+        await w.uploadAllToCloud();
+        assert(calls === 1 && status.textContent.includes('已暂存 1 张'), 'retry uploads only the failed image');
+
+        for (const failure of [async () => json({ error: '尚未配置' }, 503), async () => json({ url: 'https://example.com/not-blob.png' }), async () => new w.Response('upstream error', { status: 502 }), async () => { throw new Error('network unavailable'); }]) {
+            fixture();
+            w.fetch = failure;
+            await w.uploadAllToCloud();
+            assert([...preview.querySelectorAll('img')].every(img => img.src === image), 'failure never overwrites original images');
+            assert(status.textContent.includes('2 张失败') && !button.disabled, 'failure is not reported as success and can be retried');
+        }
+
+        fixture();
+        let finish;
+        calls = 0;
+        w.fetch = () => { calls++; return new Promise(resolve => { finish = resolve; }); };
+        const uploading = w.uploadAllToCloud();
+        assert(button.disabled, 'button disabled while uploading');
+        await w.uploadAllToCloud();
+        assert(calls === 1, 'double-click does not start a second upload');
+        preview.innerHTML = '<p>新文档</p>';
+        finish(json({ url: blobUrl(12) }));
+        await uploading;
+        assert(preview.innerHTML === '<p>新文档</p>' && !button.disabled, 'finishing an old upload does not mutate a replacement document');
+
+        preview.innerHTML = '<img src="https://files.catbox.moe/old.png">';
+        calls = 0;
+        w.fetch = async url => {
+            if (url === '/api/upload-image') { calls++; return json({ url: blobUrl(13) }); }
+            return new w.Response(Uint8Array.from(atob(image.split(',')[1]), c => c.charCodeAt(0)), { headers: { 'Content-Type': 'image/png' } });
+        };
+        await w.uploadAllToCloud();
+        assert(calls === 1 && preview.querySelector('img').src === blobUrl(13), 'legacy external images can be explicitly re-uploaded, not silently skipped');
+        assert(!w.isWordBlobImage('https://unit.public.blob.vercel-storage.com.evil/word-images/preview/image.png'), 'lookalike storage host is rejected');
+
+        const notice = d.querySelector('.cloud-storage-notice').textContent;
+        assert(notice.includes('7 天') && notice.includes('粘贴不代表') && notice.includes('不会立即删除') && notice.includes('敏感图片'), 'privacy, retention and rehosting limits are visible');
+        document.querySelector('#result').textContent = `PASS: ${checks} Word Blob UI checks (mock storage, not live Blob)`;
+    } catch (error) {
+        document.querySelector('#result').textContent = 'FAIL: ' + error.stack;
+        throw error;
+    }
+});
+</script>
