@@ -2,7 +2,7 @@ importScripts('https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js')
 
 self.onmessage = async ({ data: { pdfData, quality, maxWidth, removeMetadata } }) => {
   try {
-    const { PDFDocument, PDFRawStream, PDFName } = self.PDFLib;
+    const { PDFDocument, PDFRawStream, PDFName, PDFArray } = self.PDFLib;
     const doc = await PDFDocument.load(pdfData, { updateMetadata: false });
     const images = doc.context.enumerateIndirectObjects().filter(([, object]) =>
       object instanceof PDFRawStream && object.dict.get(PDFName.of('Subtype')) === PDFName.of('Image'));
@@ -15,9 +15,13 @@ self.onmessage = async ({ data: { pdfData, quality, maxWidth, removeMetadata } }
       const value = key => image.dict.lookup(PDFName.of(key));
       let bitmap;
       try {
+        // Chrome、Word 等导出的照片多为带 RGB ICC 配置的 JPEG：像素值原样重编码并沿用原配置，颜色不变。
+        const space = value('ColorSpace');
+        const profile = space instanceof PDFArray && String(space.lookup(0)) === '/ICCBased' ? space.lookup(1) : null;
+        const iccRgb = profile instanceof PDFRawStream && profile.dict.lookup(PDFName.of('N'))?.asNumber?.() === 3;
         // Other encodings, masks and custom decode arrays must keep their original decoder.
         if (masks.has(image) || String(value('Filter')) !== '/DCTDecode' ||
-            !['/DeviceRGB', '/DeviceGray'].includes(String(value('ColorSpace'))) ||
+            !(iccRgb || ['/DeviceRGB', '/DeviceGray'].includes(String(space))) ||
             ['SMask', 'Mask', 'Decode', 'DecodeParms'].some(key => image.dict.has(PDFName.of(key)))) {
           skipped++;
           continue;
@@ -30,7 +34,7 @@ self.onmessage = async ({ data: { pdfData, quality, maxWidth, removeMetadata } }
           continue;
         }
         const original = image.getContents();
-        bitmap = await createImageBitmap(new Blob([original], { type: 'image/jpeg' }), { imageOrientation: 'none' });
+        bitmap = await createImageBitmap(new Blob([original], { type: 'image/jpeg' }), { imageOrientation: 'none', colorSpaceConversion: 'none' });
         if (bitmap.width !== width || bitmap.height !== height) { skipped++; continue; }
         const ratio = Math.min(1, maxWidth / width);
         const canvas = new OffscreenCanvas(Math.max(1, Math.round(width * ratio)), Math.max(1, Math.round(height * ratio)));
@@ -39,7 +43,7 @@ self.onmessage = async ({ data: { pdfData, quality, maxWidth, removeMetadata } }
         if (blob.size < original.byteLength) {
           const replacement = doc.context.stream(new Uint8Array(await blob.arrayBuffer()), {
             Type: 'XObject', Subtype: 'Image', Width: canvas.width, Height: canvas.height,
-            ColorSpace: 'DeviceRGB', BitsPerComponent: 8, Filter: 'DCTDecode'
+            BitsPerComponent: 8, Filter: 'DCTDecode', ...(iccRgb ? {} : { ColorSpace: 'DeviceRGB' })
           });
           for (const [key, value] of image.dict.entries()) {
             if (!replacement.dict.has(key) && key !== PDFName.of('Length')) replacement.dict.set(key, value);
