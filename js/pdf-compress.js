@@ -140,12 +140,15 @@ function compressPDF() {
         pdfMood?.done(data.unchanged || saved <= 0 ? '这份已经很瘦了，没什么可减的' : '压完了，瘦了 ' + saved + '%', { confetti: !data.unchanged && saved > 0 });
         stopCompression();
         document.getElementById('result-card').style.display = 'block';
+        // 结果卡在页面最下方，居中滚到眼前，也让右下角的气泡压不到数字
+        document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
         document.getElementById('result-original').textContent = formatFileSize(currentPDFData.byteLength);
         document.getElementById('result-compressed').textContent = formatFileSize(data.data.byteLength);
         document.getElementById('result-rate').textContent = Math.round((1 - data.data.byteLength / currentPDFData.byteLength) * 100) + '%';
         document.getElementById('result-note').textContent = data.unchanged
           ? '未发现更小的结果，下载将保留原文件（未移除元数据）。文字型、已压缩或非 JPEG 图片的 PDF 可能无法进一步缩小。'
-          : `已优化 ${data.optimized} 张 JPEG 图片，保留文字与矢量内容；${data.skipped} 张特殊编码或带蒙版的图片保持原样。`;
+          : (data.optimized ? `已优化 ${data.optimized} 张 JPEG 图片，保留文字与矢量内容` : '没有可重新压缩的 JPEG 图片，减小的部分来自整理文件结构') +
+            (data.skipped ? `；${data.skipped} 张特殊编码或带蒙版的图片保持原样。` : '。');
         pdfStatus(data.unchanged ? '处理完成，文件未减小，未重复压缩。' : '压缩完成，请下载并核对画质，保留原文件。');
       }
     };

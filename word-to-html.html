@@ -95,6 +95,8 @@
             transform: scale(1.01);
         }
 
+        #word-operation-status { scroll-margin-top: 96px; }
+
         .preview-container {
             background: white;
             border-radius: 12px;
@@ -354,6 +356,8 @@
                 document.getElementById('file-name-display').innerText = file.name;
                 document.getElementById('preview-content').innerHTML = '<div style="text-align:center; padding: 40px; color: #666;">正在转换中...</div>';
                 document.getElementById('preview-container').style.display = 'block';
+                // 拖拽区占满首屏，进度和结果在它下面：带用户过去，免得以为没反应
+                document.getElementById('word-operation-status').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
                 const mood = window.LuyuPlayful?.busy('word');
                 try { await convertDocxToHtml(await file.arrayBuffer()); mood?.done('搬好了，图文都在'); }
@@ -366,7 +370,9 @@
                 document.getElementById('word-operation-status').textContent = '正在加载 Word 处理组件…';
                 await ToolDependencies.load('mammoth');
                 document.getElementById('word-operation-status').textContent = '正在转换文档与图片…';
-                const result = await mammoth.convertToHtml({ arrayBuffer });
+                // Word 的「标题 / 副标题」样式默认会被当成普通段落，这里补上映射
+                const result = await mammoth.convertToHtml({ arrayBuffer }, { styleMap: [
+                    "p[style-name='Title'] => h1:fresh", "p[style-name='Subtitle'] => h2:fresh"] });
                 await displayResult(result);
             }
 
@@ -582,13 +588,30 @@
                 window.wordDraft?.setBusy(false);
                 document.getElementById("btn-cloud-upload").disabled = false;
                 console.error(err);
-                document.getElementById('preview-content').innerHTML = previousWord?.html || '';
+                const preview = document.getElementById('preview-content');
+                preview.innerHTML = previousWord?.html || '';
                 if (previousWord) document.getElementById('file-name-display').textContent = previousWord.filename;
-                document.getElementById('word-operation-status').textContent = '转换失败：' + err.message + '。上一次内容已保留，请重新选择文件重试。';
+                const kept = !!(preview.textContent.trim() || preview.querySelector('img, table'));
+                if (!kept) document.getElementById('preview-container').style.display = 'none';
+                // 解压库的英文报错对用户没有意义：这类错误都是文件本身不是有效的 docx
+                const reason = /zip|central directory|end of data|corrupt/i.test(err.message)
+                    ? '这个文件不是有效的 .docx，可能已损坏，或是直接改了后缀的 .doc / 其他格式；请用 Word 另存为 .docx 后再试'
+                    : err.message;
+                document.getElementById('word-operation-status').textContent = '转换失败：' + reason + '。' +
+                    (kept ? '上一次内容已保留，' : '') + '请重新选择文件重试。';
+            }
+
+            // 预览里的图片带有「复制 / 下载」悬浮按钮和包装层，它们只属于本页，不能进入复制结果
+            function cleanPreviewClone() {
+                const clone = document.getElementById('preview-content').cloneNode(true);
+                clone.removeAttribute('id');
+                clone.querySelectorAll('.img-controls').forEach(el => el.remove());
+                clone.querySelectorAll('.img-wrapper').forEach(wrapper => wrapper.replaceWith(...wrapper.childNodes));
+                return clone;
             }
 
             function copyHTML() {
-                const content = document.getElementById('preview-content').innerHTML;
+                const content = cleanPreviewClone().innerHTML;
                 navigator.clipboard.writeText(content).then(() => {
                     alert('HTML 代码已复制到剪贴板');
                 }).catch(err => {
@@ -598,26 +621,7 @@
             }
 
             async function copyRichText() {
-                // Clone content to strip controls before copying
-                const contentOriginal = document.getElementById('preview-content');
-                const contentClone = contentOriginal.cloneNode(true);
-
-                // Remove all .img-controls and unwrap .img-wrapper
-                // Remove all .img-controls
-                contentClone.querySelectorAll('.img-controls').forEach(el => el.remove());
-
-                // Unwrap .img-wrapper to restore clean <img> tags
-                contentClone.querySelectorAll('.img-wrapper').forEach(wrapper => {
-                    // Move all children (usually just the img) before the wrapper
-                    while (wrapper.firstChild) {
-                        wrapper.parentNode.insertBefore(wrapper.firstChild, wrapper);
-                    }
-                    // Remove the empty wrapper
-                    wrapper.remove();
-                });
-
-                const content = contentClone;
-                content.removeAttribute('id');
+                const content = cleanPreviewClone();
                 const helper = document.getElementById('clipboard-helper');
                 // innerText needs a rendered tree to preserve paragraph and line breaks.
                 helper.replaceChildren(content);

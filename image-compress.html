@@ -600,7 +600,7 @@
                   <th>原大小</th>
                   <th>压后尺寸</th>
                   <th>压后大小</th>
-                  <th>压缩率</th>
+                  <th>节省</th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -650,6 +650,10 @@
         return (bytes / Math.pow(k, i)).toFixed(2) + " " + sizes[i];
       }
 
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, ch => "&#" + ch.charCodeAt(0) + ";");
+      }
+
       // 显示状态消息
       function showStatus(message, type = "info") {
         statusEl.innerHTML = `<div class="status status-${type}">${message}</div>`;
@@ -674,28 +678,34 @@
         tbody.innerHTML = "";
         files.forEach((f) => {
           const r = results[f.name];
-          const ratioPercent = r ? (r.size / f.size * 100).toFixed(1) : "-";
+          const saved = r ? (1 - r.size / f.size) * 100 : 0;
           let ratioClass = "";
+          let savedText = "-";
 
           if (r) {
-            if (r.size <= f.size * 0.5) ratioClass = "ratio-good";
-            else if (r.size <= f.size * 0.8) ratioClass = "ratio-warning";
+            if (r.kept) savedText = "已经很小，保留原图";
+            else if (saved < 0) savedText = "变大 " + (-saved).toFixed(1) + "%";
+            else savedText = "省 " + saved.toFixed(1) + "%";
+            if (r.kept) ratioClass = "";
+            else if (saved >= 50) ratioClass = "ratio-good";
+            else if (saved >= 0) ratioClass = "ratio-warning";
             else ratioClass = "ratio-bad";
           }
+          const name = escapeHtml(f.name);
 
           const origDim = r?.origW ? `${r.origW} × ${r.origH}` : "-";
           const compDim = r?.w ? `${r.w} × ${r.h}` : "-";
 
           tbody.innerHTML += `
           <tr>
-            <td><strong>${f.name}</strong></td>
+            <td><strong>${name}</strong></td>
             <td>${origDim}</td>
             <td>${fmtBytes(f.size)}</td>
             <td>${compDim}</td>
             <td>${r ? fmtBytes(r.size) : "-"}</td>
-            <td class="${ratioClass}">${r ? ratioPercent + "%" : "-"}</td>
+            <td class="${ratioClass}">${savedText}</td>
             <td>
-              ${r ? `<button class="btn btn-secondary" data-name="${f.name}" data-dl style="font-size: 12px; padding: 6px 12px;">下载</button>` : '<span style="color: var(--color-text-tertiary);">未压缩</span>'}
+              ${r ? `<button class="btn btn-secondary" data-name="${name}" data-dl style="font-size: 12px; padding: 6px 12px;">下载</button>` : '<span style="color: var(--color-text-tertiary);">未压缩</span>'}
             </td>
           </tr>
         `;
@@ -751,17 +761,29 @@
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext("2d");
+        const outType = format === "auto" ? (file.type || "image/jpeg") : format;
+        if (outType === "image/jpeg") {
+          // JPEG 没有透明通道，透明区域垫白底，否则会变成黑色
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(0, 0, width, height);
+        }
         ctx.drawImage(img, 0, 0, width, height);
 
-        const outType = format === "auto" ? (file.type || "image/jpeg") : format;
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, outType, quality));
+        let blob = await new Promise(resolve => canvas.toBlob(resolve, outType, quality));
         if (!blob) throw new Error("压缩失败");
 
         const ext = outType === "image/png" ? ".png" : outType === "image/webp" ? ".webp" : ".jpg";
-        const outputName = file.name.replace(/\.[^.]+$/, "") + ext;
+        let outputName = file.name.replace(/\.[^.]+$/, "") + ext;
+        // 格式和尺寸都没变却压不小（常见于 PNG 和已压过的图）时，原图就是最好的结果
+        const kept = ratio === 1 && outType === file.type && blob.size >= file.size;
+        if (kept) {
+          blob = file;
+          outputName = file.name;
+        }
 
         results[file.name] = {
           blob,
+          kept,
           size: blob.size,
           w: width,
           h: height,
@@ -787,7 +809,8 @@
           for (const f of files) {
             await compressOne(f);
           }
-          showStatus(`✓ 压缩完成，共 ${files.length} 个文件`, "success");
+          const keptCount = Object.values(results).filter(r => r.kept).length;
+          showStatus(`✓ 压缩完成，共 ${files.length} 个文件` + (keptCount ? `；${keptCount} 张已经很小，保留了原图（PNG 想再小可以把输出格式改成 WebP）` : ""), "success");
           renderTable();
           const before = files.reduce((total, f) => total + f.size, 0);
           const saved = Math.round((1 - Object.values(results).reduce((total, r) => total + r.size, 0) / before) * 100);
@@ -814,8 +837,13 @@
         try {
           await ToolDependencies.load("zip");
           const zip = new JSZip();
-          Object.entries(results).forEach(([name, r]) => {
-            zip.file(r.outputName, r.blob);
+          const used = new Set();
+          Object.values(results).forEach(r => {
+            // 不同格式的同名图片转成同一格式后会重名，加序号避免互相覆盖
+            let name = r.outputName;
+            for (let n = 2; used.has(name.toLowerCase()); n++) name = r.outputName.replace(/(\.[^.]+)?$/, "-" + n + "$1");
+            used.add(name.toLowerCase());
+            zip.file(name, r.blob);
           });
           const blob = await zip.generateAsync({ type: "blob" });
           const url = URL.createObjectURL(blob);

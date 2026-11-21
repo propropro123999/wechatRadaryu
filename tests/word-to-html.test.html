@@ -90,7 +90,7 @@ document.querySelector('#converter').addEventListener('load', async function () 
 
         w.copyHTML();
         await Promise.resolve();
-        assert(clipboard['text/plain'] === original, 'raw HTML copy remains unchanged');
+        assert(clipboard['text/plain'] === expectedHtml && preview.innerHTML === original, 'HTML copy leaves out the preview-only image buttons and wrappers');
         document.querySelector('#result').textContent = `PASS: ${checks} Word preview and clipboard checks`;
     } catch (error) {
         document.querySelector('#result').textContent = 'FAIL: ' + error.stack;
