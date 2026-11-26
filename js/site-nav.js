@@ -75,11 +75,19 @@
     const key = icons.sites[index];
     return key.startsWith('b:') ? '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="' + icons.brands[key.slice(2)] + '"/></svg>' : lineIcon(key);
   }
+  function siteAvatar(index) {
+    const sprite = icons.sprite;
+    const slot = sprite?.slots?.[index];
+    if (typeof slot === 'number' && slot >= 0) {
+      return '<span class="sn-avatar sn-avatar-logo" aria-hidden="true"><span class="sn-favicon" style="--fx:' + (slot % sprite.cols) + ';--fy:' + Math.floor(slot / sprite.cols) + '"></span></span>';
+    }
+    return '<span class="sn-avatar" aria-hidden="true">' + siteIcon(index) + '</span>';
+  }
   function card(item, order, terms) {
     const favorite = favorites.includes(item.url);
     return '<article class="sn-card" data-cat="' + item.cat.id + '" style="--c:' + item.cat.color + ';--i:' + order + '">' +
       '<a class="sn-link" href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer" data-site="' + item.index + '">' +
-      '<span class="sn-avatar" aria-hidden="true">' + siteIcon(item.index) + '</span>' +
+      siteAvatar(item.index) +
       '<span class="sn-name">' + highlight(item.name, terms) + '</span><span class="sn-host">' + highlight(item.host, terms) + '</span>' +
       '<span class="sn-desc">' + highlight(item.desc, terms) + '</span>' +
       '<svg class="sn-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>' +

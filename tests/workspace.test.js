@@ -64,6 +64,8 @@ const iconContext = { window: {} };
 vm.runInNewContext(readFileSync(resolve(root, 'js/site-nav-icons.js'), 'utf8'), iconContext);
 const siteIcons = iconContext.window.SITE_NAV_ICONS;
 assert.equal(siteIcons.sites.length, siteNav.sites.length);
+assert.ok(existsSync(resolve(root, siteIcons.sprite.src)), siteIcons.sprite.src);
+assert.equal(siteIcons.sprite.slots.length, siteNav.sites.length);
 for (const key of siteIcons.sites) {
   assert.ok(key.startsWith('b:') ? siteIcons.brands[key.slice(2)] : siteIcons.lucide[key], key);
 }

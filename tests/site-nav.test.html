@@ -22,8 +22,8 @@ document.querySelector('#page').addEventListener('load', async function () {
         assert(links().every(link => /^https?:\/\//.test(link.href) && link.target === '_blank' && link.rel === 'noopener noreferrer'), 'sites open in a new tab without referrer');
         assert(!/icviews|半导纵横/i.test(d.body.innerHTML), 'no company identifiers');
         assert(!d.querySelector('img'), 'no third-party images are requested');
-        assert([...d.querySelectorAll('.sn-avatar')].every(avatar => avatar.querySelector('svg') && !avatar.textContent.trim()), 'every site shows a vector icon instead of a letter');
-        assert(d.querySelectorAll('.sn-avatar svg[fill="currentColor"]').length === 11 && [...d.querySelectorAll('.sn-chip')].every(chip => chip.querySelector('svg')), 'brand and category icons render');
+        assert([...d.querySelectorAll('.sn-avatar')].every(avatar => (avatar.querySelector('.sn-favicon') || avatar.querySelector('svg')) && !avatar.textContent.trim()), 'every site shows a local favicon or vector fallback instead of a letter');
+        assert(d.querySelectorAll('.sn-avatar .sn-favicon').length >= 90 && [...d.querySelectorAll('.sn-chip')].every(chip => chip.querySelector('svg')), 'local sprite favicons and category icons render');
         const allo = element => w.getComputedStyle(element).fontFamily.includes('Allo Display');
         assert(allo(d.querySelector('.sn-word')) && allo(d.querySelector('.sn-section-word')), 'category words use the display font');
         assert(!allo(d.querySelector('.sn-name')) && !allo(d.querySelector('.sn-desc')) && !allo(search), 'site text and search keep the system font');

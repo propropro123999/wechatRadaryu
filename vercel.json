@@ -16,9 +16,9 @@
       ]
     },
     {
-      "source": "/(favicon\\.(?:png|svg)|wechat-export-location\\.png)",
+      "source": "/(favicon\\.(?:png|svg)|wechat-export-location\\.png|site-favicons\\.webp)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=2592000" }
+        { "key": "Cache-Control", "value": "public, max-age=2592000, stale-while-revalidate=31536000" }
       ]
     },
     {
