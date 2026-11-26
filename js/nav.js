@@ -42,6 +42,7 @@ const WORKSPACE_ICONS = {
   sheets: '<rect x="3" y="3" width="18" height="6" rx="2" fill="currentColor" fill-opacity=".22" stroke="none"/><rect width="18" height="18" x="3" y="3" rx="2.5"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 9v12"/><path d="M15 9v12"/>',
   pdf: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" fill="currentColor" fill-opacity=".16"/><path d="M14 2v6h6"/><rect x="7" y="13" width="10" height="5" rx="1.5" fill="currentColor" fill-opacity=".24"/><path d="M10 15.5h4"/>',
   stitch: '<rect x="5" y="3" width="14" height="6.5" rx="2" fill="currentColor" fill-opacity=".18"/><rect x="5" y="14.5" width="14" height="6.5" rx="2" fill="currentColor" fill-opacity=".18"/><path d="M9 9.5v5"/><path d="M15 9.5v5"/>',
+  watermark: '<path d="M12 2.5C12 2.5 5.5 9.6 5.5 14.3a6.5 6.5 0 0 0 13 0C18.5 9.6 12 2.5 12 2.5Z" fill="currentColor" fill-opacity=".18"/><path d="M12 2.5C12 2.5 5.5 9.6 5.5 14.3a6.5 6.5 0 0 0 13 0C18.5 9.6 12 2.5 12 2.5Z"/><path d="M9.2 14.5a2.8 2.8 0 0 0 2.8 2.8"/>',
   terminal: '<rect x="3" y="4" width="18" height="16" rx="3" fill="currentColor" fill-opacity=".16"/><path d="M3 9h18"/><path d="m7.5 13 2.5 2-2.5 2"/><path d="M12.5 17h4"/>',
   brand: '<circle cx="8" cy="10" r="1.6" fill="currentColor" stroke="none"/><path d="M13 10.6q2.2-2.8 4.4 0"/><path d="M8.4 15.2q3.6 2.9 7.2 0"/>',
   user: '<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
@@ -63,6 +64,7 @@ const NAV_ITEMS = [
   { href: 'youmeng.html', icon: 'sheets', color: '#16a34a', label: '多表流量分析', category: 'analytics', desc: '多个 Sheet 合成一张，不用再手动复制粘贴。', formats: 'XLSX / XLS', keywords: '多表 Sheet 合并 趋势', local: true },
   { href: 'pdf-compress.html', icon: 'pdf', color: '#f97316', label: 'PDF 压缩', category: 'media', desc: '给 PDF 减减肥，清晰度留多少你定。', formats: 'PDF', keywords: '文档 减小 大小 质量', local: true },
   { href: 'image-stitch.html', icon: 'stitch', color: '#ca8a04', label: '长图拼接', category: 'media', desc: '多张图排好队，拼成一张长图。', formats: 'JPG / PNG', keywords: '图片 合并 排序 长图', local: true },
+  { href: 'image-watermark.html', icon: 'watermark', color: '#0ea5e9', label: '图片水印', category: 'media', desc: '批量加文字或 Logo 水印，支持画布直接缩放与定位。', formats: 'JPG / PNG / WebP', keywords: '水印 文字 Logo 批量 防盗 证件 截图 图片 缩放', local: true },
   { href: 'orc-log-parser.html', icon: 'terminal', color: '#c026d3', label: 'ORC 日志解析', category: 'developer', desc: '批量解析 ORC 数据，筛选、合并并导出 Excel 报表。', formats: 'ORC → XLSX', keywords: '日志 大数据 开发 Excel', local: false }
 ];
 

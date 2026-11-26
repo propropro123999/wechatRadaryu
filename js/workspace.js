@@ -13,7 +13,7 @@
   }
   function markVisited(path) {
     if (!knownPaths.has(path)) return;
-    saveList('luyu-toolbox-recent', [path, ...readList('luyu-toolbox-recent').filter(item => item !== path)].slice(0, 11));
+    saveList('luyu-toolbox-recent', [path, ...readList('luyu-toolbox-recent').filter(item => item !== path)].slice(0, NAV_ITEMS.length));
   }
   function hydrateIcons(root = document) {
     const icons = [...root.querySelectorAll('[data-icon]')];

@@ -14,6 +14,7 @@
 | youmeng.html | youmeng-traffic |
 | yiban-dashboard.html | yiban-analysis |
 | image-compress.html | image-compress |
+| image-watermark.html | image-watermark |
 | orc-log-parser.html | orc-parser |
 | pdf-compress.html | pdf-compress |
 | word-to-html.html | word-parser |

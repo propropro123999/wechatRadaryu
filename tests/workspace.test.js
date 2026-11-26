@@ -8,7 +8,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const context = { window: {} };
 vm.runInNewContext(readFileSync(resolve(root, 'js/nav.js'), 'utf8'), context);
 const tools = context.window.NAV_ITEMS;
-assert.equal(tools.length, 11);
+assert.equal(tools.length, 12);
 assert.equal(new Set(tools.map(tool => tool.href)).size, tools.length);
 const counts = {};
 for (const tool of tools) {
@@ -26,7 +26,7 @@ for (const tool of tools) {
   }
   assert.ok(page.indexOf('src="js/nav.js"') < page.indexOf('src="js/workspace.js"'), tool.href);
 }
-assert.deepEqual(counts, { analytics: 5, documents: 2, media: 3, developer: 1 });
+assert.deepEqual(counts, { analytics: 5, documents: 2, media: 4, developer: 1 });
 const home = readFileSync(resolve(root, 'index.html'), 'utf8');
 assert.match(home, /<title>Luyu的工具箱<\/title>/);
 assert.match(home, /aria-label="Luyu的工具箱 首页"/);
@@ -208,4 +208,22 @@ vm.runInNewContext(youmengEscape, escapeContext);
 assert.equal(escapeContext.escapeCell('<img src=x onerror=alert(1)>'), '&lt;img src=x onerror=alert(1)&gt;');
 assert.equal(escapeContext.renderUrlCell('javascript:alert(1)'), 'javascript:alert(1)');
 assert.match(escapeContext.renderUrlCell('https://example.com/a?b=1&c=2'), /^<a href="https:\/\/example\.com\/a\?b=1&amp;c=2" target="_blank" rel="noopener noreferrer">/);
+const wmContext = { window: {} };
+vm.runInNewContext(readFileSync(resolve(root, 'js/image-watermark.js'), 'utf8'), wmContext);
+const wm = wmContext.window.WatermarkEngine;
+assert.equal(wm.resolveOutputMime('auto', 'image/jpeg'), 'image/jpeg');
+assert.equal(wm.resolveOutputMime('image/webp', 'image/png'), 'image/webp');
+assert.equal(wm.resolveOutputMime('auto', 'image/gif'), 'image/png');
+const usedNames = new Set();
+assert.equal(wm.outputFileName('photo.jpg', 'image/jpeg', usedNames), 'photo_watermarked.jpg');
+assert.equal(wm.outputFileName('photo.png', 'image/jpeg', usedNames), 'photo_watermarked_2.jpg');
+assert.deepEqual({ ...wm.computeSingleAnchor('tl', 1000, 800, 100, 40, 20) }, { x: 70, y: 40 });
+assert.deepEqual({ ...wm.computeSingleAnchor('br', 1000, 800, 100, 40, 20) }, { x: 930, y: 760 });
+assert.deepEqual({ ...wm.computeSingleAnchor('mc', 1000, 800, 100, 40, 20) }, { x: 500, y: 400 });
+assert.deepEqual({ ...wm.scaleWatermarkSize({ mode: 'text', fontSize: 50 }, 1.2) }, { fontSize: 60 });
+assert.deepEqual({ ...wm.scaleWatermarkSize({ mode: 'text', fontSize: 200 }, 2) }, { fontSize: 220 });
+assert.deepEqual({ ...wm.scaleWatermarkSize({ mode: 'image', logoScale: 20 }, 1.5) }, { logoScale: 30 });
+assert.deepEqual({ ...wm.scaleWatermarkSize({ mode: 'image', logoScale: 5 }, 0.2) }, { logoScale: 4 });
+assert.equal(wm.isLightColor('#ffffff'), true);
+assert.equal(wm.isLightColor('#111827'), false);
 console.log('Workspace catalog, shared assets, category counts, and entry points passed.');
