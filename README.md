@@ -27,7 +27,7 @@
 3. 使用 Node.js 24；`.python-version` 固定 Python 3.12，`requirements.txt` 仅安装 pyorc（二进制 wheel）。
 4. 部署后直接访问工具页面，无需登录。
 
-`/api/upload-image` 和 `/api/parse-orc` 公开访问。文章抓取接口在 handler 内仅允许同源请求；图片代理允许外部编辑器跨源加载复制的文章图片。图片代理拒绝私有地址和重定向，限制 8 MB / 10 秒，并验证图片 Content-Type。
+`/api/fetch-article` 和 `/api/upload-image` 仅允许同源请求（`upload-image` 限制图片白名单与 4 MB 上限，并转发到 Catbox）；`/api/parse-orc` 公开访问；图片代理允许外部编辑器跨源加载复制的文章图片，拒绝私有地址、重定向和 `image/svg+xml`，限制 4 MB / 10 秒（对齐 Vercel Serverless 4.5 MB 响应上限），并启用 CDN `s-maxage` 缓存以节省函数调用额度。
 
 ## 本地开发
 
@@ -42,9 +42,7 @@ npx vercel dev
 
 ## ORC 解析
 
-DuckDB-Wasm 本地路径保持不变。云端优先调用同源 `/api/parse-orc`；网络错误或 5xx 时回退现有 Railway 服务。401/4xx 不触发回退。Vercel 接口限制上传及 JSON 结果各 4 MB；大文件请优先使用本地解析。时间/日期用 ISO 字符串，Decimal 用字符串，二进制用 Base64 表示。
-
-Railway 仅作为兼容后备：`Dockerfile` 使用独立的 Flask/Gunicorn 安装和 `app.py`，`railway.json` 指定 Docker 构建。后备服务保持原有公开行为。云端解析会上传文件；Word 图片上传会发送到 Catbox。
+DuckDB-Wasm 本地路径保持不变。云端仅调用同源 Vercel `/api/parse-orc`，并在上传前拦截大于 4 MB 的文件，多文件按队列串行解析以避免突发并发冷启动。Vercel 接口限制上传及 JSON 结果各 4 MB；大文件请先拆分。时间/日期用 ISO 字符串，Decimal 用字符串，二进制用 Base64 表示。云端解析会上传文件；Word 图片上传会发送到 Catbox。
 
 ## 文章图文复制
 

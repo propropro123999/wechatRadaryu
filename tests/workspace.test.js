@@ -200,4 +200,10 @@ for (const [path, label] of [
 assert.equal(classifierContext.detectPageType('https://conference.example.com/events'), '会议活动');
 assert.equal(classifierContext.detectPageType(''), '其他');
 assert.equal(classifierContext.detectPageType('http://['), '其他');
+const youmengEscape = multiTraffic.slice(multiTraffic.indexOf('function escapeCell'), multiTraffic.indexOf('// 预览表'));
+const escapeContext = { URL };
+vm.runInNewContext(youmengEscape, escapeContext);
+assert.equal(escapeContext.escapeCell('<img src=x onerror=alert(1)>'), '&lt;img src=x onerror=alert(1)&gt;');
+assert.equal(escapeContext.renderUrlCell('javascript:alert(1)'), 'javascript:alert(1)');
+assert.match(escapeContext.renderUrlCell('https://example.com/a?b=1&c=2'), /^<a href="https:\/\/example\.com\/a\?b=1&amp;c=2" target="_blank" rel="noopener noreferrer">/);
 console.log('Workspace catalog, shared assets, category counts, and entry points passed.');

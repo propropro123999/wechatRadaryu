@@ -3,7 +3,7 @@ import https from 'node:https';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 
-const limit = 8 * 1024 * 1024;
+const limit = 4 * 1024 * 1024;
 export function privateAddress(address) {
   const ip = address.replace(/^\[|\]$/g, '').toLowerCase();
   if (ip.includes(':')) return !/^[23][0-9a-f]{0,3}:/.test(ip) || ip.startsWith('2001:db8:');
@@ -14,6 +14,10 @@ export function privateAddress(address) {
     (a === 198 && (b === 18 || b === 19));
 }
 export default async function handler(req, res) {
+  if (req.method && req.method !== 'GET' && req.method !== 'HEAD') {
+    res.setHeader('Allow', 'GET, HEAD');
+    return res.status(405).json({error: 'Method Not Allowed'});
+  }
   let url, addresses;
   try {
     url = new URL(req.query.url);
@@ -38,7 +42,7 @@ export default async function handler(req, res) {
         headers: {'Referer': 'https://mp.weixin.qq.com/', 'User-Agent': 'Mozilla/5.0'}
       }, response => {
         const contentType = response.headers['content-type'] || '';
-        if (response.statusCode !== 200 || !/^image\//i.test(contentType) || Number(response.headers['content-length']) > limit) {
+        if (response.statusCode !== 200 || !/^image\/(?!svg\+xml\b)/i.test(contentType) || Number(response.headers['content-length']) > limit) {
           response.destroy(); reject(new Error('无效图片')); return;
         }
         const chunks = []; let size = 0;
@@ -56,7 +60,8 @@ export default async function handler(req, res) {
     });
     res.setHeader('Content-Type', contentType);
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+    res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800');
     return res.status(200).send(buffer);
-  } catch { return res.status(502).json({error: '图片获取失败（超时、格式不符或超过 8 MB）'}); }
+  } catch { return res.status(502).json({error: '图片获取失败（超时、格式不符或超过 4 MB）'}); }
 }

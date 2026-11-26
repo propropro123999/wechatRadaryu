@@ -434,6 +434,27 @@
         }));
       }
 
+      function escapeCell(val) {
+        return String(val ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function renderUrlCell(rawUrl) {
+        const text = String(rawUrl ?? "");
+        const escaped = escapeCell(text);
+        try {
+          const parsed = new URL(text);
+          if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+            return `<a href="${escapeCell(parsed.href)}" target="_blank" rel="noopener noreferrer">${escaped}</a>`;
+          }
+        } catch {}
+        return escaped;
+      }
+
       // 预览表（前 50 行）
       function renderPreview(data) {
         const el = document.getElementById("preview");
@@ -443,14 +464,14 @@
         }
         const cols = Object.keys(data[0]);
         let html = "<table class='table'><thead><tr>";
-        cols.forEach(c => html += `<th class="${c.includes("URL") ? "url" : ""}">${c}</th>`);
+        cols.forEach(c => html += `<th class="${c.includes("URL") ? "url" : ""}">${escapeCell(c)}</th>`);
         html += "</tr></thead><tbody>";
         data.slice(0, 50).forEach(row => {
           html += "<tr>";
           cols.forEach(c => {
             const v = (row[c] ?? "");
             const cls = (c.includes("URL") ? "url" : "");
-            html += `<td class="${cls}">${String(v).replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>`;
+            html += `<td class="${cls}">${escapeCell(v)}</td>`;
           });
           html += "</tr>";
         });
@@ -471,9 +492,9 @@
         data.slice(0, 20).forEach((r, i) => {
           html += "<tr>"
             + `<td>${i + 1}</td>`
-            + `<td class="url"><a href="${r.页面URL}" target="_blank" rel="noopener">${r.页面URL}</a></td>`
-            + `<td>${r.页面类型}</td>`
-            + `<td>${r.页面ID}</td>`
+            + `<td class="url">${renderUrlCell(r.页面URL)}</td>`
+            + `<td>${escapeCell(r.页面类型)}</td>`
+            + `<td>${escapeCell(r.页面ID)}</td>`
             + "</tr>";
         });
         html += "</tbody></table>";
@@ -693,7 +714,7 @@
           const a = agg[t];
           const avgDur = a.durCnt ? (a.durSum / a.durCnt).toFixed(2) : "-";
           html += `<tr>
-      <td>${t}</td>
+      <td>${escapeCell(t)}</td>
       <td>${a.pv.toLocaleString()}</td>
       <td>${a.uv.toLocaleString()}</td>
       <td>${a.count}</td>
@@ -719,9 +740,9 @@
         topPvShow.forEach((r, i) => {
           htmlPv += "<tr>"
             + `<td>${i + 1}</td>`
-            + `<td>${r.页面类型}</td>`
-            + `<td>${r.页面ID}</td>`
-            + `<td class="url"><a href="${r.页面URL}" target="_blank" rel="noopener">${r.页面URL}</a></td>`
+            + `<td>${escapeCell(r.页面类型)}</td>`
+            + `<td>${escapeCell(r.页面ID)}</td>`
+            + `<td class="url">${renderUrlCell(r.页面URL)}</td>`
             + `<td>${num(r.PV).toLocaleString()}</td>`
             + `<td>${num(r.UV).toLocaleString()}</td>`
             + `<td>${num(r.IP).toLocaleString()}</td>`
@@ -746,9 +767,9 @@
         topDurShow.forEach((r, i) => {
           htmlDur += "<tr>"
             + `<td>${i + 1}</td>`
-            + `<td>${r.页面类型}</td>`
-            + `<td>${r.页面ID}</td>`
-            + `<td class="url"><a href="${r.页面URL}" target="_blank" rel="noopener">${r.页面URL}</a></td>`
+            + `<td>${escapeCell(r.页面类型)}</td>`
+            + `<td>${escapeCell(r.页面ID)}</td>`
+            + `<td class="url">${renderUrlCell(r.页面URL)}</td>`
             + `<td>${num(r.平均停留秒).toFixed(2)}</td>`
             + `<td>${num(r.PV).toLocaleString()}</td>`
             + `<td>${num(r.UV).toLocaleString()}</td>`
@@ -844,7 +865,7 @@
         let html = "<table class='table'><thead><tr><th>Sheet</th><th>记录数</th><th>PV</th><th>UV</th><th>平均停留秒</th></tr></thead><tbody>";
         rows.forEach(r => {
           html += `<tr>
-      <td>${r.sheet}</td>
+      <td>${escapeCell(r.sheet)}</td>
       <td>${r.count}</td>
       <td>${r.pv.toLocaleString()}</td>
       <td>${r.uv.toLocaleString()}</td>

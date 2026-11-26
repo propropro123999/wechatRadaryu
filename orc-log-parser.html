@@ -9,8 +9,6 @@
     <link rel="apple-touch-icon" href="favicon.png">
     <title>ORC 日志解析 - Luyu的工具箱</title>
     <link rel="stylesheet" href="gemini-ui.css" />
-    <link rel="stylesheet" href="design-system-modern.css" />
-    <link rel="stylesheet" href="tool-pages-interactions.css" />
     <!-- SheetJS for Export -->
 
     <!-- JSZip for Multiple Files Export -->
@@ -183,7 +181,7 @@
                 <div class="dropzone" id="dropzone">
                     <div style="font-size:48px;margin-bottom:16px;"><span data-icon="folder"></span></div>
                     <div style="font-size:16px;font-weight:600;color:#1E293B;margin-bottom:8px;">点击或拖拽上传 ORC 文件</div>
-                    <div style="font-size:13px;color:#64748B;">支持批量上传，单个文件大小建议不超过 100MB</div>
+                    <div style="font-size:13px;color:#64748B;">支持批量上传，云端解析单文件上限 4 MB（超大文件请先拆分）</div>
                     <input type="file" id="fileInput" multiple accept=".orc" style="display:none;">
                 </div>
 
@@ -216,8 +214,14 @@
     <!-- Auth & UI Logic (Standard Script) -->
     <script>
         // --- API Configuration ---
-        // Railway API endpoint (update this after deploying to Railway)
-        const ORC_API_URL = 'https://wechatradaryu-production.up.railway.app/api/parse-orc';
+        const MAX_CLOUD_ORC_BYTES = 4 * 1024 * 1024;
+        function escapeFileName(name) {
+            return String(name ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             initDropzone();
@@ -239,7 +243,7 @@
 
         // Placeholder until module loads（与 module 内 handleFiles 行为一致：汇总表 + 云端解析）
         if (!window.handleFiles) {
-            window.handleFiles = (files) => {
+            window.handleFiles = async (files) => {
                 if (!files.length) return;
                 window.mergedData = [];
                 window.mergedFileNames = [];
@@ -249,20 +253,23 @@
                 var container = document.getElementById('file-tabs-container');
                 if (!container) return;
                 container.innerHTML = '';
-                Array.from(files).forEach((file, idx) => {
+                var queue = Array.from(files).map((file, idx) => {
                     var fileId = 'f_' + Date.now() + '_' + idx;
                     window.mergedFileNames.push({ name: file.name, id: fileId, ok: false });
                     var btnTab = document.createElement('button');
                     btnTab.className = 'gem-btn gem-btn-secondary file-tab-btn';
                     btnTab.id = 'tab-' + fileId;
                     btnTab.style.cssText = 'white-space:nowrap; display:flex; align-items:center; gap:8px; padding:8px 16px; border:1px solid #E2E8F0; background:white; color:#64748B;';
-                    btnTab.innerHTML = '<span><span data-icon="document"></span> ' + file.name + '</span><div id="status-icon-' + fileId + '" style="font-size:10px;"><span data-icon="clock"></span></div>';
+                    btnTab.innerHTML = '<span><span data-icon="document"></span> ' + escapeFileName(file.name) + '</span><div id="status-icon-' + fileId + '" style="font-size:10px;"><span data-icon="clock"></span></div>';
                     btnTab.onclick = () => window._switchFile(fileId);
                     container.appendChild(btnTab);
-                    window.fallbackToServer(file, fileId);
+                    return { file, fileId };
                 });
                 updateLoadedFilesList();
                 renderMergedTable();
+                for (var item of queue) {
+                    await window.fallbackToServer(item.file, item.fileId);
+                }
             };
         }
 
@@ -334,27 +341,33 @@
         // --- Core File Processing Logic (Non-Wasm/Fallback) ---
 
         window.fallbackToServer = async function (file, fileId) {
+            if (file && typeof file.size === 'number' && file.size > MAX_CLOUD_ORC_BYTES) {
+                const msg = '文件超过 4 MB，云端解析接口不支持，请拆分文件后重试';
+                window.updateFileStatus(fileId, '解析失败: ' + msg, 'error');
+                var oversizeEntry = (window.mergedFileNames || []).find(f => f.id === fileId);
+                if (oversizeEntry) oversizeEntry.ok = false;
+                updateLoadedFilesList();
+                log(msg, 'error');
+                return;
+            }
+
             window.updateFileStatus(fileId, '上传云端解析...', 'running');
 
             const formData = new FormData();
             formData.append('file', file);
 
             try {
-                let resp;
-                try {
-                    resp = await fetch('/api/parse-orc', { method: 'POST', body: formData });
-                } catch {
-                    resp = await fetch(ORC_API_URL, { method: 'POST', body: formData });
-                }
-                if (resp.status >= 500 && new URL(resp.url || location.href).origin === location.origin) {
-                    resp = await fetch(ORC_API_URL, { method: 'POST', body: formData });
-                }
+                const resp = await fetch('/api/parse-orc', {
+                    method: 'POST',
+                    body: formData,
+                    signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(30000) : undefined
+                });
                 const json = await resp.json().catch(() => ({}));
 
                 if (!resp.ok) {
                     var msg = json.error || ('Server Error: ' + resp.status);
                     if (msg.indexOf('pyorc') !== -1) {
-                        msg = '当前环境不支持云端解析（pyorc 未安装）。请使用本地解析或自建带 pyorc 的后端。';
+                        msg = '当前环境不支持云端解析（pyorc 未安装）。请检查 Vercel Python 函数部署。';
                     }
                     throw new Error(msg);
                 }
@@ -362,11 +375,12 @@
 
                 window.generateExcel(json.data, file.name, fileId);
             } catch (err) {
-                window.updateFileStatus(fileId, '解析失败: ' + err.message, 'error');
+                const message = err && err.name === 'TimeoutError' ? '云端解析超时，请稍后重试或拆分文件' : err.message;
+                window.updateFileStatus(fileId, '解析失败: ' + message, 'error');
                 var entry = (window.mergedFileNames || []).find(f => f.id === fileId);
                 if (entry) entry.ok = false;
                 updateLoadedFilesList();
-                log(err.message, 'error');
+                log(message, 'error');
             }
         }
 
@@ -606,13 +620,13 @@
                 }
 
                 // === FALLBACK TO SERVER API ===
-                fallbackToServer(file, fileId);
+                await fallbackToServer(file, fileId);
             }
         }
 
 
 
-        window.handleFiles = function (files) {
+        window.handleFiles = async function (files) {
             if (!files.length) return;
 
             window.mergedData = [];
@@ -626,7 +640,7 @@
             const container = document.getElementById('file-tabs-container');
             container.innerHTML = '';
 
-            Array.from(files).forEach((file, idx) => {
+            const queue = Array.from(files).map((file, idx) => {
                 const fileId = `f_${Date.now()}_${idx}`;
 
                 window.mergedFileNames.push({ name: file.name, id: fileId, ok: false });
@@ -635,15 +649,19 @@
                 btn.className = 'gem-btn gem-btn-secondary file-tab-btn';
                 btn.id = `tab-${fileId}`;
                 btn.style.cssText = 'white-space:nowrap; display:flex; align-items:center; gap:8px; padding:8px 16px; border:1px solid #E2E8F0; background:white; color:#64748B;';
-                btn.innerHTML = `<span><span data-icon="document"></span> ${file.name}</span><div id="status-icon-${fileId}" style="font-size:10px;"><span data-icon="clock"></span></div>`;
+                btn.innerHTML = `<span><span data-icon="document"></span> ${escapeFileName(file.name)}</span><div id="status-icon-${fileId}" style="font-size:10px;"><span data-icon="clock"></span></div>`;
                 btn.onclick = () => window._switchFile(fileId);
                 container.appendChild(btn);
 
-                processFile(file, fileId);
+                return { file, fileId };
             });
 
             updateLoadedFilesList();
             renderMergedTable();
+
+            for (const item of queue) {
+                await processFile(item.file, item.fileId);
+            }
         }
 
 
