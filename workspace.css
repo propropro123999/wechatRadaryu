@@ -452,10 +452,10 @@ svg { flex-shrink: 0; vertical-align: middle; }
 
 /* 色彩与动效：按分类使用高饱和纯色，只作用于展示元素。 */
 :root { --ink: #111; --c-analytics: #0a84ff; --c-documents: #ff2d6f; --c-media: #ff8a1f; --c-developer: #6b5cff; }
-.brand-mark { background: var(--ink); border-radius: 10px; font-size: 24px; font-weight: 800; transition: background .3s, transform .4s cubic-bezier(.2,.8,.2,1); }
+.brand-mark { background: linear-gradient(145deg, #232529, #0e0f11); border-radius: 11px; box-shadow: inset 0 1px 0 #ffffff29, 0 4px 10px -4px #0000004d; font-size: 24px; font-weight: 800; transition: background .3s, transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .3s; }
 .brand-mark svg { width: 58%; height: 58%; }
 .user-avatar svg, .topbar-avatar svg { width: 56%; height: 56%; }
-a:hover > .brand-mark { background: #ff3b3b; transform: rotate(-8deg) scale(1.06); }
+a:hover > .brand-mark { background: linear-gradient(135deg, #ff4b4b, #e02424); box-shadow: inset 0 1px 0 #ffffff40, 0 8px 18px -6px #ff3b3b80; transform: rotate(-6deg) scale(1.06); }
 .workspace-home { background: #fdfdfd; color: #1c1c1e; }
 .workspace-sidebar { background: #fdfdfd; }
 .workspace-brand, .tool-brand, .tool-brand strong { color: var(--ink); }
@@ -530,15 +530,16 @@ a:hover > .brand-mark { background: #ff3b3b; transform: rotate(-8deg) scale(1.06
 .filter-chip.active { border-color: var(--ink); background: var(--ink); color: #fff; }
 .filter-chip.active::before { background: #fff; }
 .filter-chip.active > span { background: #ffffff29; color: #fff; }
-.catalog-card { --c: var(--c-analytics); border: 0; border-radius: 18px; background: #fff; box-shadow: inset 0 0 0 1.5px #ececec; transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s; }
-.catalog-card:hover, .catalog-card:focus-within { border: 0; transform: translateY(-4px); box-shadow: inset 0 0 0 1.5px var(--c), 0 20px 38px -20px color-mix(in srgb, var(--c) 60%, transparent); }
-.catalog-card[data-category] .catalog-icon { border-radius: 13px; background: var(--c); color: #fff; transition: transform .38s cubic-bezier(.2,.8,.2,1), border-radius .38s; }
-.catalog-card:hover .catalog-icon { border-radius: 50%; transform: rotate(-8deg) scale(1.08); }
-.catalog-card-category { color: var(--c); font-weight: 700; }
+.catalog-card { --c: var(--c-analytics); --card-accent: var(--tool-c, var(--c)); border: 0; border-radius: 18px; background: #fff; box-shadow: inset 0 0 0 1.5px #ececec; transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s; }
+.catalog-card:hover, .catalog-card:focus-within { border: 0; transform: translateY(-4px); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--card-accent) 70%, #fff), 0 20px 38px -20px color-mix(in srgb, var(--card-accent) 45%, transparent); }
+.catalog-card[data-category] .catalog-icon { width: 44px; height: 44px; border-radius: 13px; background: linear-gradient(145deg, color-mix(in srgb, var(--card-accent) 10%, #fff), color-mix(in srgb, var(--card-accent) 21%, #fff)); color: color-mix(in srgb, var(--card-accent) 84%, #111); box-shadow: inset 0 1px 0 #ffffffd9, inset 0 0 0 1px color-mix(in srgb, var(--card-accent) 22%, transparent), 0 4px 12px -4px color-mix(in srgb, var(--card-accent) 24%, transparent); transition: transform .32s cubic-bezier(.2,.8,.2,1), background .28s, color .22s, box-shadow .28s; }
+.catalog-card[data-category] .catalog-icon svg { width: 22px; height: 22px; }
+.catalog-card:hover .catalog-icon, .catalog-card:focus-within .catalog-icon { transform: translateY(-2px) scale(1.06); background: linear-gradient(135deg, var(--card-accent), color-mix(in srgb, var(--card-accent) 78%, #000)); color: #fff; box-shadow: inset 0 1px 0 #ffffff4d, 0 10px 20px -6px color-mix(in srgb, var(--card-accent) 55%, transparent); }
+.catalog-card-category { color: color-mix(in srgb, var(--card-accent) 82%, #111); font-weight: 700; }
 .catalog-card h3 { color: var(--ink); font-weight: 750; }
 .catalog-card p { color: #6b6f76; }
 .catalog-card-bottom { border-top-color: #f0f0f0; color: #8a8d93; }
-.catalog-card-bottom .card-open { color: var(--c); font-weight: 700; }
+.catalog-card-bottom .card-open { color: color-mix(in srgb, var(--card-accent) 84%, #111); font-weight: 700; }
 .card-open svg { transition: transform .3s cubic-bezier(.2,.8,.2,1); }
 .catalog-card:hover .card-open svg { transform: translateX(4px); }
 .favorite-button:hover, .favorite-button[aria-pressed="true"] { color: #f2b600; }
@@ -549,17 +550,24 @@ a:hover > .brand-mark { background: #ff3b3b; transform: rotate(-8deg) scale(1.06
 .workspace-tool[data-tool-category="documents"] { --tool-accent: var(--c-documents); }
 .workspace-tool[data-tool-category="media"] { --tool-accent: var(--c-media); }
 .workspace-tool[data-tool-category="developer"] { --tool-accent: var(--c-developer); }
-.workspace-tool .tool-intro .eyebrow { color: var(--tool-accent); font-weight: 700; }
+.workspace-tool .nav-switcher-menu { width: 356px; gap: 6px; padding: 10px; border-radius: 14px; }
+.workspace-tool .nav-app-item { align-items: center; gap: 10px; padding: 8px 10px; font-size: 12px; font-weight: 500; border-radius: 10px; color: #3f444a; transition: background .18s, color .18s; }
+.workspace-tool .nav-app-icon { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(145deg, color-mix(in srgb, var(--tool-c, var(--ink)) 11%, #fff), color-mix(in srgb, var(--tool-c, var(--ink)) 22%, #fff)); color: color-mix(in srgb, var(--tool-c, var(--ink)) 84%, #111); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tool-c, var(--ink)) 20%, transparent); transition: background .2s, color .2s, transform .2s; }
+.workspace-tool .nav-app-icon svg { width: 16px; height: 16px; }
+.workspace-tool .nav-app-item:hover, .workspace-tool .nav-app-item.current { background: color-mix(in srgb, var(--tool-c, var(--ink)) 9%, #fff); color: var(--ink); font-weight: 600; }
+.workspace-tool .nav-app-item:hover .nav-app-icon, .workspace-tool .nav-app-item.current .nav-app-icon { background: linear-gradient(135deg, var(--tool-c, var(--ink)), color-mix(in srgb, var(--tool-c, var(--ink)) 78%, #000)); color: #fff; box-shadow: none; transform: scale(1.05); }
+.workspace-tool .tool-intro .eyebrow { color: color-mix(in srgb, var(--tool-accent) 85%, #111); font-weight: 700; }
 .workspace-tool .tool-intro h1 { color: var(--ink); font-size: 34px; font-weight: 800; letter-spacing: -.02em; }
 .workspace-tool .tool-intro h1::after { content: ""; display: inline-block; width: .26em; height: .26em; margin-left: .14em; border-radius: 50%; background: var(--tool-accent); }
-.tool-format-badge { border: 1.5px solid var(--tool-accent); border-radius: 999px; color: var(--ink); font-weight: 600; }
-.tool-format-badge svg { color: var(--tool-accent); }
+.tool-format-badge { border: 1.5px solid color-mix(in srgb, var(--tool-accent) 42%, #fff); background: color-mix(in srgb, var(--tool-accent) 7%, #fff); border-radius: 999px; color: var(--ink); font-weight: 600; }
+.tool-format-badge svg { color: color-mix(in srgb, var(--tool-accent) 85%, #111); }
 .workspace-tool :is(.btn-primary, .gem-btn-primary, .gem-button-primary, .action-btn, .nav-btn-primary) { border-color: var(--ink); background: var(--ink); color: #fff; }
 .workspace-tool :is(.btn-primary, .gem-btn-primary, .gem-button-primary, .action-btn, .nav-btn-primary):hover { border-color: #000; background: #000; }
 .workspace-tool :is(.dropzone, .drop-zone, .upload-area):hover { border-color: var(--tool-accent); background: color-mix(in srgb, var(--tool-accent) 6%, #fff); }
 .workspace-tool :is(.dropzone-icon, .upload-icon) { color: var(--tool-accent); }
-.workspace-tool .upload-empty-icon { background: var(--tool-accent); color: #fff; }
-.workspace-tool .nav-app-extra { margin-top: 4px; border-top: 1px solid #ececec; }
+.workspace-tool .upload-empty-icon { width: 52px; height: 52px; border-radius: 15px; background: linear-gradient(145deg, color-mix(in srgb, var(--tool-accent) 12%, #fff), color-mix(in srgb, var(--tool-accent) 24%, #fff)); color: color-mix(in srgb, var(--tool-accent) 85%, #111); box-shadow: inset 0 1px 0 #ffffffd9, inset 0 0 0 1px color-mix(in srgb, var(--tool-accent) 24%, transparent), 0 8px 18px -8px color-mix(in srgb, var(--tool-accent) 32%, transparent); }
+.workspace-tool .upload-empty-icon svg { width: 26px; height: 26px; }
+.workspace-tool .nav-app-extra { grid-column: 1 / -1; margin-top: 4px; padding-top: 10px; border-top: 1px solid #ececec; }
 @media (max-width: 760px) {
   .workspace-tool .tool-intro h1 { font-size: 26px; }
   .nav-banner-sub { display: none; }

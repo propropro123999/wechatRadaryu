@@ -1,7 +1,7 @@
 // 图标路径来自 Lucide（ISC），授权见 THIRD-PARTY-NOTICES.md；brand 是本站自绘的标志。
 const WORKSPACE_ICONS = {
   grid: '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
-  chart: '<path d="M12 16v5"/><path d="M16 14v7"/><path d="M20 10v11"/><path d="m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15"/><path d="M4 18v3"/><path d="M8 14v7"/>',
+  chart: '<rect x="3" y="13" width="4" height="8" rx="1" fill="currentColor" fill-opacity=".18" stroke="none"/><rect x="10" y="9" width="4" height="12" rx="1" fill="currentColor" fill-opacity=".28" stroke="none"/><rect x="17" y="4" width="4" height="17" rx="1" fill="currentColor" fill-opacity=".18" stroke="none"/><path d="M4 21v-7a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v7"/><path d="M11 21V10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v11"/><path d="M18 21V5a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v16"/><path d="M2 21h20"/>',
   document: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
   image: '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
   code: '<path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/>',
@@ -10,7 +10,7 @@ const WORKSPACE_ICONS = {
   search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
   arrow: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
   external: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
-  shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+  shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" fill="currentColor" fill-opacity=".14"/><path d="m9 12 2 2 4-4"/>',
   sparkles: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>',
   list: '<path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/>',
   menu: '<line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>',
@@ -18,7 +18,7 @@ const WORKSPACE_ICONS = {
   globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
   compass: '<path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/>',
   compress: '<path d="m15 15 6 6m-6-6v4.8m0-4.8h4.8"/><path d="M9 19.8V15m0 0H4.2M9 15l-6 6"/><path d="M15 4.2V9m0 0h4.8M15 9l6-6"/><path d="M9 4.2V9m0 0H4.2M9 9 3 3"/>',
-  edit: '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>',
+  edit: '<path d="M4 5a2 2 0 0 1 2-2h9l4 4v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" fill="currentColor" fill-opacity=".16" stroke="none"/><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/><path d="m14.5 5.5 4 4"/>',
   upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
   copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
@@ -34,36 +34,36 @@ const WORKSPACE_ICONS = {
   scale: '<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
   refresh: '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
   home: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
-  community: '<path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/>',
-  traffic: '<path d="M14 4.1 12 6"/><path d="m5.1 8-2.9-.8"/><path d="m6 12-1.9 2"/><path d="M7.2 2.2 8 5.1"/><path d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"/>',
-  word: '<path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M2 13v-1h6v1"/><path d="M5 12v6"/><path d="M4 18h2"/>',
-  'image-down': '<path d="M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1-3.1a2 2 0 0 0-2.814.014L6 21"/><path d="m14 19 3 3v-5.5"/><path d="m17 22 3-3"/><circle cx="9" cy="9" r="2"/>',
-  sources: '<path d="M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1z"/><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>',
-  sheets: '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="3" x2="21" y1="15" y2="15"/><line x1="9" x2="9" y1="9" y2="21"/><line x1="15" x2="15" y1="9" y2="21"/>',
-  pdf: '<path d="M10 12v-1"/><path d="M10 18v-2"/><path d="M10 7V6"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M15.5 22H18a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v16a2 2 0 0 0 .274 1.01"/><circle cx="10" cy="20" r="2"/>',
-  stitch: '<path d="M7 2h10"/><path d="M5 6h14"/><rect width="18" height="12" x="3" y="10" rx="2"/>',
-  terminal: '<path d="m7 11 2-2-2-2"/><path d="M11 13h4"/><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>',
+  community: '<circle cx="9.5" cy="8" r="4" fill="currentColor" fill-opacity=".22"/><path d="M2.5 20a7 7 0 0 1 14 0Z" fill="currentColor" fill-opacity=".16" stroke="none"/><path d="M16.5 20a7 7 0 0 0-14 0"/><path d="M21.5 19.5c0-2.9-1.7-5.5-3.8-6.6a4 4 0 0 0-.6-7.6"/>',
+  traffic: '<path d="M3 17 8.5 11.5 13 15 21 6.5V20H3Z" fill="currentColor" fill-opacity=".18" stroke="none"/><path d="M3 17 8.5 11.5 13 15 21 6.5"/><path d="M16 6.5h5v5"/><path d="M3 20h18"/>',
+  word: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" fill="currentColor" fill-opacity=".16"/><path d="M14 2v6h6"/><path d="m8 12 1.4 5.5L12 13l2.6 4.5L16 12"/>',
+  'image-down': '<path d="M13 19H5.5A2.5 2.5 0 0 1 3 16.5v-11A2.5 2.5 0 0 1 5.5 3h13A2.5 2.5 0 0 1 21 5.5V12" fill="currentColor" fill-opacity=".16"/><circle cx="8.5" cy="8.5" r="1.6" fill="currentColor" stroke="none"/><path d="m4 16.2 4.3-4.3a1.5 1.5 0 0 1 2.1 0l2.6 2.6"/><path d="M18 14v7"/><path d="m15.5 18.5 2.5 2.5 2.5-2.5"/>',
+  sources: '<path d="M21 12A9 9 0 1 1 12 3v9Z" fill="currentColor" fill-opacity=".16"/><path d="M14 2.2A9 9 0 0 1 21.8 10H14Z" fill="currentColor" fill-opacity=".32"/><path d="M21 12A9 9 0 1 1 12 3v9Z"/><path d="M14 2.2A9 9 0 0 1 21.8 10H14Z"/>',
+  sheets: '<rect x="3" y="3" width="18" height="6" rx="2" fill="currentColor" fill-opacity=".22" stroke="none"/><rect width="18" height="18" x="3" y="3" rx="2.5"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 9v12"/><path d="M15 9v12"/>',
+  pdf: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" fill="currentColor" fill-opacity=".16"/><path d="M14 2v6h6"/><rect x="7" y="13" width="10" height="5" rx="1.5" fill="currentColor" fill-opacity=".24"/><path d="M10 15.5h4"/>',
+  stitch: '<rect x="5" y="3" width="14" height="6.5" rx="2" fill="currentColor" fill-opacity=".18"/><rect x="5" y="14.5" width="14" height="6.5" rx="2" fill="currentColor" fill-opacity=".18"/><path d="M9 9.5v5"/><path d="M15 9.5v5"/>',
+  terminal: '<rect x="3" y="4" width="18" height="16" rx="3" fill="currentColor" fill-opacity=".16"/><path d="M3 9h18"/><path d="m7.5 13 2.5 2-2.5 2"/><path d="M12.5 17h4"/>',
   brand: '<circle cx="8" cy="10" r="1.6" fill="currentColor" stroke="none"/><path d="M13 10.6q2.2-2.8 4.4 0"/><path d="M8.4 15.2q3.6 2.9 7.2 0"/>',
   user: '<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
   history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>'
 };
 
 function workspaceIcon(name) {
-  return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (WORKSPACE_ICONS[name] || WORKSPACE_ICONS.grid) + '</svg>';
+  return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (WORKSPACE_ICONS[name] || WORKSPACE_ICONS.grid) + '</svg>';
 }
 
 const NAV_ITEMS = [
-  { href: 'content-dashboard.html', icon: 'chart', label: '内容数据分析', category: 'analytics', desc: '看阅读、分享和完读，哪篇能打一目了然。', formats: 'CSV / XLSX', keywords: '公众号 微信 四象限 榜单', local: true },
-  { href: 'community-dashboard.html', icon: 'community', label: '专栏 / 帖子分析', category: 'analytics', desc: '发帖频次、作者分层、高频词，一张表摸清家底。', formats: 'CSV / XLSX', keywords: '作者 内容 运营', local: true },
-  { href: 'page-traffic-dashboard.html', icon: 'traffic', label: '页面流量分析', category: 'analytics', desc: '谁来了、看了啥、在哪走的，漏斗里见分晓。', formats: 'CSV / XLSX', keywords: '访问 页面 PV UV', local: true },
-  { href: 'word-to-html.html', icon: 'word', label: 'Word 转 HTML', category: 'documents', desc: 'Word 文档原样搬上网页，图文一个不落。', formats: 'DOCX → HTML', keywords: '文档 网页 转换 知乎 公众号', local: false },
-  { href: 'image-compress.html', icon: 'image-down', label: '图片压缩', category: 'media', desc: '给图片批量瘦身，画质和尺寸你说了算。', formats: 'JPG / PNG / WebP', keywords: '图片 批量 质量 大小 体积 压缩', local: true },
-  { href: 'article-formatter.html', icon: 'edit', label: '文章排版', category: 'documents', desc: '清掉乱七八糟的样式，标点空格各归各位。', formats: 'TEXT / HTML', keywords: '文本 清洗 编辑 格式化', local: false },
-  { href: 'yiban-dashboard.html', icon: 'sources', label: '阅读来源分析', category: 'analytics', desc: '读者从哪儿来的？按来源拆开看互动和转化。', formats: 'CSV / XLSX', keywords: '公众号 微信 报表', local: true },
-  { href: 'youmeng.html', icon: 'sheets', label: '多表流量分析', category: 'analytics', desc: '多个 Sheet 合成一张，不用再手动复制粘贴。', formats: 'XLSX / XLS', keywords: '多表 Sheet 合并 趋势', local: true },
-  { href: 'pdf-compress.html', icon: 'pdf', label: 'PDF 压缩', category: 'media', desc: '给 PDF 减减肥，清晰度留多少你定。', formats: 'PDF', keywords: '文档 减小 大小 质量', local: true },
-  { href: 'image-stitch.html', icon: 'stitch', label: '长图拼接', category: 'media', desc: '多张图排好队，拼成一张长图。', formats: 'JPG / PNG', keywords: '图片 合并 排序 长图', local: true },
-  { href: 'orc-log-parser.html', icon: 'terminal', label: 'ORC 日志解析', category: 'developer', desc: '批量解析 ORC 数据，筛选、合并并导出 Excel 报表。', formats: 'ORC → XLSX', keywords: '日志 大数据 开发 Excel', local: false }
+  { href: 'content-dashboard.html', icon: 'chart', color: '#0a84ff', label: '内容数据分析', category: 'analytics', desc: '看阅读、分享和完读，哪篇能打一目了然。', formats: 'CSV / XLSX', keywords: '公众号 微信 四象限 榜单', local: true },
+  { href: 'community-dashboard.html', icon: 'community', color: '#00a6cf', label: '专栏 / 帖子分析', category: 'analytics', desc: '发帖频次、作者分层、高频词，一张表摸清家底。', formats: 'CSV / XLSX', keywords: '作者 内容 运营', local: true },
+  { href: 'page-traffic-dashboard.html', icon: 'traffic', color: '#ff2d6f', label: '页面流量分析', category: 'analytics', desc: '谁来了、看了啥、在哪走的，漏斗里见分晓。', formats: 'CSV / XLSX', keywords: '访问 页面 PV UV', local: true },
+  { href: 'word-to-html.html', icon: 'word', color: '#ef4444', label: 'Word 转 HTML', category: 'documents', desc: 'Word 文档原样搬上网页，图文一个不落。', formats: 'DOCX → HTML', keywords: '文档 网页 转换 知乎 公众号', local: false },
+  { href: 'image-compress.html', icon: 'image-down', color: '#6b5cff', label: '图片压缩', category: 'media', desc: '给图片批量瘦身，画质和尺寸你说了算。', formats: 'JPG / PNG / WebP', keywords: '图片 批量 质量 大小 体积 压缩', local: true },
+  { href: 'article-formatter.html', icon: 'edit', color: '#00a88f', label: '文章排版', category: 'documents', desc: '清掉乱七八糟的样式，标点空格各归各位。', formats: 'TEXT / HTML', keywords: '文本 清洗 编辑 格式化', local: false },
+  { href: 'yiban-dashboard.html', icon: 'sources', color: '#d97706', label: '阅读来源分析', category: 'analytics', desc: '读者从哪儿来的？按来源拆开看互动和转化。', formats: 'CSV / XLSX', keywords: '公众号 微信 报表', local: true },
+  { href: 'youmeng.html', icon: 'sheets', color: '#16a34a', label: '多表流量分析', category: 'analytics', desc: '多个 Sheet 合成一张，不用再手动复制粘贴。', formats: 'XLSX / XLS', keywords: '多表 Sheet 合并 趋势', local: true },
+  { href: 'pdf-compress.html', icon: 'pdf', color: '#f97316', label: 'PDF 压缩', category: 'media', desc: '给 PDF 减减肥，清晰度留多少你定。', formats: 'PDF', keywords: '文档 减小 大小 质量', local: true },
+  { href: 'image-stitch.html', icon: 'stitch', color: '#ca8a04', label: '长图拼接', category: 'media', desc: '多张图排好队，拼成一张长图。', formats: 'JPG / PNG', keywords: '图片 合并 排序 长图', local: true },
+  { href: 'orc-log-parser.html', icon: 'terminal', color: '#c026d3', label: 'ORC 日志解析', category: 'developer', desc: '批量解析 ORC 数据，筛选、合并并导出 Excel 报表。', formats: 'ORC → XLSX', keywords: '日志 大数据 开发 Excel', local: false }
 ];
 
 function renderNav(config = {}) {
@@ -74,8 +74,8 @@ function renderNav(config = {}) {
   container.innerHTML = '<nav class="nav-bar workspace-tool-nav" aria-label="工具导航"><div class="tool-nav-leading"><a href="index.html" class="tool-brand" aria-label="Luyu的工具箱 首页"><span class="brand-mark" aria-hidden="true">' + workspaceIcon('brand') + '</span><strong>Luyu的工具箱</strong></a><span class="tool-nav-separator">/</span><span class="nav-title">' + title + '</span></div><div class="nav-actions">' +
     (showFileInput ? '<label class="nav-btn nav-btn-primary">' + workspaceIcon('upload') + '<span>' + fileLabel.replace(/^[^\p{L}\p{N}]+/u, '') + '</span><input type="file" id="nav-file-input" accept="' + fileAccept + '" class="nav-file-input"></label>' : '') +
     '<div class="nav-switcher"><button class="nav-switcher-btn" type="button" aria-label="切换工具" aria-expanded="false">' + workspaceIcon('grid') + '</button><div class="nav-switcher-menu" hidden>' +
-    NAV_ITEMS.map(item => '<a href="' + item.href + '" class="nav-app-item' + (item.href === current ? ' current' : '') + '" ' + (item.href === current ? 'aria-current="page"' : '') + '>' + workspaceIcon(item.icon) + '<span>' + item.label + '</span></a>').join('') +
-    '<a href="site-nav.html" class="nav-app-item nav-app-extra">' + workspaceIcon('globe') + '<span>网址导航</span></a>' +
+    NAV_ITEMS.map(item => '<a href="' + item.href + '" class="nav-app-item' + (item.href === current ? ' current' : '') + '" style="--tool-c:' + item.color + '" ' + (item.href === current ? 'aria-current="page"' : '') + '><span class="nav-app-icon" aria-hidden="true">' + workspaceIcon(item.icon) + '</span><span>' + item.label + '</span></a>').join('') +
+    '<a href="site-nav.html" class="nav-app-item nav-app-extra" style="--tool-c:#00b89c"><span class="nav-app-icon" aria-hidden="true">' + workspaceIcon('globe') + '</span><span>网址导航</span></a>' +
     '</div></div><a href="index.html" class="nav-btn nav-btn-secondary tool-home-link">' + workspaceIcon('home') + '<span>返回首页</span></a></div></nav>';
   const switcher = container.querySelector('.nav-switcher');
   const toggle = switcher.querySelector('button');

@@ -69,7 +69,7 @@
     return html + escapeHtml(value.slice(last));
   }
   function lineIcon(name) {
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + icons.lucide[name] + '</svg>';
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + icons.lucide[name] + '</svg>';
   }
   function siteIcon(index) {
     const key = icons.sites[index];

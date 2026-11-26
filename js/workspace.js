@@ -93,6 +93,7 @@
     document.body.classList.add('workspace-tool');
     document.body.dataset.tool = current.href.replace('.html', '');
     document.body.dataset.toolCategory = current.category;
+    if (current.color) document.body.style.setProperty('--tool-accent', current.color);
     markVisited(current.href);
     let nav = document.getElementById('nav-container');
     if (!nav) {
@@ -152,7 +153,7 @@
     if (category === 'recent') tools.sort((a, b) => recent.indexOf(a.href) - recent.indexOf(b.href));
     grid.innerHTML = tools.map(tool => {
       const favorite = favorites.includes(tool.href);
-      return '<article class="catalog-card" data-category="' + tool.category + '"><a class="catalog-card-link" href="' + tool.href + '" data-tool-visit="' + tool.href + '"><div class="catalog-card-top"><span class="catalog-icon">' + workspaceIcon(tool.icon) + '</span><span class="catalog-card-category">' + categoryNames[tool.category] + '</span></div><h3>' + tool.label + '</h3><p>' + tool.desc + '</p><div class="catalog-card-bottom"><span>' + tool.formats + '</span><span class="card-open">打开工具 ' + workspaceIcon('arrow') + '</span></div></a><button class="favorite-button" data-favorite="' + tool.href + '" aria-label="' + (favorite ? '取消收藏' : '收藏') + tool.label + '" aria-pressed="' + favorite + '" title="' + (favorite ? '取消收藏' : '收藏工具') + '">' + workspaceIcon('star') + '</button></article>';
+      return '<article class="catalog-card" data-category="' + tool.category + '" style="--tool-c:' + (tool.color || '') + '"><a class="catalog-card-link" href="' + tool.href + '" data-tool-visit="' + tool.href + '"><div class="catalog-card-top"><span class="catalog-icon">' + workspaceIcon(tool.icon) + '</span><span class="catalog-card-category">' + categoryNames[tool.category] + '</span></div><h3>' + tool.label + '</h3><p>' + tool.desc + '</p><div class="catalog-card-bottom"><span>' + tool.formats + '</span><span class="card-open">打开工具 ' + workspaceIcon('arrow') + '</span></div></a><button class="favorite-button" data-favorite="' + tool.href + '" aria-label="' + (favorite ? '取消收藏 ' : '收藏') + tool.label + '" aria-pressed="' + favorite + '" title="' + (favorite ? '取消收藏' : '收藏工具') + '">' + workspaceIcon('star') + '</button></article>';
     }).join('');
     document.getElementById('favorite-count').textContent = favorites.length;
     document.getElementById('results-count').textContent = tools.length;
