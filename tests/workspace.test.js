@@ -93,7 +93,7 @@ for (const tool of tools) assert.ok(lostPage.includes(JSON.stringify([tool.href,
 assert.doesNotMatch(lostPage, /(?:href|src)="(?!\/|#)/);
 assert.match(tools.find(tool => tool.href === 'image-compress.html').keywords, /体积/);
 const privacyPage = readFileSync(resolve(root, 'bxooo-privacy.html'), 'utf8');
-assert.match(privacyPage, /<h1>Bxooo 隐私声明<\/h1>[\s\S]+href="mailto:luyu909090@gmail\.com"/);
+assert.match(privacyPage, /<h1>Bxooo 浏览器扩展隐私声明<\/h1>[\s\S]+href="mailto:luyu909090@gmail\.com"/);
 assert.doesNotMatch(privacyPage, /Luyu 兼容复制|请替换|(?:href|src)="(?!\/|mailto:)/);
 let navMarkup = '';
 const navElement = { addEventListener() {}, querySelector() { return this; }, contains() { return false; } };
